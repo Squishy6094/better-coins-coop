@@ -153,7 +153,6 @@ local function bhv_whomp_loop(o)
         -- Check if player is activly ground pounding whomp
         if o.oAction == 6 and o.oBehParams2ndByte == 0 and o.oSubAction == 0 and cur_obj_is_any_player_on_platform() ~= 0 and cur_obj_is_mario_ground_pounding_platform() ~= 0 then
             -- Do nothing if pounding whomp
-            djui_chat_message_create(tostring(o.oCoinUnk110))
         else
             o.oCoinUnk110 = o.oNumLootCoins
         end
@@ -190,7 +189,6 @@ local function thwomp_break_loop(o)
         if o.oDorrieGroundPounded == 0 then
             o.oHealth = math.max(o.oHealth - (m.flags & MARIO_METAL_CAP ~= 0 and 3 or 1), 0)
             o.oBooOscillationTimer = o.oBooOscillationTimer + 30
-            djui_chat_message_create(tostring(o.oHealth))
             if o.oHealth > 0 then
                 o.oThwompRandomTimer = o.oThwompRandomTimer + 30
                 spawn_triangle_break_particles(5, 138, 1.0, 4);
@@ -238,7 +236,6 @@ end
 
 local function bhv_bowser_spawn_coins(o)
     if o.oAction == 4 then
-        djui_chat_message_create(tostring(o.oSubAction))
         if (o.oSubAction == 4 or o.oSubAction == 11) and o.oNumLootCoins > 0 then
             obj_spawn_yellow_coins(o, o.oNumLootCoins)
             o.oNumLootCoins = 0
