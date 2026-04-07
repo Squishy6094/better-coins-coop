@@ -214,10 +214,12 @@ end
 hook_coins_behavior(id_bhvThwomp, false, thwomp_break_init, thwomp_break_loop)
 hook_coins_behavior(id_bhvThwomp2, false, thwomp_break_init, thwomp_break_loop)
 
+---@param o Object
 local function bhv_small_box_kickable_init(o)
     o.oInteractionSubtype = INT_SUBTYPE_KICKABLE;
 end
 
+---@param o Object
 local function bhv_small_box_kickable_loop(o)
     local m = nearest_mario_state_to_object(o);
     if not m then return end
@@ -230,10 +232,12 @@ end
 
 hook_coins_behavior(id_bhvBreakableBoxSmall, false, bhv_small_box_kickable_init, bhv_small_box_kickable_loop)
 
+---@param o Object
 local function bhv_bowser_init_loot(o)
     o.oNumLootCoins = 50
 end
 
+---@param o Object
 local function bhv_bowser_spawn_coins(o)
     if o.oAction == 4 then
         if (o.oSubAction == 4 or o.oSubAction == 11) and o.oNumLootCoins > 0 then
@@ -245,10 +249,12 @@ end
 
 hook_coins_behavior(id_bhvBowser, false, bhv_bowser_init_loot, bhv_bowser_spawn_coins)
 
+---@param o Object
 local function bhv_chest_loot_init(o)
     o.oNumLootCoins = o.oBehParams2ndByte
 end
 
+---@param o Object
 local function bhv_chest_loot_loop(o)
     if (o.parentObj.oTreasureChestCurrentAnswer - 1) == o.oBehParams2ndByte and o.oNumLootCoins > 0 then
         spawn_coin_spawner(o.oPosX, o.oPosY + 100, o.oPosZ, o.oNumLootCoins, true)
@@ -258,6 +264,7 @@ end
 
 hook_coins_behavior(id_bhvTreasureChestBottom, false, bhv_chest_loot_init, bhv_chest_loot_loop)
 
+---@param o Object
 local function breakable_wall_coins(o)
     if o.oBreakableWallForce == 1 then
         spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
@@ -267,11 +274,15 @@ end
 hook_coins_behavior(id_bhvWfBreakableWallLeft, false, nil, breakable_wall_coins)
 hook_coins_behavior(id_bhvWfBreakableWallRight, false, nil, breakable_wall_coins)
 
+---@param o Object
 local function boss_death_coins(o)
-    if o.oSoundEffectUnkF4 == SOUND_OBJ_KING_WHOMP_DEATH and o.oCoinUnk110 == 0 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 20, true)
+    -- Assume going invis means they're dead
+    if (o.oSyncDeath ~= 0 or o.header.gfx.node.flags & GRAPH_RENDER_INVISIBLE ~= 0) and o.oCoinUnk110 == 0 then
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 15, true)
         o.oCoinUnk110 = 1
     end
 end
 
-hook_coins_behavior(id_bhvSoundSpawner, false, nil, boss_death_coins)
+hook_coins_behavior(id_bhvKingBobomb, false, nil, boss_death_coins)
+hook_coins_behavior(id_bhvWhompKingBoss, false, nil, boss_death_coins)
+hook_coins_behavior(id_bhvEyerokHand, false, nil, boss_death_coins)

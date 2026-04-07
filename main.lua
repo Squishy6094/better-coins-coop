@@ -51,9 +51,9 @@ local function update()
         end
     end
 
-    if m.controller.buttonPressed & (D_JPAD) ~= 0 then
-        spawn_coin_spawner(m.pos.x, m.pos.y, m.pos.z, 1000, true)
-    end
+    --if m.controller.buttonPressed & (D_JPAD) ~= 0 then
+    --    spawn_coin_spawner(m.pos.x, m.pos.y, m.pos.z, 1000, true)
+    --end
 end
 
 hook_event(HOOK_UPDATE, update)
