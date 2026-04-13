@@ -120,9 +120,11 @@ local noCountdown = {
 }
 
 local function master_cap_update(m)
+    if m.playerIndex ~= 0 then return end
     if masterCapTimer > 0 then
+        masterCapTimer = math.max(m.capTimer, masterCapTimer)
         if not noCountdown[m.action] then
-            masterCapTimer = math.max(m.capTimer, masterCapTimer) - 1
+            masterCapTimer = masterCapTimer - 1
         end
         m.capTimer = masterCapTimer
         if masterCapTimer > 0 then
