@@ -297,3 +297,64 @@ end
 hook_coins_behavior(id_bhvKingBobomb, false, nil, boss_death_coins)
 hook_coins_behavior(id_bhvWhompKingBoss, false, nil, boss_death_coins)
 hook_coins_behavior(id_bhvEyerokHand, false, nil, boss_death_coins)
+
+---@param o Object
+local function bhv_1up_to_blue_coin(o)
+    o.oNumLootCoins = 5
+    cur_obj_spawn_loot_blue_coin()
+    obj_mark_for_deletion(o)
+end
+
+---@param o Object
+local function bhv_1up_hidden_in_pole_loop(o)
+    if o.oAction == 0 then
+        obj_set_model_extended(o, E_MODEL_BLUE_COIN)
+    elseif o.oAction == 1 then
+        o.oNumLootCoins = 5
+        bhv_1up_to_blue_coin(o)
+    end
+    o.oAnimState = o.oTimer%7
+end
+
+local function replace_stationary_1ups(o)
+    if obj_has_behavior_id(o, id_bhv1Up) ~= 0 then
+        spawn_sync_object(id_bhvBlueCoin, E_MODEL_BLUE_COIN, o.oPosX, o.oPosY, o.oPosZ, function (o) end)
+        obj_mark_for_deletion(o)
+    end
+end
+
+---@param o Object
+local function bhv_blue_coin_init(o)
+    o.oInteractType = INTERACT_COIN
+    o.oFlags = o.oFlags | (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
+    o.hitboxRadius = 100
+    o.hitboxHeight = 64
+    o.oDamageOrCoinValue = 5
+    o.oAnimState = -1
+    obj_set_billboard(o)
+    if obj_has_model_extended(o, E_MODEL_1UP) ~= 0 then
+        obj_set_model_extended(o, E_MODEL_BLUE_COIN)
+    end
+
+    network_init_object(o, true, {})
+end
+
+---@param o Object
+local function bhv_blue_coin_loop(o)
+    cur_obj_enable_rendering();
+    cur_obj_become_tangible();
+
+    -- Delete the coin once collected
+    if (o.oInteractStatus & INT_STATUS_INTERACTED ~= 0) then
+        spawn_non_sync_object(id_bhvGoldenCoinSparkles, E_MODEL_SPARKLES, o.oPosX, o.oPosY, o.oPosZ, function (o) end);
+        obj_mark_for_deletion(o);
+    end
+
+    o.oAnimState = o.oTimer%7
+    o.oInteractStatus = 0;
+end
+
+hook_coins_behavior(id_bhv1Up, true, bhv_blue_coin_init, bhv_blue_coin_loop)
+hook_coins_behavior(id_bhv1upWalking, false, nil, bhv_1up_hidden_in_pole_loop)
+hook_coins_behavior(id_bhvHidden1up, false, nil, bhv_1up_hidden_in_pole_loop)
+hook_coins_behavior(id_bhvHidden1upInPole, false, nil, bhv_1up_hidden_in_pole_loop)

@@ -111,7 +111,7 @@ local function level_init()
             end
         end
         
-        spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, (castFloor.x + (nearestObjPos.x or 300))*0.5, (castFloor.y + (nearestObjPos.y or 0))*0.5 + 400, (castFloor.z + (nearestObjPos.z or 300))*0.5, function (o)
+        spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, (castFloor.x + math.clamp(nearestObjPos.x or 300, castFloor.x - 2000, castFloor.x + 2000))*0.5, castFloor.y + 400, (castFloor.z + math.clamp(nearestObjPos.z or 300, castFloor.z - 2000, castFloor.z + 2000))*0.5, function (o)
 
         end)
     end
@@ -122,6 +122,9 @@ local noCountdown = {
     [ACT_READING_NPC_DIALOG] = true,
     [ACT_READING_SIGN] = true,
     [ACT_IN_CANNON] = true,
+    -- New
+    [ACT_TELEPORT_FADE_IN] = true,
+    [ACT_TELEPORT_FADE_OUT] = true,
 }
 
 local function master_cap_update(m)
