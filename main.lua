@@ -1,9 +1,33 @@
 -- name: Better Coins
 -- description: Overhauls the coin collecting expirience to make 100 coin stars fun and satisfying to work towards\n\nMade by: Squishy6094
 
+--[[
+    - Todo:
+        - Purple Switch gives coins
+        - Stomp Toads (5 coins)
+        - 1ups with blue coins
+        - Falling in snow/sand gives 1-3 coins
+        - Pound Pillars should give coins
+        - Make killing all boos spawn coins from Eternal Star
+        - Chairs give 2 coins
+        - Books give blue on wall hit
+        - Bosses spawn coins on despawn
+        - Crazy box bounce gives coins
+        - Bowser Bombs Explode into 5 coins
+        - Vanish disables raycast check
+        - Ground Pounding THI Moutain gives coins
+        - Fix trans star check
+        - Grand Star flings coins EVERYWHERE
+        - Snowman body should give coins when under head
+        - 
+]]
+
 gLevelValues.previewBlueCoins = 1
 gLevelValues.respawnBlueCoinsSwitch = 1
 gLevelValues.hudCapTimer = 1
+gLevelValues.visibleSecrets = 1
+
+gGlobalSyncTable.mouseGrab = false
 
 local starBhvs = {
     id_bhvStar,
@@ -25,9 +49,12 @@ local magnetBhvs = {
     id_bhvHiddenStarTrigger,
 }
 
+local coinRange = 0
+local mouseX = 0
+local mouseY = 0
 local function update()
     local m = gMarioStates[0]
-    local gIndex = network_global_index_from_local(0) + 1
+
     for i = 1, #magnetBhvs do
         local bhvID = magnetBhvs[i]
         if bhvID == nil then
@@ -35,14 +62,39 @@ local function update()
         end
         local o = obj_get_first_with_behavior_id(bhvID)
         while o ~= nil do
-            -- Attract is coin is yours
-            local mN = nearest_mario_state_to_object(o)
-            if (m.playerIndex == mN.playerIndex) and not is_object_being_carried(o) then
-                local dist = vec3f_dist(obj_pos_to_vec3f(o), m.pos)
-                if (dist < (m.flags & MARIO_METAL_CAP ~= 0 and 1200 or 500) or o.oVelY < 0) and o.oVelY <= 0 and (bhvID ~= id_bhvHiddenBlueCoin or o.oAction == HIDDEN_BLUE_COIN_ACT_ACTIVE) then
-                    local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 10).surface ~= nil
-                    if not isWall and not obj_is_in_clam(o) then
-                        carry_object_to_mario(m, o)
+            if not is_object_being_carried(o) then
+                local oPos = obj_pos_to_vec3f(o)
+
+                -- Attract if coin is yours
+                local mN = nearest_mario_state_to_object(o)
+                if (m.playerIndex == mN.playerIndex) then
+                    local dist = vec3f_dist(oPos, m.pos)
+                    coinRange = 400
+                    if m.flags & MARIO_METAL_CAP ~= 0 then
+                        coinRange = coinRange * 3
+                    end
+                    if m.action & ACT_FLAG_FLYING ~= 0 then
+                        coinRange = coinRange *1.25
+                    end
+                    if (dist < coinRange or o.oVelY < 0) and o.oVelY <= 0 and (bhvID ~= id_bhvHiddenBlueCoin or o.oAction == HIDDEN_BLUE_COIN_ACT_ACTIVE) then
+                        local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
+                        if (not isWall and not obj_is_in_clam(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
+                            carry_object_to_mario(m, o)
+                        end
+                    end
+                end
+
+                -- Check Galaxy Controls
+                if gGlobalSyncTable.mouseGrab then
+                    djui_hud_set_resolution(RESOLUTION_N64)
+                    local out = {x = 0, y = 0, z = 0}
+                    djui_hud_world_pos_to_screen_pos(oPos, out)
+                    local mouseDist = math.sqrt((out.x - mouseX)^2 + (out.y - mouseY)^2)
+                    if mouseDist < 10 then
+                        local isWall = collision_find_surface_on_ray(gLakituState.pos.x, gLakituState.pos.y, gLakituState.pos.z, o.oPosX - gLakituState.pos.x, (o.oPosY + 50) - gLakituState.pos.y, o.oPosZ - gLakituState.pos.z, 128).surface ~= nil
+                        if not isWall then
+                            carry_object_to_mario(m, o)
+                        end
                     end
                 end
             end
@@ -74,6 +126,19 @@ local function coin_counter()
 
     hud_set_value(HUD_DISPLAY_COINS, math.round(customCoinHudValue))
     customCoinBelow100 = customCoinHudValue < gLevelValues.coinsRequiredForCoinStar
+
+    -- Mouse
+    djui_hud_set_resolution(RESOLUTION_DJUI)
+    local djuiWidth = djui_hud_get_screen_width()
+    local djuiHeight = djui_hud_get_screen_height()
+    djui_hud_set_resolution(RESOLUTION_N64)
+    if gGlobalSyncTable.mouseGrab then
+        local newMouseX = djui_hud_get_mouse_x() * (djui_hud_get_screen_width()/djuiWidth)
+        local nemMouseY = djui_hud_get_mouse_y() * (djui_hud_get_screen_height()/djuiHeight)
+        djui_hud_render_rect_interpolated(mouseX, mouseY, 16, 16, mouseX, mouseY, 16, 16)
+        mouseX = newMouseX
+        mouseY = nemMouseY
+    end
 end
 
 local saveFile = get_current_save_file_num()

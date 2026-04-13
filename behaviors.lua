@@ -107,6 +107,9 @@ local function bhv_bubble_cannon_init(o)
     local nBombomb = obj_get_nearest_object_with_behavior_id(o, id_bhvBobomb)
     local nBobombBuddy = obj_get_nearest_object_with_behavior_id(o, id_bhvBobombBuddy)
     o.parentObj = vec3f_dist(cannonPos, obj_pos_to_vec3f(nBombomb)) < vec3f_dist(cannonPos, obj_pos_to_vec3f(nBobombBuddy)) and nBombomb or nBobombBuddy
+    if o.parentObj == nBombomb then
+        obj_set_nametag(o.parentObj, "Jim", {r = 50, g = 50, b = 100})
+    end
 end
 
 
@@ -115,6 +118,7 @@ local function bhv_bubble_cannon_explode(o)
     local owner = o.parentObj
     if owner ~= nil and obj_has_behavior_id(owner, id_bhvBobomb) ~= 0 then
         if owner.oAction == BOBOMB_ACT_EXPLODE and owner.oTimer >= 5 then
+            obj_remove_nametag(owner)
             spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
             obj_mark_for_deletion(o)
         end
@@ -213,6 +217,7 @@ end
 
 hook_coins_behavior(id_bhvThwomp, false, thwomp_break_init, thwomp_break_loop)
 hook_coins_behavior(id_bhvThwomp2, false, thwomp_break_init, thwomp_break_loop)
+hook_coins_behavior(id_bhvGrindel, false, thwomp_break_init, thwomp_break_loop)
 
 ---@param o Object
 local function bhv_small_box_kickable_init(o)
@@ -266,6 +271,12 @@ hook_coins_behavior(id_bhvTreasureChestBottom, false, bhv_chest_loot_init, bhv_c
 
 ---@param o Object
 local function breakable_wall_coins(o)
+    if cur_obj_is_any_player_on_platform() ~= 0 and cur_obj_is_mario_ground_pounding_platform() ~= 0 then
+        local m = nearest_mario_state_to_object(o)
+        if (m.flags & MARIO_METAL_CAP ~= 0) then
+            o.oBreakableWallForce = 1
+        end
+    end
     if o.oBreakableWallForce == 1 then
         spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
     end
