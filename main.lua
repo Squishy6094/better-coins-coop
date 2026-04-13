@@ -166,7 +166,7 @@ end
 local function interact(m, o, int)
     if int == INTERACT_COIN then
         if m.capTimer ~= 0 then
-            m.capTimer = m.capTimer + o.oDamageOrCoinValue*20
+            m.capTimer = m.capTimer + o.oDamageOrCoinValue*25
         end
     end
 
