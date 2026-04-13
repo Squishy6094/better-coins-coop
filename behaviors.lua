@@ -316,15 +316,10 @@ local function bhv_1up_hidden_in_pole_loop(o)
     o.oAnimState = o.oTimer%7
 end
 
-local function replace_stationary_1ups(o)
-    if obj_has_behavior_id(o, id_bhv1Up) ~= 0 then
-        spawn_sync_object(id_bhvBlueCoin, E_MODEL_BLUE_COIN, o.oPosX, o.oPosY, o.oPosZ, function (o) end)
-        obj_mark_for_deletion(o)
-    end
-end
-
 ---@param o Object
 local function bhv_blue_coin_init(o)
+    bhv_1up_common_init()
+    o.oMoveAngleYaw = o.oFaceAngleYaw
     o.oInteractType = INTERACT_COIN
     o.oFlags = o.oFlags | (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
     o.hitboxRadius = 100
@@ -354,7 +349,16 @@ local function bhv_blue_coin_loop(o)
     o.oInteractStatus = 0;
 end
 
+local function bhv_moving_blue_coin_capped_loop(o)
+    bhv_moving_blue_coin_loop()
+    if (o.oForwardVel > 40.0) then
+        o.oForwardVel = 40.0
+    end
+    o.oAnimState = o.oTimer%7
+end
+
 hook_coins_behavior(id_bhv1Up, true, bhv_blue_coin_init, bhv_blue_coin_loop)
 hook_coins_behavior(id_bhv1upWalking, false, nil, bhv_1up_hidden_in_pole_loop)
+hook_coins_behavior(id_bhv1upSliding, true, function (o); bhv_blue_coin_init(o); bhv_moving_blue_coin_init() end, bhv_moving_blue_coin_capped_loop)
 hook_coins_behavior(id_bhvHidden1up, false, nil, bhv_1up_hidden_in_pole_loop)
 hook_coins_behavior(id_bhvHidden1upInPole, false, nil, bhv_1up_hidden_in_pole_loop)

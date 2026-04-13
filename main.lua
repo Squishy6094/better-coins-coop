@@ -47,6 +47,8 @@ local magnetBhvs = {
     id_bhvHiddenBlueCoin,
     id_bhvMovingBlueCoin,
     id_bhvHiddenStarTrigger,
+    id_bhv1Up,
+    id_bhv1upSliding,
 }
 
 local coinRange = 0
@@ -204,8 +206,25 @@ local function count_possible_coins()
     --djui_chat_message_create(tostring(areaCoinCount))
 end
 
+local coinSoundCount = 0
+local coinsSounds = {
+    [0] = audio_stream_load("coin1.ogg"),
+    [1] = audio_stream_load("coin2.ogg"),
+    [2] = audio_stream_load("coin3.ogg"),
+    [3] = audio_stream_load("coin4.ogg"),
+}
+
+local function on_coin_sound(sound, pos)
+    if sound == SOUND_GENERAL_COIN then
+        audio_stream_play(coinsSounds[coinSoundCount], true, 10)
+        coinSoundCount = (coinSoundCount + 1)%4
+        return NO_SOUND
+    end
+end
+
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, coin_counter)
 hook_event(HOOK_ALLOW_INTERACT, allow_interact)
 hook_event(HOOK_ON_OBJECT_UNLOAD, object_unload)
 hook_event(HOOK_ON_INTERACT, interact)
+hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
 --hook_event(HOOK_ON_SYNC_VALID, count_possible_coins)
