@@ -112,9 +112,18 @@ local function level_init()
     end
 end
 
+local noCountdown = {
+    [ACT_READING_AUTOMATIC_DIALOG] = true,
+    [ACT_READING_NPC_DIALOG] = true,
+    [ACT_READING_SIGN] = true,
+    [ACT_IN_CANNON] = true,
+}
+
 local function master_cap_update(m)
     if masterCapTimer > 0 then
-        masterCapTimer = math.max(m.capTimer, masterCapTimer) - 1
+        if not noCountdown[m.action] then
+            masterCapTimer = math.max(m.capTimer, masterCapTimer) - 1
+        end
         m.capTimer = masterCapTimer
         if masterCapTimer > 0 then
             m.flags = m.flags | MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP
