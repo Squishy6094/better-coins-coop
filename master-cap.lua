@@ -27,6 +27,7 @@ local function bhv_master_cap_box_loop(o)
     o.oNumLootCoins = 0
     o.hurtboxRadius = 40
     o.hurtboxHeight = 30
+    local nearestM = nearest_mario_state_to_object(o)
 
     if o.oAction == 0 then
         o.oExclamationBoxForce = 0;
@@ -41,8 +42,12 @@ local function bhv_master_cap_box_loop(o)
         end
 
         o.oPosY = math.lerp(o.oPosY, o.oHomeY + math.sin(get_global_timer()/10)*30, 0.1)
+        if nearestM.numCoins > 0 then
+            o.oHomeY = o.oHomeY + o.oVelY
+            o.oVelY = o.oVelY + 1
+        end
 
-        local isNearest = (nearest_mario_state_to_object(o) == gMarioStates[0]);
+        local isNearest = (nearestM == gMarioStates[0]);
         if (o.oExclamationBoxForce ~= 0 or isNearest) then
             if (o.oExclamationBoxForce ~= 0 or (isNearest and cur_obj_was_attacked_or_ground_pounded() ~= 0)) then
                 if (o.oExclamationBoxForce == 0) then
@@ -78,7 +83,7 @@ local function bhv_master_cap_box_loop(o)
         end
     elseif o.oAction == 3 then
         --exclamation_box_spawn_contents(gExclamationBoxContents, o->oBehParams2ndByte);
-        masterCapTimer = gLevelValues.wingCapDuration*0.5
+        masterCapTimer = gLevelValues.wingCapDuration*0.5--(gNetworkPlayers[0].currCourseNum <= 15 and 0.5 or 0.25)
         spawn_mist_particles_variable(0, 0, 46.0);
         spawn_triangle_break_particles(20, 139, 0.3, o.oAnimState);
         create_sound_spawner(SOUND_GENERAL_BREAK_BOX);
@@ -92,7 +97,7 @@ id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, b
 local function level_init()
     local m = gMarioStates[0]
     masterCapTimer = 0
-    if gNetworkPlayers[0].currCourseNum <= 15 and gNetworkPlayers[0].currCourseNum > 0 then
+    if gNetworkPlayers[0].currCourseNum > 0 then
         local castFloor = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
         local nearestObjPos = nil
         for i = 0, NUM_OBJ_LISTS - 1 do
