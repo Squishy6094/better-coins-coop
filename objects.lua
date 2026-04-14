@@ -12,7 +12,7 @@ local function bhv_coin_carry_loop(o)
         return
     end
     local m = gMarioStates[network_local_index_from_global(o.globalPlayerIndex)]
-    if is_player_active(m) == 0 then 
+    if is_player_active(m) == 0 and o.parentObj.oSyncID ~= 0 then 
         m = nearest_mario_state_to_object(o)
         o.globalPlayerIndex = network_global_index_from_local(m.playerIndex)
     end

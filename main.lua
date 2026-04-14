@@ -118,8 +118,9 @@ local customCoinHudValue = 0
 local customCoinBelow100 = true
 local function coin_counter()
     local m = gMarioStates[0]
-    customCoinHudValue = math.min(customCoinHudValue, m.numCoins)
-    customCoinHudValue = math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.3))
+    --[[
+    --customCoinHudValue = math.min(customCoinHudValue, m.numCoins)
+    customCoinHudValue = math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.5))
 
     -- Ensure 100 is successfully hit before couting higher for star
     if customCoinBelow100 then
@@ -128,6 +129,7 @@ local function coin_counter()
 
     hud_set_value(HUD_DISPLAY_COINS, math.round(customCoinHudValue))
     customCoinBelow100 = customCoinHudValue < gLevelValues.coinsRequiredForCoinStar
+    ]]
 
     -- Mouse
     djui_hud_set_resolution(RESOLUTION_DJUI)

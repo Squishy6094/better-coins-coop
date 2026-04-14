@@ -42,12 +42,12 @@ local function bhv_master_cap_box_loop(o)
         end
 
         o.oPosY = math.lerp(o.oPosY, o.oHomeY + math.sin(get_global_timer()/10)*30, 0.1)
-        if nearestM.numCoins > 0 then
+        if nearestM and nearestM.numCoins > 0 then
             o.oHomeY = o.oHomeY + o.oVelY
             o.oVelY = o.oVelY + 1
         end
 
-        local isNearest = (nearestM == gMarioStates[0]);
+        local isNearest = (nearestM ~= nil and nearestM == gMarioStates[0]);
         if (o.oExclamationBoxForce ~= 0 or isNearest) then
             if (o.oExclamationBoxForce ~= 0 or (isNearest and cur_obj_was_attacked_or_ground_pounded() ~= 0)) then
                 if (o.oExclamationBoxForce == 0) then

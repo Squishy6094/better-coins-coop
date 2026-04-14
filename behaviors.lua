@@ -183,30 +183,41 @@ local function thwomp_break_init(o)
 
         "oDorrieGroundPounded",
         "oHealth",
+        "oBooOscillationTimer",
     })
 end
 
 ---@param o Object
 local function thwomp_break_loop(o)
     if cur_obj_is_any_player_on_platform() ~= 0 and cur_obj_is_mario_ground_pounding_platform() ~= 0 then
-        local m = nearest_mario_state_to_object(o)
-        if o.oDorrieGroundPounded == 0 then
-            o.oHealth = math.max(o.oHealth - (m.flags & MARIO_METAL_CAP ~= 0 and 3 or 1), 0)
-            o.oBooOscillationTimer = o.oBooOscillationTimer + 30
-            if o.oHealth > 0 then
-                o.oThwompRandomTimer = o.oThwompRandomTimer + 30
-                spawn_triangle_break_particles(5, 138, 1.0, 4);
-                play_sound_with_freq_scale(SOUND_OBJ_THWOMP, o.header.gfx.cameraToObject, 1 + (5 - o.oHealth)/5*0.3)
-            else
-                obj_spawn_yellow_coins(o, 10)
-                spawn_triangle_break_particles(20, 138, 3.0, 4);
-                play_sound_with_freq_scale(SOUND_OBJ_THWOMP, o.header.gfx.cameraToObject, 0.8)
-                obj_mark_for_deletion(o)
-            end
+        if (o.oSyncID == 0 or sync_object_is_owned_locally(o.oSyncID)) and o.oDorrieGroundPounded == 0 then
+            local m = nearest_mario_state_to_object(o)
             o.oDorrieGroundPounded = 1
+            o.oHealth = math.max(o.oHealth - (m.flags & MARIO_METAL_CAP ~= 0 and 3 or 1), 0)
+            --djui_chat_message_create(tostring(o.oHealth))
+            network_send_object(o, true)
         end
     else
         o.oDorrieGroundPounded = 0
+    end
+    djui_chat_message_create(tostring(o.oDorrieGroundPounded))
+
+
+    if o.oHealth > 0 then
+        if o.oDorrieGroundPounded == 1 then
+            o.oDorrieGroundPounded = 2
+            o.oBooOscillationTimer = o.oBooOscillationTimer + 30
+            o.oThwompRandomTimer = o.oThwompRandomTimer + 30
+            spawn_triangle_break_particles(5, 138, 1.0, 4);
+            play_sound_with_freq_scale(SOUND_OBJ_THWOMP, o.header.gfx.cameraToObject, 1 + (5 - o.oHealth)/5*0.3)
+        end
+    else
+        if sync_object_is_owned_locally(o.oSyncID) then
+            obj_spawn_yellow_coins(o, 10)
+        end
+        spawn_triangle_break_particles(20, 138, 3.0, 4);
+        play_sound_with_freq_scale(SOUND_OBJ_THWOMP, o.header.gfx.cameraToObject, 0.8)
+        obj_mark_for_deletion(o)
     end
 
     if o.oBooOscillationTimer > 0 then
@@ -359,6 +370,7 @@ end
 
 hook_coins_behavior(id_bhv1Up, true, bhv_blue_coin_init, bhv_blue_coin_loop)
 hook_coins_behavior(id_bhv1upWalking, false, nil, bhv_1up_hidden_in_pole_loop)
+hook_coins_behavior(id_bhv1upRunningAway, false, nil, bhv_1up_hidden_in_pole_loop)
 hook_coins_behavior(id_bhv1upSliding, true, function (o); bhv_blue_coin_init(o); bhv_moving_blue_coin_init() end, bhv_moving_blue_coin_capped_loop)
 hook_coins_behavior(id_bhvHidden1up, false, nil, bhv_1up_hidden_in_pole_loop)
 hook_coins_behavior(id_bhvHidden1upInPole, false, nil, bhv_1up_hidden_in_pole_loop)
