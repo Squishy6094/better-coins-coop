@@ -374,3 +374,33 @@ hook_coins_behavior(id_bhv1upRunningAway, false, nil, bhv_1up_hidden_in_pole_loo
 hook_coins_behavior(id_bhv1upSliding, true, function (o); bhv_blue_coin_init(o); bhv_moving_blue_coin_init() end, bhv_moving_blue_coin_capped_loop)
 hook_coins_behavior(id_bhvHidden1up, false, nil, bhv_1up_hidden_in_pole_loop)
 hook_coins_behavior(id_bhvHidden1upInPole, false, nil, bhv_1up_hidden_in_pole_loop)
+
+local function bhv_purple_switch_coins_init(o)
+    o.oNumLootCoins = 3
+    network_init_object(o, true, {
+        "oAction",
+        "oTimer",
+        "oNumLootCoins",
+    })
+end
+
+local function bhv_purple_switch_coins_loop(o)
+    if o.oAction == PURPLE_SWITCH_PRESSED and o.oNumLootCoins > 0 then
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, o.oNumLootCoins, true)
+        o.oNumLootCoins = 0
+        network_send_object(o, true)
+    end
+end
+
+hook_coins_behavior(id_bhvFloorSwitchHardcodedModel, false, bhv_purple_switch_coins_init, bhv_purple_switch_coins_loop)
+hook_coins_behavior(id_bhvFloorSwitchAnimatesObject, false, bhv_purple_switch_coins_init, bhv_purple_switch_coins_loop)
+hook_coins_behavior(id_bhvFloorSwitchHiddenObjects, false, bhv_purple_switch_coins_init, bhv_purple_switch_coins_loop)
+hook_coins_behavior(id_bhvFloorSwitchGrills, false, bhv_purple_switch_coins_init, bhv_purple_switch_coins_loop)
+
+local function bhv_bowser_bomb_explosion_coins_loop(o)
+    if o.oTimer == 4 then
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 15, true)
+    end
+end
+
+hook_coins_behavior(id_bhvBowserBombExplosion, false, nil, bhv_bowser_bomb_explosion_coins_loop)

@@ -96,7 +96,9 @@ id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, b
 
 local function level_init()
     local m = gMarioStates[0]
-    masterCapTimer = 0
+    if obj_get_first_with_behavior_id(id_bhvBowser) == nil then
+        masterCapTimer = 0
+    end
     if gNetworkPlayers[0].currCourseNum > 0 then
         local castFloor = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
         local nearestObjPos = nil

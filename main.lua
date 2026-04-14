@@ -3,9 +3,7 @@
 
 --[[
     - Todo:
-        - Purple Switch gives coins
         - Stomp Toads (5 coins)
-        - 1ups with blue coins
         - Falling in snow/sand gives 1-3 coins
         - Pound Pillars should give coins
         - Make killing all boos spawn coins from Eternal Star
@@ -13,13 +11,9 @@
         - Books give blue on wall hit
         - Bosses spawn coins on despawn
         - Crazy box bounce gives coins
-        - Bowser Bombs Explode into 5 coins
-        - Vanish disables raycast check
         - Ground Pounding THI Moutain gives coins
-        - Fix trans star check
         - Grand Star flings coins EVERYWHERE
-        - Snowman body should give coins when under head
-        - 
+        - Snowman head give coins when reunited with body
 ]]
 
 gLevelValues.previewBlueCoins = 1
@@ -115,21 +109,10 @@ hook_event(HOOK_UPDATE, update)
 -- Updates / Hooks --
 
 local customCoinHudValue = 0
-local customCoinBelow100 = true
 local function coin_counter()
     local m = gMarioStates[0]
-    --[[
-    --customCoinHudValue = math.min(customCoinHudValue, m.numCoins)
-    customCoinHudValue = math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.5))
-
-    -- Ensure 100 is successfully hit before couting higher for star
-    if customCoinBelow100 then
-        customCoinHudValue = math.min(customCoinHudValue, gLevelValues.coinsRequiredForCoinStar)
-    end
-
-    hud_set_value(HUD_DISPLAY_COINS, math.round(customCoinHudValue))
-    customCoinBelow100 = customCoinHudValue < gLevelValues.coinsRequiredForCoinStar
-    ]]
+    customCoinHudValue = math.min(approach_f32(customCoinHudValue, m.numCoins, 1, 1), m.numCoins)
+    hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
 
     -- Mouse
     djui_hud_set_resolution(RESOLUTION_DJUI)
@@ -166,9 +149,33 @@ local function allow_interact(m, o, int)
     end
 end
 
+local coinSoundCount = 0
+local coinSoundCombo = 0
+local coinSoundComboEnd = 0
+local coinsSounds = {
+    [0] = audio_stream_load("coin1.ogg"),
+    [1] = audio_stream_load("coin2.ogg"),
+    [2] = audio_stream_load("coin3.ogg"),
+    [3] = audio_stream_load("coin4.ogg"),
+}
+
 ---@param m MarioState
 local function interact(m, o, int)
     if int == INTERACT_COIN then
+        -- Make Coin Sound
+        local currCoinSound = coinsSounds[coinSoundCount]
+        if get_global_timer() > coinSoundComboEnd then
+            coinSoundCombo = 0
+        else
+            coinSoundCombo = coinSoundCombo + 1
+        end
+                                                    -- Lowest V  V Highest     Coins to Highest V
+        audio_stream_set_frequency(currCoinSound, math.lerp(0.9, 1.5, math.clamp(coinSoundCombo/50, 0, 1)))
+        audio_stream_play(currCoinSound, true, 1.5)
+        coinSoundCount = (coinSoundCount + 1)%4
+        coinSoundComboEnd = get_global_timer() + 90
+
+        -- Up cap timer
         if m.capTimer ~= 0 then
             m.capTimer = m.capTimer + o.oDamageOrCoinValue*25
         end
@@ -208,18 +215,8 @@ local function count_possible_coins()
     --djui_chat_message_create(tostring(areaCoinCount))
 end
 
-local coinSoundCount = 0
-local coinsSounds = {
-    [0] = audio_stream_load("coin1.ogg"),
-    [1] = audio_stream_load("coin2.ogg"),
-    [2] = audio_stream_load("coin3.ogg"),
-    [3] = audio_stream_load("coin4.ogg"),
-}
-
 local function on_coin_sound(sound, pos)
     if sound == SOUND_GENERAL_COIN then
-        audio_stream_play(coinsSounds[coinSoundCount], true, 1.5)
-        coinSoundCount = (coinSoundCount + 1)%4
         return NO_SOUND
     end
 end
