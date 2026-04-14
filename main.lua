@@ -216,7 +216,7 @@ local coinsSounds = {
 
 local function on_coin_sound(sound, pos)
     if sound == SOUND_GENERAL_COIN then
-        audio_stream_play(coinsSounds[coinSoundCount], true, 10)
+        audio_stream_play(coinsSounds[coinSoundCount], true, 1.5)
         coinSoundCount = (coinSoundCount + 1)%4
         return NO_SOUND
     end
