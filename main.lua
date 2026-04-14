@@ -148,8 +148,8 @@ end
 local saveFile = get_current_save_file_num()
 local function obj_is_star_collected(o)
     local starId = o.oBehParams >> 24;
-    local currentLevelStarFlags = save_file_get_star_flags(saveFile - 1, (gLevelValues.useGlobalStarIds and (starId / 7) - 1 or gNetworkPlayers[0].currCourseNum - 1));
-    return (currentLevelStarFlags & (1 << (gLevelValues.useGlobalStarIds and starId % 7 or starId)) ~= 0)
+    local currentLevelStarFlags = save_file_get_star_flags(saveFile - 1, (gLevelValues.useGlobalStarIds ~= 0 and (starId / 7) - 1 or gNetworkPlayers[0].currCourseNum - 1))
+    return (currentLevelStarFlags & (1 << (gLevelValues.useGlobalStarIds ~= 0 and starId % 7 or starId)) ~= 0)
 end
 
 local originalStayInLevel = gServerSettings.stayInLevelAfterStar
