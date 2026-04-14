@@ -105,9 +105,9 @@ local function update()
         end
     end
 
-    --if m.controller.buttonPressed & (D_JPAD) ~= 0 then
-    --    spawn_coin_spawner(m.pos.x, m.pos.y, m.pos.z, 1000, true)
-    --end
+    if m.controller.buttonPressed & (D_JPAD) ~= 0 then
+        spawn_coin_spawner(m.pos.x, m.pos.y, m.pos.z, 1000, true)
+    end
 end
 
 hook_event(HOOK_UPDATE, update)
@@ -119,7 +119,7 @@ local customCoinBelow100 = true
 local function coin_counter()
     local m = gMarioStates[0]
     customCoinHudValue = math.min(customCoinHudValue, m.numCoins)
-    customCoinHudValue = math.lerp(customCoinHudValue, m.numCoins, 0.3)
+    customCoinHudValue = math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.3))
 
     -- Ensure 100 is successfully hit before couting higher for star
     if customCoinBelow100 then
