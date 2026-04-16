@@ -481,3 +481,20 @@ local function bhv_snowmans_head_coins_loop(o)
 end
 
 hook_coins_behavior(id_bhvSnowmansHead, false, bhv_snowmans_head_coins_init, bhv_snowmans_head_coins_loop)
+
+---@param o Object
+local function bhv_water_pillar_init(o)
+    o.oNumLootCoins = gLevelValues.numCoinsToLife
+end
+
+---@param o Object
+local function bhv_water_pillar_loop(o)
+    if o.oAction == 4 and o.oNumLootCoins > 0 then
+        otherWaterPillar = cur_obj_nearest_object_with_behavior(o.behavior)
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, o.oNumLootCoins*0.5, true)
+        spawn_coin_spawner(otherWaterPillar.oPosX, otherWaterPillar.oPosY, otherWaterPillar.oPosZ, o.oNumLootCoins*0.5, true)
+        o.oNumLootCoins = 0
+    end
+end
+
+hook_coins_behavior(id_bhvWaterLevelPillar, false, bhv_water_pillar_init, bhv_water_pillar_loop)

@@ -140,7 +140,7 @@ local function courtyard_condition_loop(o)
         o.oAction = o.oAction + 1     
     else
         if o.oTimer > 60 then
-            spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 100, true)
+            spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 241)
             gGlobalSyncTable.courtyardSecretSolved = true
             obj_mark_for_deletion(o)
         end

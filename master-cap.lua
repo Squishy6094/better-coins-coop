@@ -103,13 +103,17 @@ local function level_init()
         local castFloor = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
         local nearestObjPos = nil
         for i = 0, NUM_OBJ_LISTS - 1 do
-            local o = obj_get_first(i)
-            while o ~= nil do
-                local objPos = obj_pos_to_vec3f(o)
-                if nearestObjPos == nil or vec3f_dist(objPos, castFloor) < vec3f_dist(nearestObjPos, castFloor) then
-                    nearestObjPos = objPos
+            if i ~= OBJ_LIST_PLAYER then
+                local o = obj_get_first(i)
+                while o ~= nil do
+                    if obj_has_model_extended(o, E_MODEL_NONE) == 0 then
+                        local objPos = obj_pos_to_vec3f(o)
+                        if nearestObjPos == nil or vec3f_dist(objPos, castFloor) < vec3f_dist(nearestObjPos, castFloor) then
+                            nearestObjPos = objPos
+                        end
+                    end
+                    o = obj_get_next(o)
                 end
-                o = obj_get_next(o)
             end
         end
         

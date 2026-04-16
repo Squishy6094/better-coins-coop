@@ -218,7 +218,7 @@ local function on_coin_sound(sound, pos)
 end
 
 local function courtyard_secret()
-    if gNetworkPlayers[0].currLevelNum == LEVEL_CASTLE_COURTYARD and not gGlobalSyncTable.courtyardSecretSolved then
+    if gNetworkPlayers[0].currLevelNum == LEVEL_CASTLE_COURTYARD and not gGlobalSyncTable.courtyardSecretSolved and gMarioStates[0].numStars >= 12 then
         if obj_get_first_with_behavior_id(id_bhvCourtyardCondition) == nil then
             spawn_sync_object(id_bhvCourtyardCondition, E_MODEL_NONE, 0, 425, -1735, function (o) end)
         end
