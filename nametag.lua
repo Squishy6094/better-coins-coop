@@ -19,7 +19,7 @@ local objTag = {}
 
 ---@param o Object
 function obj_set_nametag(o, name, color)
-    o.oFlyGuyUnusedJitter = 1
+    --o.oFlyGuyUnusedJitter = 1
     objTag[o] = {
         name = name,
         color = color,
@@ -44,7 +44,7 @@ local function nametags_render()
 
         djui_hud_world_pos_to_screen_pos(pos, out)
 
-        if (not djui_hud_world_pos_to_screen_pos(pos, out) or o.oFlyGuyUnusedJitter == 0) then
+        if (not djui_hud_world_pos_to_screen_pos(pos, out) --[[or o.oFlyGuyUnusedJitter == 0]]) then
             goto continue;
         end
 
@@ -83,4 +83,9 @@ local function nametags_render()
     end
 end
 
+local function level_init()
+    objTag = {}
+end
+
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, nametags_render)
+hook_event(HOOK_ON_LEVEL_INIT, level_init)

@@ -1,4 +1,5 @@
 local masterCapTimer = 0
+local masterCapTotalTimer = 0
 
 ---@param o Object
 local function bhv_master_cap_box_init(o)
@@ -98,6 +99,7 @@ local function level_init()
     local m = gMarioStates[0]
     if obj_get_first_with_behavior_id(id_bhvBowser) == nil then
         masterCapTimer = 0
+        masterCapTotalTimer = 0
     end
     if gNetworkPlayers[0].currCourseNum > 0 then
         local castFloor = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
@@ -117,9 +119,11 @@ local function level_init()
             end
         end
         
-        spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, (castFloor.x + math.clamp(nearestObjPos.x or 300, castFloor.x - 2000, castFloor.x + 2000))*0.5, castFloor.y + 400, (castFloor.z + math.clamp(nearestObjPos.z or 300, castFloor.z - 2000, castFloor.z + 2000))*0.5, function (o)
+        if masterCapTimer <= 0 then
+            spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, (castFloor.x + math.clamp(nearestObjPos.x or 300, castFloor.x - 2000, castFloor.x + 2000))*0.5, castFloor.y + 400, (castFloor.z + math.clamp(nearestObjPos.z or 300, castFloor.z - 2000, castFloor.z + 2000))*0.5, function (o)
 
-        end)
+            end)
+        end
     end
 end
 
@@ -139,6 +143,7 @@ local function master_cap_update(m)
         masterCapTimer = math.max(m.capTimer, masterCapTimer)
         if not noCountdown[m.action] then
             masterCapTimer = masterCapTimer - 1
+            masterCapTotalTimer = masterCapTotalTimer + 1
         end
         m.capTimer = masterCapTimer
         if masterCapTimer > 0 then
@@ -150,11 +155,14 @@ end
 local TEXT_MASTER_CAP = "Collect as many coins as possible!"
 local function hud_render()
     djui_hud_set_resolution(RESOLUTION_N64)
+    djui_hud_set_font(FONT_RECOLOR_HUD)
     local sWidth = djui_hud_get_screen_width()
     local sHeight = djui_hud_get_screen_height()
     if masterCapTimer > 0 then
-        djui_hud_set_font(FONT_RECOLOR_HUD)
-        djui_hud_print_text(TEXT_MASTER_CAP, 10, 10, 1)
+        hud_hide()
+        local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
+        local textScale = math.min(sWidth/(textW + 32), 1)
+        djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (textH + 16 + math.abs(math.sin(masterCapTotalTimer/30))*8)*textScale, textScale)
     end
 end
 
