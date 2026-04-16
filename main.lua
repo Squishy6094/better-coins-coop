@@ -3,17 +3,12 @@
 
 --[[
     - Todo:
-        - Stomp Toads (5 coins)
         - Falling in snow/sand gives 1-3 coins
         - Pound Pillars should give coins
-        - Make killing all boos spawn coins from Eternal Star
-        - Chairs give 2 coins
-        - Books give blue on wall hit
         - Bosses spawn coins on despawn
         - Crazy box bounce gives coins
         - Ground Pounding THI Moutain gives coins
         - Grand Star flings coins EVERYWHERE
-        - Snowman head give coins when reunited with body
 ]]
 
 gLevelValues.previewBlueCoins = 1
@@ -22,6 +17,7 @@ gLevelValues.hudCapTimer = 1
 gLevelValues.visibleSecrets = 1
 
 gGlobalSyncTable.mouseGrab = false
+gGlobalSyncTable.courtyardSecretSolved = false
 
 local starBhvs = {
     id_bhvStar,
@@ -221,9 +217,17 @@ local function on_coin_sound(sound, pos)
     end
 end
 
+local function courtyard_secret()
+    if gNetworkPlayers[0].currLevelNum == LEVEL_CASTLE_COURTYARD and not gGlobalSyncTable.courtyardSecretSolved then
+        if obj_get_first_with_behavior_id(id_bhvCourtyardCondition) == nil then
+            spawn_sync_object(id_bhvCourtyardCondition, E_MODEL_NONE, 0, 425, -1735, function (o) end)
+        end
+    end
+end
+
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, coin_counter)
 hook_event(HOOK_ALLOW_INTERACT, allow_interact)
 hook_event(HOOK_ON_OBJECT_UNLOAD, object_unload)
 hook_event(HOOK_ON_INTERACT, interact)
 hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
---hook_event(HOOK_ON_SYNC_VALID, count_possible_coins)
+hook_event(HOOK_ON_SYNC_VALID, courtyard_secret)

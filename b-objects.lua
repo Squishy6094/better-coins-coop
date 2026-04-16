@@ -15,6 +15,7 @@ local function bhv_coin_carry_loop(o)
     if is_player_active(m) == 0 and o.parentObj.oSyncID ~= 0 then 
         m = nearest_mario_state_to_object(o)
         o.globalPlayerIndex = network_global_index_from_local(m.playerIndex)
+        o.oTimer = 0
     end
 
     o.oPosX = math.lerp(o.oPosX + o.parentObj.oVelX, m.pos.x, math.clamp(o.oTimer^2/800, 0, 1))
@@ -25,9 +26,9 @@ local function bhv_coin_carry_loop(o)
     o.parentObj.oPosX = o.oPosX
     o.parentObj.oPosY = o.oPosY
     o.parentObj.oPosZ = o.oPosZ
-    o.parentObj.oVelX = math.lerp(o.oVelX, 0, 0.6)
-    o.parentObj.oVelY = math.lerp(o.oVelY, 0, 0.6)
-    o.parentObj.oVelZ = math.lerp(o.oVelZ, 0, 0.6)
+    o.parentObj.oVelX = math.lerp(o.oVelX, 0, 0.01)
+    o.parentObj.oVelY = math.lerp(o.oVelY, 0, 0.01)
+    o.parentObj.oVelZ = math.lerp(o.oVelZ, 0, 0.01)
 end
 
 local id_bhvCoinCarry = hook_behavior(nil, OBJ_LIST_LEVEL, true, bhv_coin_carry_init, bhv_coin_carry_loop, "bhvCoinCarry")
@@ -99,3 +100,52 @@ function spawn_coin_spawner(x, y, z, coins, forceYellow)
         o.oAction = forceYellow and 1 or 0
     end)
 end
+
+
+--- @param o Object
+local function courtyard_condition_init(o)
+    o.oBehParams = 1
+    o.oBehParams2ndByte = 1
+    o.oAction = 0
+end
+
+--- @param o Object
+local function courtyard_condition_loop(o)
+    if o.oAction == 0 then
+        local oBoo = obj_get_first_with_behavior_id(id_bhvGhostHuntBoo)
+        local booCount = 0
+        while oBoo ~= nil do
+            booCount = booCount + 1
+            oBoo = obj_get_next_with_same_behavior_id(oBoo)
+        end
+
+        if obj_get_first_with_behavior_id(id_bhvBooWithCage) ~= nil then
+            booCount = booCount + 1
+        end
+
+        if booCount < o.oBehParams and o.oTimer > 30 then
+            o.oBehParams = o.oBehParams - 1
+            if o.oBehParams > 0 then
+                spawn_orange_number(o.oBehParams, 0, 10, 0)
+                play_sound_with_freq_scale(SOUND_MENU_COLLECT_SECRET, gGlobalSoundSource, 1 + (o.oBehParams2ndByte - o.oBehParams)/o.oBehParams2ndByte*0.5)
+            else
+                o.oAction = o.oAction + 1
+            end
+            o.oTimer = 0
+        end
+
+        o.oBehParams = math.max(booCount, o.oBehParams)
+    elseif o.oAction == 1 then
+        play_puzzle_jingle()
+        o.oAction = o.oAction + 1     
+    else
+        if o.oTimer > 60 then
+            spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 100, true)
+            gGlobalSyncTable.courtyardSecretSolved = true
+            obj_mark_for_deletion(o)
+        end
+    end
+    o.oBehParams2ndByte = math.max(o.oBehParams2ndByte, o.oBehParams)
+end
+
+id_bhvCourtyardCondition = hook_behavior(nil, OBJ_LIST_SPAWNER, true, courtyard_condition_init, courtyard_condition_loop, "bhvCourtyardCondition")

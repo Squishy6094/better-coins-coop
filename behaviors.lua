@@ -297,7 +297,7 @@ hook_coins_behavior(id_bhvWfBreakableWallLeft, false, nil, breakable_wall_coins)
 hook_coins_behavior(id_bhvWfBreakableWallRight, false, nil, breakable_wall_coins)
 
 ---@param o Object
-local function boss_death_coins(o)
+local function bhv_boss_death_coins(o)
     -- Assume going invis means they're dead
     if (o.oSyncDeath ~= 0 or o.header.gfx.node.flags & GRAPH_RENDER_INVISIBLE ~= 0) and o.oCoinUnk110 == 0 then
         spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 15, true)
@@ -305,9 +305,9 @@ local function boss_death_coins(o)
     end
 end
 
-hook_coins_behavior(id_bhvKingBobomb, false, nil, boss_death_coins)
-hook_coins_behavior(id_bhvWhompKingBoss, false, nil, boss_death_coins)
-hook_coins_behavior(id_bhvEyerokHand, false, nil, boss_death_coins)
+hook_coins_behavior(id_bhvKingBobomb, false, nil, bhv_boss_death_coins)
+hook_coins_behavior(id_bhvWhompKingBoss, false, nil, bhv_boss_death_coins)
+hook_coins_behavior(id_bhvEyerokHand, false, nil, bhv_boss_death_coins)
 
 ---@param o Object
 local function bhv_1up_to_blue_coin(o)
@@ -360,6 +360,7 @@ local function bhv_blue_coin_loop(o)
     o.oInteractStatus = 0;
 end
 
+---@param o Object
 local function bhv_moving_blue_coin_capped_loop(o)
     bhv_moving_blue_coin_loop()
     if (o.oForwardVel > 40.0) then
@@ -375,6 +376,7 @@ hook_coins_behavior(id_bhv1upSliding, true, function (o); bhv_blue_coin_init(o);
 hook_coins_behavior(id_bhvHidden1up, false, nil, bhv_1up_hidden_in_pole_loop)
 hook_coins_behavior(id_bhvHidden1upInPole, false, nil, bhv_1up_hidden_in_pole_loop)
 
+---@param o Object
 local function bhv_purple_switch_coins_init(o)
     o.oNumLootCoins = 3
     network_init_object(o, true, {
@@ -384,6 +386,7 @@ local function bhv_purple_switch_coins_init(o)
     })
 end
 
+---@param o Object
 local function bhv_purple_switch_coins_loop(o)
     if o.oAction == PURPLE_SWITCH_PRESSED and o.oNumLootCoins > 0 then
         spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, o.oNumLootCoins, true)
@@ -397,6 +400,7 @@ hook_coins_behavior(id_bhvFloorSwitchAnimatesObject, false, bhv_purple_switch_co
 hook_coins_behavior(id_bhvFloorSwitchHiddenObjects, false, bhv_purple_switch_coins_init, bhv_purple_switch_coins_loop)
 hook_coins_behavior(id_bhvFloorSwitchGrills, false, bhv_purple_switch_coins_init, bhv_purple_switch_coins_loop)
 
+---@param o Object
 local function bhv_bowser_bomb_explosion_coins_loop(o)
     if o.oTimer == 4 then
         spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 15, true)
@@ -404,3 +408,76 @@ local function bhv_bowser_bomb_explosion_coins_loop(o)
 end
 
 hook_coins_behavior(id_bhvBowserBombExplosion, false, nil, bhv_bowser_bomb_explosion_coins_loop)
+
+---@param o Object
+local function bhv_bookend_death_coins(o)
+    if o.oNumLootCoins == 0 and o.oMoveFlags & (OBJ_MOVE_MASK_ON_GROUND | OBJ_MOVE_HIT_WALL) ~= 0 then
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 5)
+        o.oNumLootCoins = -1
+    end
+end
+
+hook_coins_behavior(id_bhvFlyingBookend, false, nil, bhv_bookend_death_coins)
+
+---@param o Object
+local function bhv_haunted_chair_coin_init(o)
+    network_init_object(o, true, {
+        "oFaceAnglePitch",
+        "oFaceAngleRoll",
+        "oFaceAngleYaw",
+        "oHauntedChairUnk104",
+        "oHauntedChairUnkF4",
+        "oHauntedChairUnkF8",
+        "oHauntedChairUnkFC",
+        "oMoveAnglePitch",
+        "oMoveAngleYaw",
+
+        "oCoinUnk110",
+        "oMarioBurnTimer",
+    })
+    o.oMarioBurnTimer = 0
+end
+
+---@param o Object
+local function bhv_haunted_chair_coin_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    if o.oAction == 0 or o.oMarioBurnTimer ~= 0 or m == nil then return end
+    if m.interactObj == o then
+        o.oMarioBurnTimer = 1
+        play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.5)
+        if o.oSyncID ~= 0 then
+            network_send_object(o, true)
+        end
+        return
+    end
+    
+    if o.oTimer >= 70 and o.oMoveFlags & (OBJ_MOVE_MASK_ON_GROUND | OBJ_MOVE_HIT_WALL) ~= 0 then
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 2)
+        o.oMarioBurnTimer = 1
+        if o.oSyncID ~= 0 then
+            network_send_object(o, true)
+        end
+    end
+end
+
+hook_coins_behavior(id_bhvHauntedChair, false, bhv_haunted_chair_coin_init, bhv_haunted_chair_coin_loop)
+
+---@param o Object
+local function bhv_snowmans_head_coins_init(o)
+    o.oNumLootCoins = 15
+    network_init_object(o, true, {
+        "oAction",
+        "oNumLootCoins",
+    })
+end
+
+---@param o Object
+local function bhv_snowmans_head_coins_loop(o)
+    if o.oAction == 4 and o.oNumLootCoins > 0 then
+        spawn_coin_spawner(o.oPosX, o.oPosY + o.hitboxHeight, o.oPosZ, o.oNumLootCoins, true)
+        o.oNumLootCoins = 0
+        network_send_object(o, true)
+    end
+end
+
+hook_coins_behavior(id_bhvSnowmansHead, false, bhv_snowmans_head_coins_init, bhv_snowmans_head_coins_loop)
