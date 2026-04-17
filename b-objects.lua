@@ -20,25 +20,32 @@ local function bhv_coin_carry_loop(o)
         o.oTimer = 0
     end
 
+    local velLerp = math.clamp(o.oTimer^2/800, 0, 1)
     local targetPos = {
-        x = m.pos.x + m.vel.x,
-        y = m.pos.y + m.vel.y + 70,
-        z = m.pos.z + m.vel.z,
+        x = m.pos.x + m.vel.x*velLerp,
+        y = m.pos.y + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y*velLerp or 0) + 70,
+        z = m.pos.z + m.vel.z*velLerp,
     }
 
     -- Make objs circle mario when uninteractable
-    if m.action & ACT_GROUP_CUTSCENE ~= 0 then
+    if m.action & ACT_FLAG_INTANGIBLE ~= 0 then
         local total, curr = count_carrier_objects(o)
         local angle = 0x10000*((curr - 1)/total) + get_global_timer()*0x200
         targetPos.x = targetPos.x + sins(angle)*250
         targetPos.z = targetPos.z + coss(angle)*250
-        o.oTimer = math.min(o.oTimer, 10)
+        o.oTimer = math.min(o.oTimer, math.sqrt(800))
         o.parentObj.oTimer = o.parentObj.oTimer - 1
+        o.oAction = 1
+    else
+        if o.oAction == 1 then
+            velLerp = 0
+            o.oAction = 0
+        end
     end
 
-    o.oPosX = math.lerp(o.oPosX + o.parentObj.oVelX, targetPos.x, math.clamp(o.oTimer^2/800, 0, 1))
-    o.oPosY = math.lerp(o.oPosY + o.parentObj.oVelY, targetPos.y, math.clamp(o.oTimer^2/800, 0, 1))
-    o.oPosZ = math.lerp(o.oPosZ + o.parentObj.oVelZ, targetPos.z, math.clamp(o.oTimer^2/800, 0, 1))
+    o.oPosX = math.lerp(o.oPosX + o.parentObj.oVelX, targetPos.x, velLerp)
+    o.oPosY = math.lerp(o.oPosY + o.parentObj.oVelY, targetPos.y, velLerp)
+    o.oPosZ = math.lerp(o.oPosZ + o.parentObj.oVelZ, targetPos.z, velLerp)
 
     -- Update Parent Obj
     o.parentObj.oPosX = o.oPosX

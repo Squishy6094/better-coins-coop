@@ -6,12 +6,11 @@
         - Falling in snow/sand gives 1-3 coins
         - Pound Pillars should give coins
         - Bosses spawn coins on despawn
-        - Ground Pounding THI Moutain gives coins
-        - Grand Star flings coins EVERYWHERE
 
         - Big Goombas always give blues
         - Big Plants give blues
         - is_in_box func
+        - Use secret parent code for hidden 1ups
 ]]
 
 gLevelValues.previewBlueCoins = 1
@@ -72,7 +71,7 @@ local function update()
                     local dist = vec3f_dist(oPos, m.pos)
                     if (dist < coinRange or o.oVelY < 0) and o.oVelY <= 0 and (bhvID ~= id_bhvHiddenBlueCoin or o.oAction == HIDDEN_BLUE_COIN_ACT_ACTIVE) then
                         local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
-                        if (not isWall and not obj_is_in_clam(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
+                        if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
                             carry_object_to_mario(m, o)
                         end
                     end

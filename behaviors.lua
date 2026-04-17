@@ -295,19 +295,6 @@ hook_coins_behavior(id_bhvWfBreakableWallLeft, false, nil, breakable_wall_coins)
 hook_coins_behavior(id_bhvWfBreakableWallRight, false, nil, breakable_wall_coins)
 
 ---@param o Object
-local function bhv_boss_death_coins(o)
-    -- Assume going invis means they're dead
-    if (o.oSyncDeath ~= 0 or o.header.gfx.node.flags & GRAPH_RENDER_INVISIBLE ~= 0) and o.oCoinUnk110 == 0 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 15, true)
-        o.oCoinUnk110 = 1
-    end
-end
-
-hook_coins_behavior(id_bhvKingBobomb, false, nil, bhv_boss_death_coins)
-hook_coins_behavior(id_bhvWhompKingBoss, false, nil, bhv_boss_death_coins)
-hook_coins_behavior(id_bhvEyerokHand, false, nil, bhv_boss_death_coins)
-
----@param o Object
 local function bhv_1up_to_blue_coin(o)
     o.oNumLootCoins = 5
     cur_obj_spawn_loot_blue_coin()
@@ -443,18 +430,14 @@ local function bhv_haunted_chair_coin_loop(o)
     if m.interactObj == o then
         o.oMarioBurnTimer = 1
         play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.5)
-        if o.oSyncID ~= 0 then
-            network_send_object(o, true)
-        end
+        network_send_object(o, true)
         return
     end
     
     if o.oTimer >= 70 and o.oMoveFlags & (OBJ_MOVE_MASK_ON_GROUND | OBJ_MOVE_HIT_WALL) ~= 0 then
         spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 2)
         o.oMarioBurnTimer = 1
-        if o.oSyncID ~= 0 then
-            network_send_object(o, true)
-        end
+        network_send_object(o, true)
     end
 end
 
@@ -504,8 +487,16 @@ local function bhv_secret_follow_coin_loop(o)
         o.oPosY = o.parentObj.oPosY
         o.oPosZ = o.parentObj.oPosZ
 
-        if o.parentObj.activeFlags == ACTIVE_FLAG_DEACTIVATED then
-            o.activeFlags = ACTIVE_FLAG_DEACTIVATED
+        o.oVelX = o.parentObj.oVelX
+        o.oVelY = o.parentObj.oVelY
+        o.oVelZ = o.parentObj.oVelZ
+
+        if o.parentObj.activeFlags == ACTIVE_FLAG_DEACTIVATED and sync_object_is_owned_locally(o.oSyncID) then
+            local oCarry = carry_object_to_mario(gMarioStates[0], o)
+            if oCarry ~= nil then
+                oCarry.oTimer = math.sqrt(800)
+            end
+            network_send_object(o, true)
         end
     else
         if o.oTimer < 5 then
@@ -518,6 +509,7 @@ local function bhv_secret_follow_coin_loop(o)
 end
 
 hook_coins_behavior(id_bhvHiddenStarTrigger, false, nil, bhv_secret_follow_coin_loop)
+hook_coins_behavior(id_bhvHidden1upTrigger, false, nil, bhv_secret_follow_coin_loop)
 
 ---@param o Object
 local function bhv_thi_pound_coins_init(o)
@@ -539,3 +531,58 @@ local function bhv_thi_pound_coins_loop(o)
 end
 
 hook_coins_behavior(id_bhvThiTinyIslandTop, false, bhv_thi_pound_coins_init, bhv_thi_pound_coins_loop)
+
+local function bhv_king_bobomb_coins_loop(o)
+    if (o.oAction == 6 or o.oAction == 7) and o.oTimer == 0 then
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 5, true)
+    end
+end
+
+hook_coins_behavior(id_bhvKingBobomb, false, nil, bhv_king_bobomb_coins_loop)
+
+local function bhv_king_whomp_coins_loop(o)
+    djui_chat_message_create(tostring(o.oAction))
+    if o.oAction == 6 or o.oAction == 8 then
+        if o.oTimer == 0 then
+            o.oNumLootCoins = 5
+        else
+            if cur_obj_is_mario_ground_pounding_platform() ~= 0 and o.oNumLootCoins > 0 then
+                local marioState = nearest_mario_state_to_object(o);
+                if (marioState) then
+                    spawn_coin_spawner(marioState.pos.x, marioState.pos.y, marioState.pos.z, 5, true)
+                end
+                o.oNumLootCoins = 0
+            end
+        end
+    end
+end
+
+hook_coins_behavior(id_bhvWhompKingBoss, false, nil, bhv_king_whomp_coins_loop)
+
+local function bhv_big_boo_coins_loop(o)
+    if o.oAction == 3 and o.oTimer == 1 then
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 5, true)
+    end
+end
+
+hook_coins_behavior(id_bhvBalconyBigBoo, false, nil, bhv_big_boo_coins_loop)
+hook_coins_behavior(id_bhvGhostHuntBigBoo, false, nil, bhv_big_boo_coins_loop)
+hook_coins_behavior(id_bhvMerryGoRoundBigBoo, false, nil, bhv_big_boo_coins_loop)
+
+local function bhv_big_bully_coins(o)
+    if o.oAction == BULLY_ACT_LAVA_DEATH and o.oTimer == 1 then
+        spawn_coin_spawner(o.oPosX, o.oPosY + 310, o.oPosZ, 10, true)
+    end
+end
+
+hook_coins_behavior(id_bhvBigBully, false, nil, bhv_big_bully_coins)
+hook_coins_behavior(id_bhvBigBullyWithMinions, false, nil, bhv_big_bully_coins)
+hook_coins_behavior(id_bhvBigChillBully, false, nil, bhv_big_bully_coins)
+
+local function bhv_eyerok_coins(o)
+    if (o.oAction == EYEROK_HAND_ACT_ATTACKED or o.oAction == EYEROK_HAND_ACT_DIE) and o.oTimer == 1 then
+        spawn_coin_spawner(o.oPosX + sins(o.oFaceAngleYaw)*100, o.oPosY, o.oPosZ + coss(o.oFaceAngleYaw)*100, 5, true)
+    end
+end
+
+hook_coins_behavior(id_bhvEyerokHand, false, nil, bhv_eyerok_coins)
