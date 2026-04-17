@@ -1,7 +1,9 @@
 --- @param o Object
 local function bhv_coin_carry_init(o)
     o.oFlags = o.oFlags | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO
-    network_init_object(o, true, {})
+    if o.oSyncID ~= 0 then
+        network_init_object(o, true, {})
+    end
 end
 
 --- @param o Object
@@ -18,17 +20,33 @@ local function bhv_coin_carry_loop(o)
         o.oTimer = 0
     end
 
-    o.oPosX = math.lerp(o.oPosX + o.parentObj.oVelX, m.pos.x, math.clamp(o.oTimer^2/800, 0, 1))
-    o.oPosY = math.lerp(o.oPosY + o.parentObj.oVelY, m.pos.y + 70, math.clamp(o.oTimer^2/800, 0, 1))
-    o.oPosZ = math.lerp(o.oPosZ + o.parentObj.oVelZ, m.pos.z, math.clamp(o.oTimer^2/800, 0, 1))
+    local targetPos = {
+        x = m.pos.x,
+        y = m.pos.y + 70,
+        z = m.pos.z,
+    }
+
+    -- Make objs circle mario when uninteractable
+    if m.action & ACT_GROUP_CUTSCENE ~= 0 then
+        local total, curr = count_carrier_objects(o)
+        local angle = 0x10000*((curr - 1)/total) + get_global_timer()*0x200
+        targetPos.x = targetPos.x + sins(angle)*250
+        targetPos.z = targetPos.z + coss(angle)*250
+        o.oTimer = math.min(o.oTimer, 10)
+        o.parentObj.oTimer = o.parentObj.oTimer - 1
+    end
+
+    o.oPosX = math.lerp(o.oPosX + o.parentObj.oVelX, targetPos.x, math.clamp(o.oTimer^2/800, 0, 1))
+    o.oPosY = math.lerp(o.oPosY + o.parentObj.oVelY, targetPos.y, math.clamp(o.oTimer^2/800, 0, 1))
+    o.oPosZ = math.lerp(o.oPosZ + o.parentObj.oVelZ, targetPos.z, math.clamp(o.oTimer^2/800, 0, 1))
 
     -- Update Parent Obj
     o.parentObj.oPosX = o.oPosX
     o.parentObj.oPosY = o.oPosY
     o.parentObj.oPosZ = o.oPosZ
-    o.parentObj.oVelX = math.lerp(o.oVelX, 0, 0.01)
-    o.parentObj.oVelY = math.lerp(o.oVelY, 0, 0.01)
-    o.parentObj.oVelZ = math.lerp(o.oVelZ, 0, 0.01)
+    o.parentObj.oVelX = approach_f32(o.oVelX, 0, 1, 1)
+    o.parentObj.oVelY = approach_f32(o.oVelY, -o.parentObj.oGravity, 1, 1)
+    o.parentObj.oVelZ = approach_f32(o.oVelZ, 0, 1, 1)
 end
 
 local id_bhvCoinCarry = hook_behavior(nil, OBJ_LIST_LEVEL, true, bhv_coin_carry_init, bhv_coin_carry_loop, "bhvCoinCarry")
@@ -37,8 +55,9 @@ local id_bhvCoinCarry = hook_behavior(nil, OBJ_LIST_LEVEL, true, bhv_coin_carry_
 --- @param o Object
 function carry_object_to_mario(m, o)
     local gIndex = network_global_index_from_local(m.playerIndex)
+    local spawn_func = o.oSyncID ~= 0 and spawn_sync_object or spawn_non_sync_object
     --- @param oCarry Object
-    return spawn_sync_object(id_bhvCoinCarry, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(oCarry)
+    return spawn_func(id_bhvCoinCarry, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(oCarry)
         oCarry.globalPlayerIndex = gIndex
         oCarry.parentObj = o
     end)
@@ -55,6 +74,21 @@ function is_object_being_carried(o)
         oCarry = obj_get_next_with_same_behavior_id(oCarry)
     end
     return carried
+end
+
+function count_carrier_objects(oTarget)
+    local totalCount = 0
+    local objCount = 0
+    local oCarry = obj_get_first_with_behavior_id(id_bhvCoinCarry)
+    while oCarry ~= nil do
+        totalCount = totalCount + 1
+        if oTarget == oCarry then
+            objCount = totalCount
+        end
+
+        oCarry = obj_get_next_with_same_behavior_id(oCarry)
+    end
+    return totalCount, objCount
 end
 
 --- @param o Object

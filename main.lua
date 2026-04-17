@@ -47,6 +47,14 @@ local mouseY = 0
 local function update()
     local m = gMarioStates[0]
 
+    coinRange = 400 + math.sqrt(m.vel.x^2 + m.vel.y^2 + m.vel.z^2)
+    if m.flags & MARIO_METAL_CAP ~= 0 then
+        coinRange = coinRange * 3
+    end
+    if m.action & (ACT_FLAG_FLYING | ACT_FLAG_SWIMMING | ACT_FLAG_RIDING_SHELL) ~= 0 then
+        coinRange = coinRange * 1.25
+    end
+
     for i = 1, #magnetBhvs do
         local bhvID = magnetBhvs[i]
         if bhvID == nil then
@@ -61,13 +69,6 @@ local function update()
                 local mN = nearest_mario_state_to_object(o)
                 if (m.playerIndex == mN.playerIndex) then
                     local dist = vec3f_dist(oPos, m.pos)
-                    coinRange = 400
-                    if m.flags & MARIO_METAL_CAP ~= 0 then
-                        coinRange = coinRange * 3
-                    end
-                    if m.action & ACT_FLAG_FLYING ~= 0 then
-                        coinRange = coinRange *1.25
-                    end
                     if (dist < coinRange or o.oVelY < 0) and o.oVelY <= 0 and (bhvID ~= id_bhvHiddenBlueCoin or o.oAction == HIDDEN_BLUE_COIN_ACT_ACTIVE) then
                         local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
                         if (not isWall and not obj_is_in_clam(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
@@ -194,6 +195,12 @@ local function object_unload(o)
     if obj_has_behavior_id(o, id_bhvCelebrationStar) ~= 0 then
         spawn_mist_from_global()
         spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
+        return
+    end
+
+    if obj_has_behavior_id(o, id_bhvGrandStar) ~= 0 then
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
+        return
     end
 end
 

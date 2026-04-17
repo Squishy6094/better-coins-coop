@@ -120,7 +120,7 @@ local function level_init()
         end
         
         if masterCapTimer <= 0 then
-            spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, (castFloor.x + math.clamp(nearestObjPos.x or 300, castFloor.x - 2000, castFloor.x + 2000))*0.5, castFloor.y + 400, (castFloor.z + math.clamp(nearestObjPos.z or 300, castFloor.z - 2000, castFloor.z + 2000))*0.5, function (o)
+            spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, (castFloor.x + math.clamp(nearestObjPos and nearestObjPos.x or 300, castFloor.x - 2000, castFloor.x + 2000))*0.5, castFloor.y + 400, (castFloor.z + math.clamp(nearestObjPos and nearestObjPos.z or 300, castFloor.z - 2000, castFloor.z + 2000))*0.5, function (o)
 
             end)
         end
