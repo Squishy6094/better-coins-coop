@@ -194,13 +194,11 @@ local function thwomp_break_loop(o)
             local m = nearest_mario_state_to_object(o)
             o.oDorrieGroundPounded = 1
             o.oHealth = math.max(o.oHealth - (m.flags & MARIO_METAL_CAP ~= 0 and 3 or 1), 0)
-            --djui_chat_message_create(tostring(o.oHealth))
             network_send_object(o, true)
         end
     else
         o.oDorrieGroundPounded = 0
     end
-    djui_chat_message_create(tostring(o.oDorrieGroundPounded))
 
 
     if o.oHealth > 0 then
@@ -498,3 +496,20 @@ local function bhv_water_pillar_loop(o)
 end
 
 hook_coins_behavior(id_bhvWaterLevelPillar, false, bhv_water_pillar_init, bhv_water_pillar_loop)
+
+local function bhv_secret_follow_coin_loop(o)
+    if o.parentObj ~= nil and obj_has_behavior_id(o.parentObj, id_bhvYellowCoin) ~= 0 then
+        o.oPosX = o.parentObj.oPosX
+        o.oPosY = o.parentObj.oPosY
+        o.oPosZ = o.parentObj.oPosZ
+    else
+        if o.oTimer < 5 then
+            local oCoin = obj_get_nearest_object_with_behavior_id(o, id_bhvYellowCoin)
+            if oCoin ~= nil and vec3f_dist(obj_pos_to_vec3f(o), obj_pos_to_vec3f(oCoin)) < 100 then
+                o.parentObj = oCoin
+            end
+        end
+    end
+end
+
+hook_coins_behavior(id_bhvHiddenStarTrigger, false, nil, bhv_secret_follow_coin_loop)

@@ -14,7 +14,6 @@
 gLevelValues.previewBlueCoins = 1
 gLevelValues.respawnBlueCoinsSwitch = 1
 gLevelValues.hudCapTimer = 1
-gLevelValues.visibleSecrets = 1
 
 gGlobalSyncTable.mouseGrab = false
 gGlobalSyncTable.courtyardSecretSolved = false
@@ -36,7 +35,6 @@ local magnetBhvs = {
     id_bhvMrIBlueCoin,
     id_bhvHiddenBlueCoin,
     id_bhvMovingBlueCoin,
-    id_bhvHiddenStarTrigger,
     id_bhv1Up,
     id_bhv1upSliding,
 }

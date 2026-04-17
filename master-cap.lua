@@ -93,7 +93,7 @@ local function bhv_master_cap_box_loop(o)
     end
 end
 
-id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, bhv_master_cap_box_init, bhv_master_cap_box_loop)
+id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, bhv_master_cap_box_init, bhv_master_cap_box_loop, "bhvMasterCapBox")
 
 local function level_init()
     local m = gMarioStates[0]
@@ -108,7 +108,7 @@ local function level_init()
             if i ~= OBJ_LIST_PLAYER then
                 local o = obj_get_first(i)
                 while o ~= nil do
-                    if obj_has_model_extended(o, E_MODEL_NONE) == 0 then
+                    if obj_has_model_extended(o, E_MODEL_NONE) == 0 and (m.waterLevel == nil or o.oPosY > m.waterLevel) then
                         local objPos = obj_pos_to_vec3f(o)
                         if nearestObjPos == nil or vec3f_dist(objPos, castFloor) < vec3f_dist(nearestObjPos, castFloor) then
                             nearestObjPos = objPos
@@ -119,7 +119,7 @@ local function level_init()
             end
         end
         
-        if masterCapTimer <= 0 then
+        if masterCapTimer <= 0 and m.numCoins <= 0 then
             spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, (castFloor.x + math.clamp(nearestObjPos and nearestObjPos.x or 300, castFloor.x - 2000, castFloor.x + 2000))*0.5, castFloor.y + 400, (castFloor.z + math.clamp(nearestObjPos and nearestObjPos.z or 300, castFloor.z - 2000, castFloor.z + 2000))*0.5, function (o)
 
             end)
