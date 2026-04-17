@@ -159,10 +159,10 @@ local function hud_render()
     local sWidth = djui_hud_get_screen_width()
     local sHeight = djui_hud_get_screen_height()
     if masterCapTimer > 0 then
-        hud_hide()
+        --hud_hide()
         local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
         local textScale = math.min(sWidth/(textW + 32), 1)
-        djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (textH + 16 + math.abs(math.sin(masterCapTotalTimer/30))*8)*textScale, textScale)
+        djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (32 + math.abs(math.sin(masterCapTotalTimer/30))*8)*textScale, textScale)
     end
 end
 

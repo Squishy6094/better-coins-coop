@@ -409,7 +409,7 @@ hook_coins_behavior(id_bhvBowserBombExplosion, false, nil, bhv_bowser_bomb_explo
 
 ---@param o Object
 local function bhv_bookend_death_coins(o)
-    if o.oNumLootCoins == 0 and o.oMoveFlags & (OBJ_MOVE_MASK_ON_GROUND | OBJ_MOVE_HIT_WALL) ~= 0 then
+    if o.oNumLootCoins == 0 and o.oMoveFlags & (OBJ_MOVE_MASK_ON_GROUND | OBJ_MOVE_HIT_WALL) ~= 0 and o.oDamageOrCoinValue == 2 then
         spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 5)
         o.oNumLootCoins = -1
     end
@@ -497,11 +497,16 @@ end
 
 hook_coins_behavior(id_bhvWaterLevelPillar, false, bhv_water_pillar_init, bhv_water_pillar_loop)
 
+---@param o Object
 local function bhv_secret_follow_coin_loop(o)
     if o.parentObj ~= nil and obj_has_behavior_id(o.parentObj, id_bhvYellowCoin) ~= 0 then
         o.oPosX = o.parentObj.oPosX
         o.oPosY = o.parentObj.oPosY
         o.oPosZ = o.parentObj.oPosZ
+
+        if o.parentObj.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+            o.activeFlags = ACTIVE_FLAG_DEACTIVATED
+        end
     else
         if o.oTimer < 5 then
             local oCoin = obj_get_nearest_object_with_behavior_id(o, id_bhvYellowCoin)
@@ -513,3 +518,24 @@ local function bhv_secret_follow_coin_loop(o)
 end
 
 hook_coins_behavior(id_bhvHiddenStarTrigger, false, nil, bhv_secret_follow_coin_loop)
+
+---@param o Object
+local function bhv_thi_pound_coins_init(o)
+    o.oNumLootCoins = 5
+    network_init_object(o, true, {
+        "oAction",
+        "oPrevAction",
+        "oTimer",
+        "oNumLootCoins",
+    })
+end
+
+---@param o Object
+local function bhv_thi_pound_coins_loop(o)
+    if o.oAction > 0 and o.oNumLootCoins > 0 then
+        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, o.oNumLootCoins)
+        o.oNumLootCoins = 0
+    end
+end
+
+hook_coins_behavior(id_bhvThiTinyIslandTop, false, bhv_thi_pound_coins_init, bhv_thi_pound_coins_loop)

@@ -21,9 +21,9 @@ local function bhv_coin_carry_loop(o)
     end
 
     local targetPos = {
-        x = m.pos.x,
-        y = m.pos.y + 70,
-        z = m.pos.z,
+        x = m.pos.x + m.vel.x,
+        y = m.pos.y + m.vel.y + 70,
+        z = m.pos.z + m.vel.z,
     }
 
     -- Make objs circle mario when uninteractable
@@ -102,7 +102,7 @@ end
 local function coin_spawner_loop(o)
     if o.oNumLootCoins > 0 then
         if sync_object_is_owned_locally(o.oSyncID) then
-            if o.oNumLootCoins >= 5 and o.oAction == 0 and math.random() > 0.25 then
+            if o.oNumLootCoins >= 5 and o.oAction == 0 and (math.random() > 0.25 or o.oNumLootCoins == 5) then
                 cur_obj_spawn_loot_blue_coin();
                 o.oNumLootCoins = o.oNumLootCoins - 5
                 network_send_object(o, false)

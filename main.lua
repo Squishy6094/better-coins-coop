@@ -6,9 +6,12 @@
         - Falling in snow/sand gives 1-3 coins
         - Pound Pillars should give coins
         - Bosses spawn coins on despawn
-        - Crazy box bounce gives coins
         - Ground Pounding THI Moutain gives coins
         - Grand Star flings coins EVERYWHERE
+
+        - Big Goombas always give blues
+        - Big Plants give blues
+        - is_in_box func
 ]]
 
 gLevelValues.previewBlueCoins = 1
