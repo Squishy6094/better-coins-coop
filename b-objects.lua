@@ -1,9 +1,7 @@
 --- @param o Object
 local function bhv_coin_carry_init(o)
     o.oFlags = o.oFlags | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO
-    if o.oSyncID ~= 0 then
-        network_init_object(o, true, {})
-    end
+    network_init_object(o, true, {})
 end
 
 --- @param o Object

@@ -32,9 +32,18 @@ function obj_is_in_container(o)
     return false
 end
 
+-- Automatically check for if the objects is synced
+
+local og_network_init_object = network_init_object
+function network_init_object(object, standardSync, fieldTable)
+    if object.oSyncID ~= 0 then
+        return og_network_init_object(object, standardSync, fieldTable)
+    end
+end
+
 local og_network_send_object = network_send_object
-function network_send_object(o, reliable)
-    if o.oSyncID ~= 0 then
-        return og_network_send_object(o, reliable)
+function network_send_object(object, reliable)
+    if object.oSyncID ~= 0 then
+        return og_network_send_object(object, reliable)
     end
 end

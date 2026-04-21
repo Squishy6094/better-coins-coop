@@ -38,7 +38,7 @@ end
 hook_coins_behavior(id_bhvMoneybag, false, bhv_moneybag_set_coins, bhv_moneybag_squirt_jump)
 hook_coins_behavior(id_bhvMoneybagHidden, false, bhv_moneybag_set_coins, nil)
 
-
+--[[
 ---@param o Object
 local function bhv_message_panel_set_coins(o)
     o.oCoinUnk110 = 1
@@ -59,6 +59,7 @@ end
 
 hook_coins_behavior(id_bhvMessagePanel, false, bhv_message_panel_set_coins, bhv_message_panel_reward)
 hook_coins_behavior(id_bhvSignOnWall, false, bhv_message_panel_set_coins, bhv_message_panel_reward)
+]]
 
 local sYoshiShouldExplode = false
 ---@param o Object
@@ -541,7 +542,6 @@ end
 hook_coins_behavior(id_bhvKingBobomb, false, nil, bhv_king_bobomb_coins_loop)
 
 local function bhv_king_whomp_coins_loop(o)
-    djui_chat_message_create(tostring(o.oAction))
     if o.oAction == 6 or o.oAction == 8 then
         if o.oTimer == 0 then
             o.oNumLootCoins = 5

@@ -1,5 +1,8 @@
 local masterCapTimer = 0
+local resultsTimerMax = 150
+local resultsTimer = resultsTimerMax
 local masterCapTotalTimer = 0
+local masterCapCoins = 0
 
 ---@param o Object
 local function bhv_master_cap_box_init(o)
@@ -146,8 +149,11 @@ local function master_cap_update(m)
             masterCapTotalTimer = masterCapTotalTimer + 1
         end
         m.capTimer = masterCapTimer
+        masterCapCoins = m.numCoins
         if masterCapTimer > 0 then
             m.flags = m.flags | MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP
+        else
+            resultsTimer = resultsTimerMax
         end
     end
 end
@@ -163,6 +169,13 @@ local function hud_render()
         local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
         local textScale = math.min(sWidth/(textW + 32), 1)
         djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (32 + math.abs(math.sin(masterCapTotalTimer/30))*8)*textScale, textScale)
+    end
+
+    if resultsTimer > 0 then
+        play_sound(SOUND_GENERAL_COIN, gGlobalSoundSource)
+        local coinRender = tostring(math.ceil(math.lerp(masterCapCoins, 0, math.clamp((resultsTimer - resultsTimerMax*0.25)/(resultsTimerMax*0.5), 0, 1))))
+        djui_hud_print_text(coinRender, 50, 50, 2)
+        resultsTimer = resultsTimer - 1
     end
 end
 
