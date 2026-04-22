@@ -98,35 +98,52 @@ end
 
 id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, bhv_master_cap_box_init, bhv_master_cap_box_loop, "bhvMasterCapBox")
 
+
+local nearestObjPos = {x = 0, y = 0, z = 0}
 local function level_init()
     local m = gMarioStates[0]
     if obj_get_first_with_behavior_id(id_bhvBowser) == nil then
         masterCapTimer = 0
         masterCapTotalTimer = 0
     end
-    if gNetworkPlayers[0].currCourseNum > 0 then
-        local castFloor = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
-        local nearestObjPos = nil
+    if m.numStars >= get_max_possible_stars() and gNetworkPlayers[0].currCourseNum > 0 and masterCapTimer <= 0 and m.numCoins <= 0 then
+        local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
+        castFloorSpawn = {x = castFloorSpawn.x, y = castFloorSpawn.y, z = castFloorSpawn.z}
+        nearestObjPos.x = m.pos.x
+        nearestObjPos.y = 0x8000
+        nearestObjPos.z = m.pos.z
+        local prevDist = 0x8000
         for i = 0, NUM_OBJ_LISTS - 1 do
             if i ~= OBJ_LIST_PLAYER then
                 local o = obj_get_first(i)
                 while o ~= nil do
                     if obj_has_model_extended(o, E_MODEL_NONE) == 0 and (m.waterLevel == nil or o.oPosY > m.waterLevel) then
                         local objPos = obj_pos_to_vec3f(o)
-                        if nearestObjPos == nil or vec3f_dist(objPos, castFloor) < vec3f_dist(nearestObjPos, castFloor) then
-                            nearestObjPos = objPos
+                        local currDist = math.sqrt((castFloorSpawn.x - objPos.x)^2 + (castFloorSpawn.y - objPos.y)^2 + (objPos.z - nearestObjPos.z)^2)
+                        --djui_chat_message_create(get_behavior_name_from_id(get_id_from_behavior(o.behavior)))
+                        --djui_chat_message_create(tostring(currDist))
+                        --djui_chat_message_create(tostring(rayHit))
+                        if (currDist < prevDist) then
+                            nearestObjPos.x = objPos.x
+                            nearestObjPos.y = objPos.y
+                            nearestObjPos.z = objPos.z
+                            prevDist = math.sqrt((castFloorSpawn.x - nearestObjPos.x)^2 + (castFloorSpawn.y - nearestObjPos.y)^2 + (castFloorSpawn.z - nearestObjPos.z)^2)
+                            --djui_chat_message_create(get_behavior_name_from_id(get_id_from_behavior(o.behavior)))
+                            --djui_chat_message_create(tostring(currDist))
                         end
                     end
                     o = obj_get_next(o)
                 end
             end
         end
-        
-        if masterCapTimer <= 0 and m.numCoins <= 0 then
-            spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, (castFloor.x + math.clamp(nearestObjPos and nearestObjPos.x or 300, castFloor.x - 2000, castFloor.x + 2000))*0.5, castFloor.y + 400, (castFloor.z + math.clamp(nearestObjPos and nearestObjPos.z or 300, castFloor.z - 2000, castFloor.z + 2000))*0.5, function (o)
 
-            end)
-        end
+        nearestObjPos = (collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, nearestObjPos.x - m.pos.x, nearestObjPos.y - m.pos.y, nearestObjPos.z - m.pos.z, 128).hitPos)
+        
+        local objX = math.clamp(math.lerp(castFloorSpawn.x, nearestObjPos.x, 0.5), castFloorSpawn.x - 500, castFloorSpawn.x + 500)
+        local objY = math.clamp(math.lerp(castFloorSpawn.y, nearestObjPos.y, 0.5), castFloorSpawn.y - 300, castFloorSpawn.y) + 350
+        local objZ = math.clamp(math.lerp(castFloorSpawn.z, nearestObjPos.z, 0.5), castFloorSpawn.z - 500, castFloorSpawn.z + 500)
+        spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, objX, objY, objZ, function (o) end)
+        djui_chat_message_create(tostring(objX) .."|".. tostring(objY) .."|".. tostring(objZ))
     end
 end
 

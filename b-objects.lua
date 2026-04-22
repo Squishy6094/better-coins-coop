@@ -15,10 +15,14 @@ local function bhv_coin_carry_loop(o)
     if is_player_active(m) == 0 and o.parentObj.oSyncID ~= 0 then 
         m = nearest_mario_state_to_object(o)
         o.globalPlayerIndex = network_global_index_from_local(m.playerIndex)
-        o.oTimer = 0
+        o.oForwardVel = 0
     end
 
-    local velLerp = math.clamp(o.oTimer^2/800, 0, 1)
+    if o.oPosY < (m.waterLevel or -0x8000) then
+        o.oForwardVel = o.oForwardVel - 0.5
+    end
+
+    local velLerp = math.clamp(o.oForwardVel^2/800, 0, 1)
     local targetPos = {
         x = m.pos.x + m.vel.x*velLerp,
         y = m.pos.y + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y*velLerp or 0) + 70,
@@ -31,7 +35,7 @@ local function bhv_coin_carry_loop(o)
         local angle = 0x10000*((curr - 1)/total) + get_global_timer()*0x200
         targetPos.x = targetPos.x + sins(angle)*250
         targetPos.z = targetPos.z + coss(angle)*250
-        o.oTimer = math.min(o.oTimer, math.sqrt(800))
+        o.oForwardVel = math.min(o.oForwardVel, math.sqrt(800))
         o.parentObj.oTimer = o.parentObj.oTimer - 1
         o.oAction = 1
     else
@@ -44,6 +48,7 @@ local function bhv_coin_carry_loop(o)
     o.oPosX = math.lerp(o.oPosX + o.parentObj.oVelX, targetPos.x, velLerp)
     o.oPosY = math.lerp(o.oPosY + o.parentObj.oVelY, targetPos.y, velLerp)
     o.oPosZ = math.lerp(o.oPosZ + o.parentObj.oVelZ, targetPos.z, velLerp)
+    o.oForwardVel = o.oForwardVel + 1
 
     -- Update Parent Obj
     o.parentObj.oPosX = o.oPosX
