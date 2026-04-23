@@ -153,7 +153,10 @@ function spawn_coin_spawner(o, coins, forceYellow, rX, rY, rZ)
         rX = rX + o.oPosX
         rY = rY + o.oPosY
         rZ = rZ + o.oPosZ
-    end 
+    else
+        local m = nearest_mario_state_to_pos(rX, rY, rZ)
+        if not m or m.playerIndex ~= 0 then return end
+    end
     --- @param oCoins Object
     return spawn_sync_object(id_bhvCoinSpawner, E_MODEL_NONE, rX, rY, rZ, function(oCoins)
         oCoins.oNumLootCoins = coins

@@ -48,8 +48,29 @@ function network_send_object(object, reliable)
     end
 end
 
+function nearest_mario_state_to_pos(x, y, z)
+    if not x or not y or not z then return end
+    local nearest = nil;
+    local nearestDist = 0;
+    for i = 0, MAX_PLAYERS - 1 do
+        local m = gMarioStates[i]
+        if (not m.marioObj) then goto continue end
+        --if (not mario_visible) then goto continue end
+        if (not is_player_active(gMarioStates[i])) then goto continue end
+        local dist = math.sqrt((gMarioStates[i].pos.x - x)^2 + (gMarioStates[i].pos.y - y)^2 + (gMarioStates[i].pos.z - z)^2);
+        if (nearest == nil or dist < nearestDist) then
+            nearest = gMarioStates[i];
+            nearestDist = dist;
+        end
+        ::continue::
+    end
 
+    return nearest;
+end
+
+--------------------------
 -- Romhack Star Counter --
+--------------------------
 
 local function on_mods_loaded()
 
