@@ -586,3 +586,23 @@ local function bhv_eyerok_coins(o)
 end
 
 hook_coins_behavior(id_bhvEyerokHand, false, nil, bhv_eyerok_coins)
+
+local function bhv_big_goomba_loop(o)
+    if o.oGoombaSize == 1 then
+        o.oNumLootCoins = -1
+        local m = nearest_mario_state_to_object(o)
+        if o.oAction == GOOMBA_ACT_ATTACKED_MARIO and m and m.flags & MARIO_METAL_CAP ~= 0 then
+            obj_set_knockback_action(o.oInteractStatus & INT_STATUS_ATTACK_MASK)
+        end
+    end
+end
+
+hook_coins_behavior(id_bhvGoomba, false, nil, bhv_big_goomba_loop)
+
+local function bhv_breakable_box_coins(o)
+    if o.oNumLootCoins < 3 then
+        o.oNumLootCoins = 3
+    end
+end
+
+hook_coins_behavior(id_bhvBreakableBox, false, nil, bhv_breakable_box_coins)

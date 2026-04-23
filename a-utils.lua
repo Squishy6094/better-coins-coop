@@ -19,15 +19,15 @@ function obj_is_in_container(o)
     local oClam = obj_get_nearest_object_with_behavior_id(o, id_bhvClamShell)
     if oClam ~= nil and vec3f_dist(obj_pos_to_vec3f(o), obj_pos_to_vec3f(oClam)) < 100 then
         if oClam.oAction ~= 1 or oClam.oTimer < 15 then
-            return true
+            return true, oClam
         end
-        return false
+        return false, oClam
     end
 
     -- Check if inside breakable box
     local oBox = obj_get_nearest_object_with_behavior_id(o, id_bhvBreakableBox)
     if oBox ~= nil and vec3f_dist(obj_pos_to_vec3f(o), obj_pos_to_vec3f(oBox)) < 300 then
-        return true
+        return true, oBox
     end
     return false
 end
