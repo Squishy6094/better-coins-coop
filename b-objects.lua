@@ -40,6 +40,7 @@ local function bhv_coin_carry_loop(o)
     else
         if o.oAction == 1 then
             velLerp = 0
+            o.oForwardVel = 0
             o.oAction = 0
         end
     end
@@ -134,18 +135,29 @@ end
 
 local id_bhvCoinSpawner = hook_behavior(nil, OBJ_LIST_SPAWNER, true, coin_spawner_init, coin_spawner_loop, "bhvCoinSpawner")
 
----@param x integer
----@param y integer
----@param z integer
+---@param o Object?
 ---@param coins integer
 ---@param forceYellow boolean?
+---@param rX integer?
+---@param rY integer?
+---@param rZ integer?
 ---@return Object?
-function spawn_coin_spawner(x, y, z, coins, forceYellow)
+function spawn_coin_spawner(o, coins, forceYellow, rX, rY, rZ)
     if coins < 1 then return end
-    --- @param o Object
-    return spawn_sync_object(id_bhvCoinSpawner, E_MODEL_NONE, x, y, z, function(o)
-        o.oNumLootCoins = coins
-        o.oAction = forceYellow and 1 or 0
+    rX = rX or 0
+    rY = rY or 0
+    rZ = rZ or 0
+    if o then
+        local m = nearest_mario_state_to_object(o)
+        if not m or m.playerIndex ~= 0 then return end
+        rX = rX + o.oPosX
+        rY = rY + o.oPosY
+        rZ = rZ + o.oPosZ
+    end 
+    --- @param oCoins Object
+    return spawn_sync_object(id_bhvCoinSpawner, E_MODEL_NONE, rX, rY, rZ, function(oCoins)
+        oCoins.oNumLootCoins = coins
+        oCoins.oAction = forceYellow and 1 or 0
     end)
 end
 
@@ -188,7 +200,7 @@ local function courtyard_condition_loop(o)
         o.oAction = o.oAction + 1     
     else
         if o.oTimer > 60 then
-            spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 241)
+            spawn_coin_spawner(o, 241)
             gGlobalSyncTable.courtyardSecretSolved = true
             obj_mark_for_deletion(o)
         end

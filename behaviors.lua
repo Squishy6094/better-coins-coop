@@ -74,7 +74,7 @@ local function bhv_yoshi_reward(o)
     if o.oAction == YOSHI_ACT_TALK then
         sYoshiShouldExplode = true
     elseif sYoshiShouldExplode then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 100 * gLevelValues.numCoinsToLife)
+        spawn_coin_spawner(o, 100 * gLevelValues.numCoinsToLife)
         spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
         obj_mark_for_deletion(o)
     end
@@ -120,7 +120,7 @@ local function bhv_bubble_cannon_explode(o)
     if owner ~= nil and obj_has_behavior_id(owner, id_bhvBobomb) ~= 0 then
         if owner.oAction == BOBOMB_ACT_EXPLODE and owner.oTimer >= 5 then
             obj_remove_nametag(owner)
-            spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
+            spawn_coin_spawner(o, 10, true)
             obj_mark_for_deletion(o)
         end
     end
@@ -272,7 +272,7 @@ end
 ---@param o Object
 local function bhv_chest_loot_loop(o)
     if (o.parentObj.oTreasureChestCurrentAnswer - 1) == o.oBehParams2ndByte and o.oNumLootCoins > 0 then
-        spawn_coin_spawner(o.oPosX, o.oPosY + 100, o.oPosZ, o.oNumLootCoins, true)
+        spawn_coin_spawner(o, o.oNumLootCoins, true, 0, 100, 0)
         o.oNumLootCoins = 0
     end
 end
@@ -288,7 +288,7 @@ local function breakable_wall_coins(o)
         end
     end
     if o.oBreakableWallForce == 1 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
+        spawn_coin_spawner(o, 10, true)
     end
 end
 
@@ -375,7 +375,7 @@ end
 ---@param o Object
 local function bhv_purple_switch_coins_loop(o)
     if o.oAction == PURPLE_SWITCH_PRESSED and o.oNumLootCoins > 0 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, o.oNumLootCoins, true)
+        spawn_coin_spawner(o, o.oNumLootCoins, true)
         o.oNumLootCoins = 0
         network_send_object(o, true)
     end
@@ -389,7 +389,7 @@ hook_coins_behavior(id_bhvFloorSwitchGrills, false, bhv_purple_switch_coins_init
 ---@param o Object
 local function bhv_bowser_bomb_explosion_coins_loop(o)
     if o.oTimer == 4 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 15, true)
+        spawn_coin_spawner(o, 15, true)
     end
 end
 
@@ -398,7 +398,7 @@ hook_coins_behavior(id_bhvBowserBombExplosion, false, nil, bhv_bowser_bomb_explo
 ---@param o Object
 local function bhv_bookend_death_coins(o)
     if o.oNumLootCoins == 0 and o.oMoveFlags & (OBJ_MOVE_MASK_ON_GROUND | OBJ_MOVE_HIT_WALL) ~= 0 and o.oDamageOrCoinValue == 2 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 5)
+        spawn_coin_spawner(o, 5)
         o.oNumLootCoins = -1
     end
 end
@@ -436,7 +436,7 @@ local function bhv_haunted_chair_coin_loop(o)
     end
     
     if o.oTimer >= 70 and o.oMoveFlags & (OBJ_MOVE_MASK_ON_GROUND | OBJ_MOVE_HIT_WALL) ~= 0 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 2)
+        spawn_coin_spawner(o, 2)
         o.oMarioBurnTimer = 1
         network_send_object(o, true)
     end
@@ -473,8 +473,8 @@ end
 local function bhv_water_pillar_loop(o)
     if o.oAction == 4 and o.oNumLootCoins > 0 then
         otherWaterPillar = cur_obj_nearest_object_with_behavior(o.behavior)
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, o.oNumLootCoins*0.5, true)
-        spawn_coin_spawner(otherWaterPillar.oPosX, otherWaterPillar.oPosY, otherWaterPillar.oPosZ, o.oNumLootCoins*0.5, true)
+        spawn_coin_spawner(o, o.oNumLootCoins*0.5, true)
+        spawn_coin_spawner(otherWaterPillar, o.oNumLootCoins*0.5, true)
         o.oNumLootCoins = 0
     end
 end
@@ -526,7 +526,7 @@ end
 ---@param o Object
 local function bhv_thi_pound_coins_loop(o)
     if o.oAction > 0 and o.oNumLootCoins > 0 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, o.oNumLootCoins)
+        spawn_coin_spawner(o, o.oNumLootCoins)
         o.oNumLootCoins = 0
     end
 end
@@ -535,7 +535,7 @@ hook_coins_behavior(id_bhvThiTinyIslandTop, false, bhv_thi_pound_coins_init, bhv
 
 local function bhv_king_bobomb_coins_loop(o)
     if (o.oAction == 6 or o.oAction == 7) and o.oTimer == 0 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 5, true)
+        spawn_coin_spawner(o, 5, true)
     end
 end
 
@@ -549,7 +549,7 @@ local function bhv_king_whomp_coins_loop(o)
             if cur_obj_is_mario_ground_pounding_platform() ~= 0 and o.oNumLootCoins > 0 then
                 local marioState = nearest_mario_state_to_object(o);
                 if (marioState) then
-                    spawn_coin_spawner(marioState.pos.x, marioState.pos.y, marioState.pos.z, 5, true)
+                    spawn_coin_spawner(o, 5, true, marioState.pos.x - o.oPosX, marioState.pos.y - o.oPosY, marioState.pos.z - o.oPosZ)
                 end
                 o.oNumLootCoins = 0
             end
@@ -561,7 +561,7 @@ hook_coins_behavior(id_bhvWhompKingBoss, false, nil, bhv_king_whomp_coins_loop)
 
 local function bhv_big_boo_coins_loop(o)
     if o.oAction == 3 and o.oTimer == 1 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 5, true)
+        spawn_coin_spawner(o, 5, true)
     end
 end
 
@@ -571,7 +571,7 @@ hook_coins_behavior(id_bhvMerryGoRoundBigBoo, false, nil, bhv_big_boo_coins_loop
 
 local function bhv_big_bully_coins(o)
     if o.oAction == BULLY_ACT_LAVA_DEATH and o.oTimer == 1 then
-        spawn_coin_spawner(o.oPosX, o.oPosY + 310, o.oPosZ, 10, true)
+        spawn_coin_spawner(o, 10, true, 0, 310, 0)
     end
 end
 
@@ -581,7 +581,7 @@ hook_coins_behavior(id_bhvBigChillBully, false, nil, bhv_big_bully_coins)
 
 local function bhv_eyerok_coins(o)
     if (o.oAction == EYEROK_HAND_ACT_ATTACKED or o.oAction == EYEROK_HAND_ACT_DIE) and o.oTimer == 1 then
-        spawn_coin_spawner(o.oPosX + sins(o.oFaceAngleYaw)*100, o.oPosY, o.oPosZ + coss(o.oFaceAngleYaw)*100, 5, true)
+        spawn_coin_spawner(o, 5, true, sins(o.oFaceAngleYaw)*100, 0, coss(o.oFaceAngleYaw)*100)
     end
 end
 

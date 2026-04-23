@@ -97,7 +97,7 @@ local function update()
     end
 
     if m.controller.buttonPressed & (U_JPAD) ~= 0 then
-        spawn_coin_spawner(m.pos.x, m.pos.y, m.pos.z, 1000, true)
+        --spawn_coin_spawner(m.marioObj, 1000, true)
     end
 end
 
@@ -183,7 +183,7 @@ local function interact(m, o, int)
         if obj_has_behavior_id(o, bhvID) ~= 0 then
             -- Spawn Coins and turn it back on
             if gServerSettings.stayInLevelAfterStar == 2 then
-                spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
+                spawn_coin_spawner(o, 10, true)
             end
             gServerSettings.stayInLevelAfterStar = originalStayInLevel
         end
@@ -194,12 +194,12 @@ local function object_unload(o)
     -- Handle Celebration Stars poofing into coins
     if obj_has_behavior_id(o, id_bhvCelebrationStar) ~= 0 then
         spawn_mist_from_global()
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
+        spawn_coin_spawner(o, 10, true)
         return
     end
 
     if obj_has_behavior_id(o, id_bhvGrandStar) ~= 0 then
-        spawn_coin_spawner(o.oPosX, o.oPosY, o.oPosZ, 10, true)
+        spawn_coin_spawner(o, 10, true)
         return
     end
 end
