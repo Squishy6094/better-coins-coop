@@ -167,7 +167,7 @@ local function interact(m, o, int)
             coinSoundCombo = coinSoundCombo + 1
         end
                                                     -- Lowest V  V Highest     Coins to Highest V
-        audio_stream_set_frequency(currCoinSound, math.lerp(0.9, 1.5, math.clamp(coinSoundCombo/50, 0, 1)))
+        audio_stream_set_frequency(currCoinSound, math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1)))
         audio_stream_play(currCoinSound, true, 1.5)
         coinSoundCount = (coinSoundCount + 1)%4
         coinSoundComboEnd = get_global_timer() + 90
