@@ -161,7 +161,7 @@ local function act_master_cap_results(m)
     local e = gMasterCapStates[m.playerIndex]
     m.marioObj.header.gfx.animInfo.animFrame = e.prevActionAnimFrame
     m.marioObj.header.gfx.animInfo.animAccel = 0
-    camera_freeze()
+    --camera_freeze()
     game_unpause()
     local pressedA = m.controller.buttonPressed & A_BUTTON ~= 0
 
@@ -191,7 +191,7 @@ local function act_master_cap_results(m)
             m.actionTimer = 0
         end
     else
-        camera_unfreeze()
+        --camera_unfreeze()
         m.action = e.prevAction
         m.marioObj.header.gfx.animInfo.animAccel = e.prevActionAnimAccel
         m.actionArg = e.prevActionArg
