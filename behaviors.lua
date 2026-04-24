@@ -543,10 +543,6 @@ end
 
 ---@param o Object
 local function bhv_coins_on_damage_loop(o)
-    djui_chat_message_create(tostring(o.oHealth))
-    djui_chat_message_create(tostring(o.oNumLootCoins))
-    djui_chat_message_create(tostring(o.oCoinUnk1B0))
-    djui_chat_message_create(tostring(o.oCoinUnk110))
     if o.oCoinUnk110 > o.oHealth and (o.oNumLootCoins > 0 or o.oCoinUnk1B0 > 0) then
         spawn_coin_spawner(o, 5, true, 0, o.hitboxHeight, 0)
         o.oNumLootCoins = o.oNumLootCoins - 5

@@ -150,7 +150,7 @@ local function level_init()
         local objY = math.clamp(math.lerp(castFloorSpawn.y, nearestObjPos.y, 0.5), castFloorSpawn.y - 300, castFloorSpawn.y) + 350
         local objZ = math.clamp(math.lerp(castFloorSpawn.z, nearestObjPos.z, 0.5), castFloorSpawn.z - capSpawnRadius, castFloorSpawn.z + capSpawnRadius)
         spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, objX, objY, objZ, function (o) end)
-        djui_chat_message_create(tostring(objX) .."|".. tostring(objY) .."|".. tostring(objZ))
+        --djui_chat_message_create(tostring(objX) .."|".. tostring(objY) .."|".. tostring(objZ))
     end
 end
 
