@@ -115,7 +115,7 @@ local function level_init()
     end
     if m.numStars >= get_max_possible_stars() and gNetworkPlayers[0].currCourseNum > 0 and e.masterCapTimer <= 0 and m.numCoins <= 0 then
         local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
-        castFloorSpawn = {x = castFloorSpawn.x, y = castFloorSpawn.y, z = castFloorSpawn.z}
+        castFloorSpawn = {x = castFloorSpawn.x, y = math.max(castFloorSpawn.y, (m.waterLevel or -0x8000) - 200), z = castFloorSpawn.z}
         nearestObjPos.x = m.pos.x
         nearestObjPos.y = 0x8000
         nearestObjPos.z = m.pos.z
@@ -160,6 +160,8 @@ local ACT_MASTER_CAP_RESULTS = allocate_mario_action(ACT_GROUP_CUTSCENE | ACT_FL
 local function act_master_cap_results(m)
     local e = gMasterCapStates[m.playerIndex]
     m.marioObj.header.gfx.animInfo.animFrame = e.prevActionAnimFrame
+    m.marioObj.header.gfx.animInfo.animAccel = 0
+    camera_freeze()
     local pressedA = m.controller.buttonPressed & A_BUTTON ~= 0
 
     if m.actionState == 0 then -- Stall
@@ -188,7 +190,9 @@ local function act_master_cap_results(m)
             m.actionTimer = 0
         end
     else
+        camera_unfreeze()
         m.action = e.prevAction
+        m.marioObj.header.gfx.animInfo.animAccel = e.prevActionAnimAccel
         m.actionArg = e.prevActionArg
         m.actionTimer = e.prevActionTimer
         m.actionState = e.prevActionState
@@ -232,6 +236,7 @@ local function master_cap_update(m)
         -- Save previous actions to unfreeze from
         if m.action ~= ACT_MASTER_CAP_RESULTS then
             e.prevActionAnimFrame = m.marioObj.header.gfx.animInfo.animFrame
+            e.prevActionAnimAccel = m.marioObj.header.gfx.animInfo.animAccel
             e.prevAction = m.action
             e.prevActionTimer = m.actionTimer
             e.prevActionState = m.actionState
