@@ -256,7 +256,7 @@ end
 local function bhv_bowser_spawn_coins(o)
     if o.oAction == 4 then
         if (o.oSubAction == 4 or o.oSubAction == 11) and o.oNumLootCoins > 0 then
-            obj_spawn_yellow_coins(o, o.oNumLootCoins)
+            spawn_coin_spawner(o, o.oNumLootCoins, true)
             o.oNumLootCoins = 0
         end
     end
@@ -533,41 +533,48 @@ end
 
 hook_coins_behavior(id_bhvThiTinyIslandTop, false, bhv_thi_pound_coins_init, bhv_thi_pound_coins_loop)
 
-local function bhv_king_bobomb_coins_loop(o)
-    if (o.oAction == 6 or o.oAction == 7) and o.oTimer == 0 then
-        spawn_coin_spawner(o, 5, true)
-    end
+---@param o Object
+local function bhv_generic_boss_coins_init(o)
+    local health = o.oHealth ~= 2048 and o.oHealth or 4
+    o.oNumLootCoins = health*5
+    o.oCoinUnk1B0 = health*5 -- failsafe for loot coin being overwritten
+    o.oCoinUnk110 = health
 end
 
-hook_coins_behavior(id_bhvKingBobomb, false, nil, bhv_king_bobomb_coins_loop)
+---@param o Object
+local function bhv_coins_on_damage_loop(o)
+    djui_chat_message_create(tostring(o.oHealth))
+    djui_chat_message_create(tostring(o.oNumLootCoins))
+    djui_chat_message_create(tostring(o.oCoinUnk1B0))
+    djui_chat_message_create(tostring(o.oCoinUnk110))
+    if o.oCoinUnk110 > o.oHealth and (o.oNumLootCoins > 0 or o.oCoinUnk1B0 > 0) then
+        spawn_coin_spawner(o, 5, true, 0, o.hitboxHeight, 0)
+        o.oNumLootCoins = o.oNumLootCoins - 5
+        o.oCoinUnk1B0 = o.oCoinUnk1B0 - 5
+    end
+    o.oCoinUnk110 = math.min(o.oCoinUnk110, o.oHealth)
+end
 
-local function bhv_king_whomp_coins_loop(o)
-    if o.oAction == 6 or o.oAction == 8 then
-        if o.oTimer == 0 then
-            o.oNumLootCoins = 5
-        else
-            if cur_obj_is_mario_ground_pounding_platform() ~= 0 and o.oNumLootCoins > 0 then
-                local marioState = nearest_mario_state_to_object(o);
-                if (marioState) then
-                    spawn_coin_spawner(o, 5, true, marioState.pos.x - o.oPosX, marioState.pos.y - o.oPosY, marioState.pos.z - o.oPosZ)
-                end
-                o.oNumLootCoins = 0
-            end
+---@param o Object
+local function bhv_coins_on_damage_at_mario_loop(o)
+    if o.oCoinUnk110 > o.oHealth and (o.oNumLootCoins > 0 or o.oCoinUnk1B0 > 0) then
+        local marioState = nearest_mario_state_to_object(o);
+        if (marioState) then
+            spawn_coin_spawner(o, 5, true, marioState.pos.x - o.oPosX, marioState.pos.y - o.oPosY, marioState.pos.z - o.oPosZ)
+            o.oNumLootCoins = o.oNumLootCoins - 5
+            o.oCoinUnk1B0 = o.oCoinUnk1B0 - 5
         end
     end
+    o.oCoinUnk110 = math.min(o.oCoinUnk110, o.oHealth)
 end
 
-hook_coins_behavior(id_bhvWhompKingBoss, false, nil, bhv_king_whomp_coins_loop)
-
-local function bhv_big_boo_coins_loop(o)
-    if o.oAction == 3 and o.oTimer == 1 then
-        spawn_coin_spawner(o, 5, true)
-    end
-end
-
-hook_coins_behavior(id_bhvBalconyBigBoo, false, nil, bhv_big_boo_coins_loop)
-hook_coins_behavior(id_bhvGhostHuntBigBoo, false, nil, bhv_big_boo_coins_loop)
-hook_coins_behavior(id_bhvMerryGoRoundBigBoo, false, nil, bhv_big_boo_coins_loop)
+hook_coins_behavior(id_bhvKingBobomb, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
+hook_coins_behavior(id_bhvWhompKingBoss, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_at_mario_loop)
+hook_coins_behavior(id_bhvBalconyBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
+hook_coins_behavior(id_bhvGhostHuntBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
+hook_coins_behavior(id_bhvMerryGoRoundBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
+hook_coins_behavior(id_bhvEyerokHand, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_at_mario_loop)
+--hook_coins_behavior(id_bhvWigglerHead, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 
 local function bhv_big_bully_coins(o)
     if o.oAction == BULLY_ACT_LAVA_DEATH and o.oTimer == 1 then
@@ -578,14 +585,6 @@ end
 hook_coins_behavior(id_bhvBigBully, false, nil, bhv_big_bully_coins)
 hook_coins_behavior(id_bhvBigBullyWithMinions, false, nil, bhv_big_bully_coins)
 hook_coins_behavior(id_bhvBigChillBully, false, nil, bhv_big_bully_coins)
-
-local function bhv_eyerok_coins(o)
-    if (o.oAction == EYEROK_HAND_ACT_ATTACKED or o.oAction == EYEROK_HAND_ACT_DIE) and o.oTimer == 1 then
-        spawn_coin_spawner(o, 5, true, sins(o.oFaceAngleYaw)*100, 0, coss(o.oFaceAngleYaw)*100)
-    end
-end
-
-hook_coins_behavior(id_bhvEyerokHand, false, nil, bhv_eyerok_coins)
 
 local function bhv_big_goomba_loop(o)
     if o.oGoombaSize == 1 then
