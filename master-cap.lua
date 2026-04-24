@@ -162,6 +162,7 @@ local function act_master_cap_results(m)
     m.marioObj.header.gfx.animInfo.animFrame = e.prevActionAnimFrame
     m.marioObj.header.gfx.animInfo.animAccel = 0
     camera_freeze()
+    game_unpause()
     local pressedA = m.controller.buttonPressed & A_BUTTON ~= 0
 
     if m.actionState == 0 then -- Stall

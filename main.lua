@@ -3,14 +3,8 @@
 
 --[[
     - Todo:
-        - Falling in snow/sand gives 1-3 coins
-        - Pound Pillars should give coins
-        - Bosses spawn coins on despawn
-
-        - Big Goombas always give blues
         - Big Plants give blues
-        - is_in_box func
-        - Use secret parent code for hidden 1ups
+        - Chain Chomp gate should give coins
 ]]
 
 gLevelValues.previewBlueCoins = 1
