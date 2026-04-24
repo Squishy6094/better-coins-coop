@@ -97,7 +97,7 @@ local function update()
     end
 
     if m.controller.buttonPressed & (U_JPAD) ~= 0 then
-        --spawn_coin_spawner(m.marioObj, 1000, true)
+        spawn_coin_spawner(nil, 1000, nil, m.pos.x, m.pos.y, m.pos.z)
     end
 end
 
@@ -176,6 +176,9 @@ local function interact(m, o, int)
         if m.capTimer ~= 0 then
             m.capTimer = m.capTimer + o.oDamageOrCoinValue*25
         end
+
+        -- Set Master Cap Coin Time
+        gMasterCapStates[m.playerIndex].masterCapCoinTimer = gMasterCapStates[m.playerIndex].masterCapTotalTimer
     end
 
     for i = 1, #starBhvs do
@@ -232,9 +235,18 @@ local function courtyard_secret()
     end
 end
 
+local function mario_update(m)
+    -- Allow Infinate Metal Jumping
+    if m.action & ACT_FLAG_METAL_WATER ~= 0 and m.flags & MARIO_WING_CAP ~= 0 and m.controller.buttonPressed & A_BUTTON ~= 0 then
+        m.marioObj.header.gfx.animInfo.animID = -1
+        set_mario_action(m, ACT_METAL_WATER_JUMP, 0)
+    end
+end
+
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, coin_counter)
 hook_event(HOOK_ALLOW_INTERACT, allow_interact)
 hook_event(HOOK_ON_OBJECT_UNLOAD, object_unload)
 hook_event(HOOK_ON_INTERACT, interact)
 hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
 hook_event(HOOK_ON_SYNC_VALID, courtyard_secret)
+hook_event(HOOK_MARIO_UPDATE, mario_update)

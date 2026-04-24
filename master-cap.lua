@@ -1,8 +1,13 @@
-local masterCapTimer = 0
-local resultsTimerMax = 150
-local resultsTimer = resultsTimerMax
-local masterCapTotalTimer = 0
-local masterCapCoins = 0
+gMasterCapStates = {}
+for i = 0, MAX_PLAYERS - 1 do
+    gMasterCapStates[i] = {
+        masterCapTimer = 0,
+        masterCapTotalTimer = 0,
+        masterCapCoinTimer = 0,
+        masterCapCoins = 0,
+    }
+end
+
 
 ---@param o Object
 local function bhv_master_cap_box_init(o)
@@ -87,7 +92,7 @@ local function bhv_master_cap_box_loop(o)
         end
     elseif o.oAction == 3 then
         --exclamation_box_spawn_contents(gExclamationBoxContents, o->oBehParams2ndByte);
-        masterCapTimer = gLevelValues.wingCapDuration*0.5--(gNetworkPlayers[0].currCourseNum <= 15 and 0.5 or 0.25)
+        gMasterCapStates[0].masterCapTimer = gLevelValues.wingCapDuration*0.5--(gNetworkPlayers[0].currCourseNum <= 15 and 0.5 or 0.25)
         spawn_mist_particles_variable(0, 0, 46.0);
         spawn_triangle_break_particles(20, 139, 0.3, o.oAnimState);
         create_sound_spawner(SOUND_GENERAL_BREAK_BOX);
@@ -100,13 +105,15 @@ id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, b
 
 
 local nearestObjPos = {x = 0, y = 0, z = 0}
+local capSpawnRadius = 400
 local function level_init()
     local m = gMarioStates[0]
+    local e = gMasterCapStates[0]
     if obj_get_first_with_behavior_id(id_bhvBowser) == nil then
-        masterCapTimer = 0
-        masterCapTotalTimer = 0
+        e.masterCapTimer = 0
+        e.masterCapTotalTimer = 0
     end
-    if m.numStars >= get_max_possible_stars() and gNetworkPlayers[0].currCourseNum > 0 and masterCapTimer <= 0 and m.numCoins <= 0 then
+    if m.numStars >= get_max_possible_stars() and gNetworkPlayers[0].currCourseNum > 0 and e.masterCapTimer <= 0 and m.numCoins <= 0 then
         local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
         castFloorSpawn = {x = castFloorSpawn.x, y = castFloorSpawn.y, z = castFloorSpawn.z}
         nearestObjPos.x = m.pos.x
@@ -139,12 +146,65 @@ local function level_init()
 
         nearestObjPos = (collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, nearestObjPos.x - m.pos.x, nearestObjPos.y - m.pos.y, nearestObjPos.z - m.pos.z, 128).hitPos)
         
-        local objX = math.clamp(math.lerp(castFloorSpawn.x, nearestObjPos.x, 0.5), castFloorSpawn.x - 500, castFloorSpawn.x + 500)
+        local objX = math.clamp(math.lerp(castFloorSpawn.x, nearestObjPos.x, 0.5), castFloorSpawn.x - capSpawnRadius, castFloorSpawn.x + capSpawnRadius)
         local objY = math.clamp(math.lerp(castFloorSpawn.y, nearestObjPos.y, 0.5), castFloorSpawn.y - 300, castFloorSpawn.y) + 350
-        local objZ = math.clamp(math.lerp(castFloorSpawn.z, nearestObjPos.z, 0.5), castFloorSpawn.z - 500, castFloorSpawn.z + 500)
+        local objZ = math.clamp(math.lerp(castFloorSpawn.z, nearestObjPos.z, 0.5), castFloorSpawn.z - capSpawnRadius, castFloorSpawn.z + capSpawnRadius)
         spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, objX, objY, objZ, function (o) end)
         djui_chat_message_create(tostring(objX) .."|".. tostring(objY) .."|".. tostring(objZ))
     end
+end
+
+local ACT_MASTER_CAP_RESULTS = allocate_mario_action(ACT_GROUP_CUTSCENE | ACT_FLAG_INTANGIBLE)
+
+---@param m MarioState
+local function act_master_cap_results(m)
+    local e = gMasterCapStates[m.playerIndex]
+    m.marioObj.header.gfx.animInfo.animFrame = e.prevActionAnimFrame
+    local pressedA = m.controller.buttonPressed & A_BUTTON ~= 0
+
+    if m.actionState == 0 then -- Stall
+        if m.actionTimer > 10 then
+            m.actionState = m.actionState + 1
+            m.actionTimer = 0
+        end
+    elseif m.actionState == 1 then -- Count Coins
+        if m.actionTimer > math.min(e.masterCapCoins, 150) or pressedA then
+            m.actionState = m.actionState + 1
+            m.actionTimer = 0
+        end
+    elseif m.actionState == 2 then -- Stall
+        if m.actionTimer > 10 then
+            m.actionState = m.actionState + 1
+            m.actionTimer = 0
+        end
+    elseif m.actionState == 3 then -- Count Time
+        if m.actionTimer > math.min(e.masterCapCoinTimer/30, 150) or pressedA then
+            m.actionState = m.actionState + 1
+            m.actionTimer = 0
+        end
+    elseif m.actionState == 4 then -- Await Input
+        if pressedA then
+            m.actionState = m.actionState + 1
+            m.actionTimer = 0
+        end
+    else
+        m.action = e.prevAction
+        m.actionArg = e.prevActionArg
+        m.actionTimer = e.prevActionTimer
+        m.actionState = e.prevActionState
+    end
+
+
+    m.actionTimer = m.actionTimer + 1
+end
+
+hook_mario_action(ACT_MASTER_CAP_RESULTS, act_master_cap_results)
+
+local function set_mario_finished_master_cap(m)
+    local e = gMasterCapStates[m.playerIndex]
+    e.masterCapTimer = 0
+    m.flags = m.flags & ~(MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
+    set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
 end
 
 local noCountdown = {
@@ -157,42 +217,89 @@ local noCountdown = {
     [ACT_TELEPORT_FADE_OUT] = true,
 }
 
+---@param m MarioState
 local function master_cap_update(m)
-    if m.playerIndex ~= 0 then return end
-    if masterCapTimer > 0 then
-        masterCapTimer = math.max(m.capTimer, masterCapTimer)
+    local e = gMasterCapStates[m.playerIndex]
+    --if m.playerIndex ~= 0 then return end
+    if e.masterCapTimer > 0 then
+        e.masterCapTimer = math.max(m.capTimer, e.masterCapTimer)
+        -- Hold timer on acts
         if not noCountdown[m.action] then
-            masterCapTimer = masterCapTimer - 1
-            masterCapTotalTimer = masterCapTotalTimer + 1
+            e.masterCapTimer = e.masterCapTimer - 1
+            e.masterCapTotalTimer = e.masterCapTotalTimer + 1
         end
-        m.capTimer = masterCapTimer
-        masterCapCoins = m.numCoins
-        if masterCapTimer > 0 then
-            m.flags = m.flags | MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP
+
+        -- Save previous actions to unfreeze from
+        if m.action ~= ACT_MASTER_CAP_RESULTS then
+            e.prevActionAnimFrame = m.marioObj.header.gfx.animInfo.animFrame
+            e.prevAction = m.action
+            e.prevActionTimer = m.actionTimer
+            e.prevActionState = m.actionState
+            e.prevActionArg = m.actionArg
+        end
+        
+        -- End at 999 coins
+        if m.numCoins >= 999 then
+            set_mario_finished_master_cap(m)
+        end
+
+        -- End on key collect
+        if m.action == ACT_STAR_DANCE_EXIT then
+            set_mario_finished_master_cap(m)
+        end
+
+        m.capTimer = e.masterCapTimer
+        e.masterCapCoins = math.clamp(m.numCoins, 0, 999)
+        if e.masterCapTimer > 0 then
+            m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
         else
-            resultsTimer = resultsTimerMax
+            set_mario_finished_master_cap(m)
         end
     end
 end
 
 local TEXT_MASTER_CAP = "Collect as many coins as possible!"
+local TEXT_RESULT_COINS = "Coins Collected:"
+local TEXT_RESULT_TIME = "Time Spent:"
 local function hud_render()
+    local m = gMarioStates[0]
+    local e = gMasterCapStates[0]
     djui_hud_set_resolution(RESOLUTION_N64)
-    djui_hud_set_font(FONT_RECOLOR_HUD)
-    local sWidth = djui_hud_get_screen_width()
+    local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
-    if masterCapTimer > 0 then
-        --hud_hide()
+    if e.masterCapTimer > 0 then
+        djui_hud_set_font(FONT_HUD)
         local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
         local textScale = math.min(sWidth/(textW + 32), 1)
-        djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (32 + math.abs(math.sin(masterCapTotalTimer/30))*8)*textScale, textScale)
+        djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (32 + math.abs(math.sin(e.masterCapTotalTimer/30))*8)*textScale, textScale)
     end
 
-    if resultsTimer > 0 then
-        play_sound(SOUND_GENERAL_COIN, gGlobalSoundSource)
-        local coinRender = tostring(math.ceil(math.lerp(masterCapCoins, 0, math.clamp((resultsTimer - resultsTimerMax*0.25)/(resultsTimerMax*0.5), 0, 1))))
-        djui_hud_print_text(coinRender, 50, 50, 2)
-        resultsTimer = resultsTimer - 1
+    if m.action == ACT_MASTER_CAP_RESULTS then
+        djui_hud_set_color(0, 0, 0, 150)
+        djui_hud_render_rect(0, 0, sWidth, sHeight)
+        djui_hud_set_color(255, 255, 255, 255)
+
+        -- Render Coins Collected
+        djui_hud_set_font(FONT_NORMAL)
+        djui_hud_print_text(TEXT_RESULT_COINS, sWidth*0.5 - djui_hud_measure_text(TEXT_RESULT_COINS)*0.25, 60, 0.5)
+        local coinCount = m.actionState < 1 and 0 or e.masterCapCoins
+        if m.actionState == 1 then
+            coinCount = math.ceil(math.lerp(0, e.masterCapCoins, m.actionTimer/math.min(e.masterCapCoins, 150)))
+        end
+        local coinRender = tostring(coinCount)
+        djui_hud_set_font(FONT_RECOLOR_HUD)
+        djui_hud_print_text(coinRender, sWidth*0.5 - djui_hud_measure_text(coinRender) - 4, 80, 2)
+
+        -- Render Timestamp
+        djui_hud_set_font(FONT_NORMAL)
+        djui_hud_print_text(TEXT_RESULT_TIME, sWidth*0.5 - djui_hud_measure_text(TEXT_RESULT_TIME)*0.25, 120, 0.5)
+        local timeCount = m.actionState < 3 and 0 or e.masterCapCoinTimer
+        if m.actionState == 3 then
+            timeCount = math.lerp(0, e.masterCapCoinTimer, m.actionTimer/math.min(e.masterCapCoinTimer/30, 150))
+        end
+        local timeRender = timestamp(timeCount)
+        djui_hud_set_font(FONT_RECOLOR_HUD)
+        djui_hud_print_text(timeRender, sWidth*0.5 - djui_hud_measure_text(timeRender)*0.5 - 2, 140, 1)
     end
 end
 

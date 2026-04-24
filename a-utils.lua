@@ -68,6 +68,14 @@ function nearest_mario_state_to_pos(x, y, z)
     return nearest;
 end
 
+function timestamp(frames)
+    seconds = math.round(frames) / 30
+    local minutes = math.floor(seconds / 60)
+    local milliseconds = math.floor((seconds - math.floor(seconds)) * 1000)
+    seconds = math.floor(seconds) % 60
+    return minutes > 0 and string.format("%d:%02d.%03d", minutes, seconds, milliseconds) or string.format("%01d.%03d", seconds, milliseconds)
+end
+
 --------------------------
 -- Romhack Star Counter --
 --------------------------
