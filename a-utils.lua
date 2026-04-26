@@ -1,3 +1,20 @@
+ROMHACK = "sm64"
+for i in pairs(gActiveMods) do
+    local mod = gActiveMods[i]
+    if mod.incompatible ~= nil then
+        if mod.incompatible:find("romhack") then
+            ROMHACK = mod.relativePath
+        end
+    end
+    if mod.category ~= nil then
+        if mod.category:find("romhack") then
+            ROMHACK = mod.relativePath
+        end
+    end
+    ROMHACK = ROMHACK:gsub("[/\\]+$", "")
+    ROMHACK = ROMHACK:gsub(".*[/\\]", "")
+end
+
 --- @param obj Object
 --- Replacement for DROP_TO_FLOOR()
 function object_drop_to_floor(obj)
@@ -69,6 +86,7 @@ function nearest_mario_state_to_pos(x, y, z)
 end
 
 function timestamp(frames)
+    frames = frames or 0
     seconds = math.round(frames) / 30
     local minutes = math.floor(seconds / 60)
     local milliseconds = math.floor((seconds - math.floor(seconds)) * 10)

@@ -229,11 +229,12 @@ local function courtyard_secret()
     end
 end
 
+---@param m MarioState
 local function mario_update(m)
     -- Allow Infinate Metal Jumping
     if m.action & ACT_FLAG_METAL_WATER ~= 0 and m.flags & MARIO_WING_CAP ~= 0 and m.controller.buttonPressed & A_BUTTON ~= 0 then
         m.marioObj.header.gfx.animInfo.animID = -1
-        set_mario_action(m, ACT_METAL_WATER_JUMP, 0)
+        set_mario_action(m, m.heldObj == nil and ACT_METAL_WATER_JUMP or ACT_HOLD_METAL_WATER_JUMP, 0)
     end
 end
 
