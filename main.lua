@@ -72,7 +72,7 @@ local function update()
                 end
 
                 -- Check Galaxy Controls
-                if gGlobalSyncTable.mouseGrab then
+                if gGlobalSyncTable.mouseGrab == true then
                     djui_hud_set_resolution(RESOLUTION_N64)
                     local out = {x = 0, y = 0, z = 0}
                     djui_hud_world_pos_to_screen_pos(oPos, out)
@@ -91,7 +91,7 @@ local function update()
     end
 
     if m.controller.buttonPressed & (U_JPAD) ~= 0 then
-        spawn_coin_spawner(nil, 1000, nil, m.pos.x, m.pos.y, m.pos.z)
+        --spawn_coin_spawner(nil, 1000, nil, m.pos.x, m.pos.y, m.pos.z)
     end
 end
 
@@ -106,11 +106,11 @@ local function coin_counter()
     hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
 
     -- Mouse
-    djui_hud_set_resolution(RESOLUTION_DJUI)
-    local djuiWidth = djui_hud_get_screen_width()
-    local djuiHeight = djui_hud_get_screen_height()
-    djui_hud_set_resolution(RESOLUTION_N64)
-    if gGlobalSyncTable.mouseGrab then
+    if gGlobalSyncTable.mouseGrab == true then
+        djui_hud_set_resolution(RESOLUTION_DJUI)
+        local djuiWidth = djui_hud_get_screen_width()
+        local djuiHeight = djui_hud_get_screen_height()
+        djui_hud_set_resolution(RESOLUTION_N64)
         local newMouseX = djui_hud_get_mouse_x() * (djui_hud_get_screen_width()/djuiWidth)
         local nemMouseY = djui_hud_get_mouse_y() * (djui_hud_get_screen_height()/djuiHeight)
         djui_hud_render_rect_interpolated(mouseX, mouseY, 16, 16, mouseX, mouseY, 16, 16)

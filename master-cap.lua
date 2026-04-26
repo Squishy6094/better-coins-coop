@@ -120,7 +120,7 @@ local function level_init()
         e.masterCapTimer = 0
         e.masterCapTotalTimer = 0
     end
-    if m.numStars >= get_max_possible_stars() and gNetworkPlayers[0].currCourseNum > 0 and e.masterCapTimer <= 0 and m.numCoins <= 0 then
+    if hud_get_value(HUD_DISPLAY_STARS) >= get_max_possible_stars() and gNetworkPlayers[0].currCourseNum > 0 and e.masterCapTimer <= 0 and m.numCoins <= 0 then
         local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
         castFloorSpawn = {x = castFloorSpawn.x, y = math.max(castFloorSpawn.y, (m.waterLevel or -0x8000) - 200), z = castFloorSpawn.z}
         nearestObjPos.x = m.pos.x
@@ -222,8 +222,11 @@ local function set_mario_finished_master_cap(m)
     if m.playerIndex == 0 then
         local course = gNetworkPlayers[0].currCourseNum
 
-        if e["masterCapRecordCoins"..course] and (e["masterCapRecordCoins"..course] < e.masterCapCoins
-        or e.masterCapCoinTimer < e["masterCapRecordTime"..course]) then
+        local prevCoins = e["masterCapRecordCoins"..course]
+        local currCoins = e.masterCapCoins
+        local prevTime = e["masterCapRecordTime"..course]
+        local currTime = e.masterCapCoinTimer
+        if prevCoins and (currCoins > prevCoins or (currCoins == prevCoins and currTime < prevTime)) then
             e["masterCapRecordCoins"..course] = e.masterCapCoins
             mod_storage_save(ROMHACK.."recordCoins"..tostring(course), tostring(e.masterCapCoins))
             e["masterCapRecordTime"..course] = e.masterCapCoinTimer
@@ -348,9 +351,11 @@ local function star_select_leaderboard()
     if obj_get_first_with_behavior_id(id_bhvActSelector) == nil then
         leaderboardView = false
         leaderboard = nil
+        --log_to_console(tostring(hud_get_value(HUD_DISPLAY_STARS)), CONSOLE_MESSAGE_INFO)
+        --log_to_console(tostring(get_max_possible_stars()), CONSOLE_MESSAGE_INFO)
         return
     end
-    if gMarioStates[0].numStars < get_max_possible_stars() then return end
+    if hud_get_value(HUD_DISPLAY_STARS) < get_max_possible_stars() then return end
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
@@ -370,19 +375,29 @@ local function star_select_leaderboard()
             leaderboard = {}
             local course = gNetworkPlayers[0].currCourseNum
             for i = 0, MAX_PLAYERS - 1 do
-                local name = gNetworkPlayers[i].name
-                local coins = tostring(gMasterCapStates[i]["masterCapRecordCoins"..course])
-                local time = timestamp(gMasterCapStates[i]["masterCapRecordTime"..course])
+                local name = get_uncolored_string(gNetworkPlayers[i].name)
+                local coins = gMasterCapStates[i]["masterCapRecordCoins"..course]
+                local time = gMasterCapStates[i]["masterCapRecordTime"..course]
                 if name ~= "" and coins and time then
-                    table.insert(leaderboard, {name = name, coins = coins, time = time})
+                    table.insert(leaderboard, {
+                        name = name,
+                        coins = coins,
+                        time = time,
+                        displayCoins = tostring(coins),
+                        displayTime = timestamp(time),
+                    })
                 end
             end
             table.sort(leaderboard, function(a, b)
-                return a.coins ~= b.coins and a.coins > b.coins or a.time < b.time
+                if a.coins ~= b.coins then
+                    return a.coins > b.coins
+                else
+                    return a.time < b.time
+                end
             end)
         end
         for i = 1, #leaderboard do
-            local recordRender = tostring(i).." - "..leaderboard[i].name .. ": ".. leaderboard[i].coins .. " | " .. leaderboard[i].time
+            local recordRender = tostring(i).." - "..leaderboard[i].name .. ": ".. leaderboard[i].displayCoins .. " | " .. leaderboard[i].displayTime
             djui_hud_print_text(recordRender, 10, 30 + 10*i, 0.25)
         end
     end
