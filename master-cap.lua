@@ -346,7 +346,7 @@ end
 local leaderboardView = false
 local leaderboard = nil
 local TEXT_LEADERBOARD = "Master Cap Challenge Leaderboard"
-local TEXT_LEADERBOARD_TOGGLE = "Z - Toggle Leaderboard"
+local TEXT_LEADERBOARD_TOGGLE = "R Button - Toggle Leaderboard"
 local function star_select_leaderboard()
     if obj_get_first_with_behavior_id(id_bhvActSelector) == nil then
         leaderboardView = false
@@ -361,7 +361,8 @@ local function star_select_leaderboard()
     local sHeight = djui_hud_get_screen_height()
     local m = gMarioStates[0]
 
-    if m.controller.buttonPressed & Z_TRIG ~= 0 then
+    if m.controller.buttonPressed & R_TRIG ~= 0 then
+        play_sound(SOUND_MENU_CLICK_CHANGE_VIEW, gGlobalSoundSource)
         leaderboardView = not leaderboardView
     end
 
@@ -397,14 +398,24 @@ local function star_select_leaderboard()
             end)
         end
         for i = 1, #leaderboard do
-            local recordRender = tostring(i).." - "..leaderboard[i].name .. ": ".. leaderboard[i].displayCoins .. " | " .. leaderboard[i].displayTime
-            djui_hud_print_text(recordRender, 10, 30 + 10*i, 0.25)
+            local name = leaderboard[i].name
+            local coins = leaderboard[i].displayCoins
+            local time = leaderboard[i].displayTime
+            local row = math.floor((i-1)/3)
+            local x = sWidth*(1/(math.min(#leaderboard - row*3, 3) + 1))*(((i - 1)%3) + 1)
+            local y = sHeight*0.5 - 24*(math.floor((#leaderboard)/3) + 1)*0.5 + 24*row
+            djui_hud_render_rect(x - 0.5, y + 2, 1, 19)
+            djui_hud_print_text(ordinal(i), x - djui_hud_measure_text(ordinal(i))*0.4 - 2, y, 0.4)
+            djui_hud_print_text(name, x + 2, y, 0.4)
+            y = y + 12
+            djui_hud_print_text(coins, x - djui_hud_measure_text(coins)*0.3 - 2, y, 0.3)
+            djui_hud_print_text(time, x + 2, y, 0.3)
         end
     end
 
     djui_hud_set_color(0, 0, 0, 255)
     djui_hud_set_font(FONT_NORMAL)
-    djui_hud_print_text(TEXT_LEADERBOARD_TOGGLE, sWidth*0.5 - djui_hud_measure_text(TEXT_LEADERBOARD_TOGGLE)*0.25 - 1, sHeight - 21, 0.5)
+    djui_hud_print_text(TEXT_LEADERBOARD_TOGGLE, sWidth - djui_hud_measure_text(TEXT_LEADERBOARD_TOGGLE)*0.3 - 5, sHeight - 14, 0.3)
 end
 
 hook_event(HOOK_ON_LEVEL_INIT, level_init)

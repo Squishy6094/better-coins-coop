@@ -94,6 +94,24 @@ function timestamp(frames)
     return minutes > 0 and string.format("%d:%02d.%01d", minutes, seconds, milliseconds) or string.format("%01d.%01d", seconds, milliseconds)
 end
 
+function ordinal(n)
+    local s = tostring(n)
+    -- Handle 11, 12, 13
+    if #s >= 2 then
+        local lastTwo = tonumber(string.sub(s, -2))
+        if lastTwo >= 11 and lastTwo <= 13 then
+            return s .. "th"
+        end
+    end
+    
+    local lastDigit = tonumber(string.sub(s, -1))
+    if lastDigit == 1 then return s .. "st"
+    elseif lastDigit == 2 then return s .. "nd"
+    elseif lastDigit == 3 then return s .. "rd"
+    else return s .. "th"
+    end
+end
+
 --------------------------
 -- Romhack Star Counter --
 --------------------------
