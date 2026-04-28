@@ -7,6 +7,7 @@ for i = 0, MAX_PLAYERS - 1 do
         masterCapCoinTimer = 0,
         masterCapCoins = 0,
         masterCapNewRecord = false,
+        masterCapCrouchTimer = 0
     }
 end
 local function on_packet_recieve(data)
@@ -228,6 +229,7 @@ hook_mario_action(ACT_MASTER_CAP_RESULTS, act_master_cap_results)
 local function set_mario_finished_master_cap(m)
     local e = gMasterCapStates[m.playerIndex]
     e.masterCapTimer = 0
+    e.masterCapCrouchTimer = 0
     m.flags = m.flags & ~(MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
     set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
 
@@ -298,6 +300,15 @@ local function master_cap_update(m)
         else
             set_mario_finished_master_cap(m)
         end
+
+        if m.action == ACT_CROUCHING then
+            e.masterCapCrouchTimer = e.masterCapCrouchTimer + 1
+            if e.masterCapCrouchTimer > 90 then
+                set_mario_finished_master_cap(m)
+            end
+        else
+            e.masterCapCrouchTimer = math.max(e.masterCapCrouchTimer - 3, 0)
+        end
     end
 
     if m.playerIndex == 0 then 
@@ -309,6 +320,7 @@ local TEXT_MASTER_CAP = "Collect as many coins as possible!"
 local TEXT_RESULT_COINS = "Coins Collected:"
 local TEXT_RESULT_TIME = "Time Spent:"
 local TEXT_RECORD = "New Record"
+local TEXT_ENDING_RUN = "Ending Run Early..."
 local function master_cap_render()
     local m = gMarioStates[0]
     local e = gMasterCapStates[0]
@@ -320,6 +332,17 @@ local function master_cap_render()
         local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
         local textScale = math.min(sWidth/(textW + 32), 1)
         djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (32 + math.abs(math.sin(e.masterCapTotalTimer/30))*8)*textScale, textScale)
+
+        if e.masterCapCrouchTimer > 15 then
+            local untilCancelInterp = math.max(e.masterCapCrouchTimer + (m.action == ACT_CROUCHING and -1 or 3) - 15, 0)/75
+            local untilCancel = math.max(e.masterCapCrouchTimer - 15, 0)/75
+            local cancelColor = 127 - 127*untilCancel
+            djui_hud_set_color(255, cancelColor, cancelColor, 255)
+            djui_hud_render_rect_interpolated(0, 0, sWidth*untilCancelInterp, 2, 0, 0, sWidth*untilCancel, 2)
+            djui_hud_set_color(255, cancelColor, cancelColor, 255*untilCancel)
+            djui_hud_set_font(FONT_RECOLOR_HUD)
+            djui_hud_print_text(TEXT_ENDING_RUN, sWidth*0.5 - djui_hud_measure_text(TEXT_ENDING_RUN)*0.5, hud_is_hidden() and 10 or 36, 1)
+        end
     end
 
     if m.action == ACT_MASTER_CAP_RESULTS then
@@ -332,7 +355,7 @@ local function master_cap_render()
         djui_hud_print_text(TEXT_RESULT_COINS, sWidth*0.5 - djui_hud_measure_text(TEXT_RESULT_COINS)*0.25, 60, 0.5)
         local coinCount = m.actionState < 1 and 0 or e.masterCapCoins
         if m.actionState == 1 then
-            coinCount = math.ceil(math.lerp(0, e.masterCapCoins, m.actionTimer/math.min(e.masterCapCoins, 150)))
+            coinCount = math.ceil(math.lerp(0, e.masterCapCoins, math.clamp(m.actionTimer/math.min(e.masterCapCoins, 150), 0, 1)))
         end
         local coinRender = tostring(coinCount)
         djui_hud_set_font(FONT_RECOLOR_HUD)
@@ -343,7 +366,7 @@ local function master_cap_render()
         djui_hud_print_text(TEXT_RESULT_TIME, sWidth*0.5 - djui_hud_measure_text(TEXT_RESULT_TIME)*0.25, 120, 0.5)
         local timeCount = m.actionState < 3 and 0 or e.masterCapCoinTimer
         if m.actionState == 3 then
-            timeCount = math.lerp(0, e.masterCapCoinTimer, m.actionTimer/math.min(e.masterCapCoinTimer/30, 150))
+            timeCount = math.lerp(0, e.masterCapCoinTimer, math.clamp(m.actionTimer/math.min(e.masterCapCoinTimer/30, 150), 0, 1))
         end
         local timeRender = timestamp(timeCount)
         djui_hud_set_font(FONT_RECOLOR_HUD)

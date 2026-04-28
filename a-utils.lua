@@ -86,11 +86,11 @@ function nearest_mario_state_to_pos(x, y, z)
 end
 
 function timestamp(frames)
-    frames = frames or 0
-    seconds = math.round(frames) / 30
+    if type(frames) ~= "number" then return "x:xx:x" end
+    local seconds = math.round(frames) / 30
     local minutes = math.floor(seconds / 60)
     local milliseconds = math.floor((seconds - math.floor(seconds)) * 10)
-    seconds = math.floor(seconds) % 60
+    seconds = math.floor(seconds % 60)
     return minutes > 0 and string.format("%d:%02d.%01d", minutes, seconds, milliseconds) or string.format("%01d.%01d", seconds, milliseconds)
 end
 

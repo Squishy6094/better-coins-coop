@@ -456,7 +456,7 @@ end
 ---@param o Object
 local function bhv_snowmans_head_coins_loop(o)
     if o.oAction == 4 and o.oNumLootCoins > 0 then
-        spawn_coin_spawner(o.oPosX, o.oPosY + o.hitboxHeight, o.oPosZ, o.oNumLootCoins, true)
+        spawn_coin_spawner(o, o.oNumLootCoins, true, 0, o.hitboxHeight, 0)
         o.oNumLootCoins = 0
         network_send_object(o, true)
     end
