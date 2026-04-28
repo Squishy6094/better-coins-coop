@@ -1,6 +1,14 @@
+local levelTimer = 0
+local function update() levelTimer = levelTimer + 1 end
+hook_event(HOOK_UPDATE, update)
+local function level_init() levelTimer = 0 end
+hook_event(HOOK_ON_LEVEL_INIT, level_init)
+
+
 --- @param o Object
 local function bhv_coin_carry_init(o)
     o.oFlags = o.oFlags | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO
+    o.oBobombFuseTimer = 90
     network_init_object(o, true, {})
 end
 
@@ -29,7 +37,9 @@ local function bhv_coin_carry_loop(o)
     }
 
     -- Make objs circle mario when uninteractable
-    if m.action & ACT_FLAG_INTANGIBLE ~= 0 then
+
+    local masterCapStall = master_cap_box_active() and levelTimer < 90
+    if m.action & ACT_FLAG_INTANGIBLE ~= 0 or masterCapStall then
         local total, curr = count_carrier_objects(o)
         local angle = 0x10000*((curr - 1)/total) + get_global_timer()*0x200
         targetPos.x = targetPos.x + sins(angle)*250

@@ -27,6 +27,7 @@ local function bhv_master_cap_box_init(o)
     o.oHomeZ = o.oPosZ
 
     o.oPosY = o.oHomeY + 0x8000
+    o.oSubAction = 0
 
     o.areaTimerType = AREA_TIMER_TYPE_MAXIMUM
     o.areaTimer = 0
@@ -61,6 +62,7 @@ local function bhv_master_cap_box_loop(o)
         if nearestM and nearestM.numCoins > 0 then
             o.oHomeY = o.oHomeY + o.oVelY
             o.oVelY = o.oVelY + 1
+            o.oSubAction = 1
         end
 
         local isNearest = (nearestM ~= nil and nearestM == gMarioStates[0]);
@@ -105,11 +107,18 @@ local function bhv_master_cap_box_loop(o)
         create_sound_spawner(SOUND_GENERAL_BREAK_BOX);
         cur_obj_hide();
         o.oAction = 4
+        o.oSubAction = 2
     end
 end
 
 id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, bhv_master_cap_box_init, bhv_master_cap_box_loop, "bhvMasterCapBox")
 
+function master_cap_box_active()
+    local o = obj_get_first_with_behavior_id(id_bhvMasterCapBox)
+    if not o then return false end
+    if o.oSubAction > 0 then return false end
+    return true, o
+end
 
 local nearestObjPos = {x = 0, y = 0, z = 0}
 local capSpawnRadius = 400
@@ -205,6 +214,9 @@ local function act_master_cap_results(m)
         m.actionTimer = e.prevActionTimer
         m.actionState = e.prevActionState
         e.masterCapNewRecord = false
+        if m.playerIndex == 0 then
+            stop_secondary_music(50)
+        end
     end
 
 
@@ -253,7 +265,7 @@ local function master_cap_update(m)
     if e.masterCapTimer > 0 then
         e.masterCapTimer = math.max(m.capTimer, e.masterCapTimer)
         -- Hold timer on acts
-        if not noCountdown[m.action] then
+        if m.action & ACT_FLAG_INTANGIBLE == 0 then
             e.masterCapTimer = e.masterCapTimer - 1
             e.masterCapTotalTimer = e.masterCapTotalTimer + 1
         end
@@ -282,6 +294,7 @@ local function master_cap_update(m)
         e.masterCapCoins = math.clamp(m.numCoins, 0, 999)
         if e.masterCapTimer > 0 then
             m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
+            play_secondary_music(0, 0, 0, 50)
         else
             set_mario_finished_master_cap(m)
         end

@@ -280,7 +280,7 @@ local function get_all_possible_level_stars(level)
         stars = stars + 1
     end
 
-    if sGaslightStars[level] then stars = stars + 1 end
+    --if sGaslightStars[level] then stars = stars + 1 end
 
     if isRomhack and level_is_vanilla_level(level) then return 0 end
 
@@ -292,6 +292,8 @@ function get_max_possible_stars()
     for i = 1, #sLevelTable - 1 do
         count = count + get_all_possible_level_stars(sLevelTable[i])
     end
+
+    --djui_chat_message_create(tostring(count))
     return count
 end
 
