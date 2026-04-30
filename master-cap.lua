@@ -10,12 +10,50 @@ for i = 0, MAX_PLAYERS - 1 do
         masterCapCrouchTimer = 0
     }
 end
+
+-- Load save into sync table
+for i = 1, COURSE_MAX do
+    gMasterCapStates[0]["masterCapRecordCoins"..i] = tonumber(mod_storage_load(ROMHACK.."recordCoins"..tostring(i))) or 0
+    gMasterCapStates[0]["masterCapRecordTime"..i] = tonumber(mod_storage_load(ROMHACK.."recordTime"..tostring(i))) or 0
+end
+
 local function on_packet_recieve(data)
     local index = network_local_index_from_global(data.index)
     gMasterCapStates[index] = data
 end
 
 hook_event(HOOK_ON_PACKET_RECEIVE, on_packet_recieve)
+
+local function get_master_cap_leaderboard(course, out)
+    local leaderboard = out or {}
+    -- Clear table
+    for i in pairs(leaderboard) do
+        out[i] = nil
+    end
+    course = course or gNetworkPlayers[0].currCourseNum
+    for i = 0, MAX_PLAYERS - 1 do
+        local name = get_uncolored_string(gNetworkPlayers[i].name)
+        local coins = gMasterCapStates[i]["masterCapRecordCoins"..course]
+        local time = gMasterCapStates[i]["masterCapRecordTime"..course]
+        if name ~= "" and coins and (coins > 0 or i == 0) and time then
+            table.insert(leaderboard, {
+                name = name,
+                coins = coins,
+                time = time,
+                displayCoins = tostring(coins),
+                displayTime = timestamp(time),
+            })
+        end
+    end
+    table.sort(leaderboard, function(a, b)
+        if a.coins ~= b.coins then
+            return a.coins > b.coins
+        else
+            return a.time < b.time
+        end
+    end)
+    return leaderboard
+end
 
 ---@param o Object
 local function bhv_master_cap_box_init(o)
@@ -202,12 +240,31 @@ local function act_master_cap_results(m)
             m.actionState = m.actionState + 1
             m.actionTimer = 0
         end
-    elseif m.actionState == 4 then -- Await Input
+    elseif m.actionState == 4 then
+        -- Save high score
+        if m.playerIndex == 0 then
+            local course = gNetworkPlayers[0].currCourseNum
+
+            local prevCoins = e["masterCapRecordCoins"..course]
+            local currCoins = e.masterCapCoins
+            local prevTime = e["masterCapRecordTime"..course]
+            local currTime = e.masterCapCoinTimer
+            if prevCoins and (currCoins > prevCoins or (currCoins == prevCoins and currTime < prevTime)) then
+                e["masterCapRecordCoins"..course] = e.masterCapCoins
+                mod_storage_save(ROMHACK.."recordCoins"..tostring(course), tostring(e.masterCapCoins))
+                e["masterCapRecordTime"..course] = e.masterCapCoinTimer
+                mod_storage_save(ROMHACK.."recordTime"..tostring(course), tostring(e.masterCapCoinTimer))
+                e.masterCapNewRecord = true
+            end
+            m.actionState = m.actionState + 1
+        end
+    elseif m.actionState == 5 then -- Await Input
         if pressedA then
             m.actionState = m.actionState + 1
             m.actionTimer = 0
         end
     else
+
         --camera_unfreeze()
         m.action = e.prevAction
         m.marioObj.header.gfx.animInfo.animAccel = e.prevActionAnimAccel
@@ -232,22 +289,6 @@ local function set_mario_finished_master_cap(m)
     e.masterCapCrouchTimer = 0
     m.flags = m.flags & ~(MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
     set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
-
-    if m.playerIndex == 0 then
-        local course = gNetworkPlayers[0].currCourseNum
-
-        local prevCoins = e["masterCapRecordCoins"..course]
-        local currCoins = e.masterCapCoins
-        local prevTime = e["masterCapRecordTime"..course]
-        local currTime = e.masterCapCoinTimer
-        if prevCoins and (currCoins > prevCoins or (currCoins == prevCoins and currTime < prevTime)) then
-            e["masterCapRecordCoins"..course] = e.masterCapCoins
-            mod_storage_save(ROMHACK.."recordCoins"..tostring(course), tostring(e.masterCapCoins))
-            e["masterCapRecordTime"..course] = e.masterCapCoinTimer
-            mod_storage_save(ROMHACK.."recordTime"..tostring(course), tostring(e.masterCapCoinTimer))
-            e.masterCapNewRecord = true
-        end
-    end
 end
 
 local noCountdown = {
@@ -318,12 +359,18 @@ end
 
 local TEXT_MASTER_CAP = "Collect as many coins as possible!"
 local TEXT_RESULT_COINS = "Coins Collected:"
+local TEXT_RESULT_PB = "Personal Best: "
+local TEXT_RESULT_SB = "Server Best: "
 local TEXT_RESULT_TIME = "Time Spent:"
 local TEXT_RECORD = "New Record"
 local TEXT_ENDING_RUN = "Ending Run Early..."
+local leaderboardTop = nil
+local leaderboard = nil
 local function master_cap_render()
     local m = gMarioStates[0]
     local e = gMasterCapStates[0]
+    local course = gNetworkPlayers[0].currCourseNum
+    local isSingle = network_player_connected_count() <= 1
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
@@ -346,11 +393,30 @@ local function master_cap_render()
     end
 
     if m.action == ACT_MASTER_CAP_RESULTS then
+        local recordFlash = (e.masterCapNewRecord and m.actionState > 3) and 1 - math.abs(math.sin(m.actionTimer*0.1)/math.pi*0.8) or 1
         djui_hud_set_color(0, 0, 0, 150)
         djui_hud_render_rect(0, 0, sWidth, sHeight)
         djui_hud_set_color(255, 255, 255, 255)
 
+
+        -- Render Personal and Server Best
+        djui_hud_set_font(FONT_NORMAL)
+        local bestPersonal = TEXT_RESULT_PB .. tostring(e["masterCapRecordCoins"..course]) .. " - " .. timestamp(e["masterCapRecordTime"..course])
+        djui_hud_set_color(255, 255, 255*recordFlash, 255)
+        djui_hud_print_text(bestPersonal, sWidth*(isSingle and 0.5 or 0.25) - djui_hud_measure_text(bestPersonal)*0.25, sHeight - 22, 0.5)
+
+        if not isSingle then
+            if leaderboardTop == nil then
+                leaderboardTop = get_master_cap_leaderboard()[1]
+            end
+            local bestServer = TEXT_RESULT_SB .. leaderboardTop.displayCoins .. " - " .. leaderboardTop.displayTime
+            local serverRecordFlash = (e.masterCapCoins > leaderboardTop.coins or (e.masterCapCoins == leaderboardTop.coins and e.masterCapTimer < leaderboardTop.time)) and recordFlash or 1
+            djui_hud_set_color(255, 255, 255*serverRecordFlash, 255)
+            djui_hud_print_text(bestServer, sWidth*0.75 - djui_hud_measure_text(bestServer)*0.25, sHeight - 22, 0.5)
+        end
+
         -- Render Coins Collected
+        djui_hud_set_color(255, 255, 255, 255)
         djui_hud_set_font(FONT_NORMAL)
         djui_hud_print_text(TEXT_RESULT_COINS, sWidth*0.5 - djui_hud_measure_text(TEXT_RESULT_COINS)*0.25, 60, 0.5)
         local coinCount = m.actionState < 1 and 0 or e.masterCapCoins
@@ -360,6 +426,10 @@ local function master_cap_render()
         local coinRender = tostring(coinCount)
         djui_hud_set_font(FONT_RECOLOR_HUD)
         djui_hud_print_text(coinRender, sWidth*0.5 - djui_hud_measure_text(coinRender) - 4, 80, 2)
+        if m.actionState > 1 then
+            local coinTimeRender = tostring(math.round(e.masterCapCoins/((e.masterCapCoinTimer > 0 and e.masterCapCoinTimer or 1)/30)*10)*0.1).."/s"
+            djui_hud_print_text(coinTimeRender, sWidth*0.5 + djui_hud_measure_text(coinRender) + 16, 80 + 16, 1)
+        end
 
         -- Render Timestamp
         djui_hud_set_font(FONT_NORMAL)
@@ -373,14 +443,15 @@ local function master_cap_render()
         djui_hud_print_text(timeRender, sWidth*0.5 - djui_hud_measure_text(timeRender)*0.5 - 2, 140, 1)
 
         if m.actionState > 3 and e.masterCapNewRecord then
-            djui_hud_set_font(FONT_RECOLOR_HUD)
-            djui_hud_print_text(TEXT_RECORD, sWidth*0.5 - djui_hud_measure_text(TEXT_RECORD)*0.5 - 2, 200, 1)
+            djui_hud_set_color(255, 255, 255*recordFlash, 255)
+            djui_hud_print_text(TEXT_RECORD, sWidth*0.5 - djui_hud_measure_text(TEXT_RECORD)*0.5 - 2, sHeight - 70, 1)
         end
+    else
+        leaderboardTop = nil
     end
 end
 
 local leaderboardView = false
-local leaderboard = nil
 local TEXT_LEADERBOARD = "Master Cap Challenge Leaderboard"
 local TEXT_LEADERBOARD_TOGGLE = "R Button - Toggle Leaderboard"
 local function star_select_leaderboard()
@@ -409,43 +480,22 @@ local function star_select_leaderboard()
         djui_hud_set_font(FONT_NORMAL)
         djui_hud_print_text(TEXT_LEADERBOARD, sWidth*0.5 - djui_hud_measure_text(TEXT_LEADERBOARD)*0.25 - 1, 10, 0.5)
         if leaderboard == nil then -- Load and sort table when loaded
-            leaderboard = {}
-            local course = gNetworkPlayers[0].currCourseNum
-            for i = 0, MAX_PLAYERS - 1 do
-                local name = get_uncolored_string(gNetworkPlayers[i].name)
-                local coins = gMasterCapStates[i]["masterCapRecordCoins"..course]
-                local time = gMasterCapStates[i]["masterCapRecordTime"..course]
-                if name ~= "" and coins and time then
-                    table.insert(leaderboard, {
-                        name = name,
-                        coins = coins,
-                        time = time,
-                        displayCoins = tostring(coins),
-                        displayTime = timestamp(time),
-                    })
-                end
+            leaderboard = get_master_cap_leaderboard()
+        else
+            for i = 1, #leaderboard do
+                local name = leaderboard[i].name
+                local coins = leaderboard[i].displayCoins
+                local time = leaderboard[i].displayTime
+                local row = math.floor((i-1)/3)
+                local x = sWidth*(1/(math.min(#leaderboard - row*3, 3) + 1))*(((i - 1)%3) + 1)
+                local y = sHeight*0.5 - 24*(math.floor((#leaderboard)/3) + 1)*0.5 + 24*row
+                djui_hud_render_rect(x - 0.5, y + 2, 1, 19)
+                djui_hud_print_text(ordinal(i), x - djui_hud_measure_text(ordinal(i))*0.4 - 2, y, 0.4)
+                djui_hud_print_text(name, x + 2, y, 0.4)
+                y = y + 12
+                djui_hud_print_text(coins, x - djui_hud_measure_text(coins)*0.3 - 2, y, 0.3)
+                djui_hud_print_text(time, x + 2, y, 0.3)
             end
-            table.sort(leaderboard, function(a, b)
-                if a.coins ~= b.coins then
-                    return a.coins > b.coins
-                else
-                    return a.time < b.time
-                end
-            end)
-        end
-        for i = 1, #leaderboard do
-            local name = leaderboard[i].name
-            local coins = leaderboard[i].displayCoins
-            local time = leaderboard[i].displayTime
-            local row = math.floor((i-1)/3)
-            local x = sWidth*(1/(math.min(#leaderboard - row*3, 3) + 1))*(((i - 1)%3) + 1)
-            local y = sHeight*0.5 - 24*(math.floor((#leaderboard)/3) + 1)*0.5 + 24*row
-            djui_hud_render_rect(x - 0.5, y + 2, 1, 19)
-            djui_hud_print_text(ordinal(i), x - djui_hud_measure_text(ordinal(i))*0.4 - 2, y, 0.4)
-            djui_hud_print_text(name, x + 2, y, 0.4)
-            y = y + 12
-            djui_hud_print_text(coins, x - djui_hud_measure_text(coins)*0.3 - 2, y, 0.3)
-            djui_hud_print_text(time, x + 2, y, 0.3)
         end
     end
 
@@ -458,9 +508,3 @@ hook_event(HOOK_ON_LEVEL_INIT, level_init)
 hook_event(HOOK_MARIO_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_HUD_RENDER, star_select_leaderboard)
-
--- Load save into sync table
-for i = 1, COURSE_MAX do
-    gMasterCapStates[0]["masterCapRecordCoins"..i] = tonumber(mod_storage_load(ROMHACK.."recordCoins"..tostring(i))) or 0
-    gMasterCapStates[0]["masterCapRecordTime"..i] = tonumber(mod_storage_load(ROMHACK.."recordTime"..tostring(i))) or 0
-end
