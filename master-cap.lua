@@ -513,7 +513,18 @@ local function star_select_leaderboard()
     djui_hud_print_text(TEXT_LEADERBOARD_TOGGLE, sWidth - djui_hud_measure_text(TEXT_LEADERBOARD_TOGGLE)*0.3 - 5, sHeight - 14, 0.3)
 end
 
+local function on_death()
+    if gMasterCapStates[0].masterCapTimer > 0 then
+        set_mario_finished_master_cap(gMarioStates[0])
+        return false
+    end
+    if gMarioStates[0].action == ACT_MASTER_CAP_RESULTS then
+        return false
+    end
+end
+
 hook_event(HOOK_ON_LEVEL_INIT, level_init)
 hook_event(HOOK_MARIO_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_HUD_RENDER, star_select_leaderboard)
+hook_event(HOOK_ON_DEATH, on_death)
