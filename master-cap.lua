@@ -255,6 +255,10 @@ local function act_master_cap_results(m)
                 e["masterCapRecordTime"..course] = e.masterCapCoinTimer
                 mod_storage_save(ROMHACK.."recordTime"..tostring(course), tostring(e.masterCapCoinTimer))
                 e.masterCapNewRecord = true
+                if m.playerIndex == 0 then
+                    play_secondary_music(SEQ_EVENT_HIGH_SCORE, 0, 1, 0)
+                    play_star_fanfare()
+                end
             end
             m.actionState = m.actionState + 1
         end
@@ -362,8 +366,8 @@ local TEXT_RESULT_COINS = "Coins Collected:"
 local TEXT_RESULT_PB = "Personal Best: "
 local TEXT_RESULT_SB = "Server Best: "
 local TEXT_RESULT_TIME = "Time Spent:"
-local TEXT_RECORD = "New Record"
-local TEXT_ENDING_RUN = "Ending Run Early..."
+local TEXT_RECORD = "HI SCORE"
+local TEXT_ENDING_RUN = "ENDING RUN EARLY..."
 local leaderboardTop = nil
 local leaderboard = nil
 local function master_cap_render()
@@ -388,12 +392,15 @@ local function master_cap_render()
             djui_hud_render_rect_interpolated(0, 0, sWidth*untilCancelInterp, 2, 0, 0, sWidth*untilCancel, 2)
             djui_hud_set_color(255, cancelColor, cancelColor, 255*untilCancel)
             djui_hud_set_font(FONT_RECOLOR_HUD)
-            djui_hud_print_text(TEXT_ENDING_RUN, sWidth*0.5 - djui_hud_measure_text(TEXT_ENDING_RUN)*0.5, hud_is_hidden() and 10 or 36, 1)
+            local xShake = math.random(-2, 2)*untilCancel
+            local yShake = math.random(-2, 2)*untilCancel
+            djui_hud_print_text(TEXT_ENDING_RUN, sWidth*0.5 - djui_hud_measure_text(TEXT_ENDING_RUN)*0.5 + xShake, sHeight*0.5 - 8 + yShake, 1)
         end
     end
 
     if m.action == ACT_MASTER_CAP_RESULTS then
-        local recordFlash = (e.masterCapNewRecord and m.actionState > 3) and 1 - math.abs(math.sin(m.actionTimer*0.1)/math.pi*0.8) or 1
+        local record = (e.masterCapNewRecord and m.actionState > 3)
+        local recordFlash = record and sins(m.actionTimer*0x1000) * 50.0 + 200.0 or 255
         djui_hud_set_color(0, 0, 0, 150)
         djui_hud_render_rect(0, 0, sWidth, sHeight)
         djui_hud_set_color(255, 255, 255, 255)
@@ -402,7 +409,7 @@ local function master_cap_render()
         -- Render Personal and Server Best
         djui_hud_set_font(FONT_NORMAL)
         local bestPersonal = TEXT_RESULT_PB .. tostring(e["masterCapRecordCoins"..course]) .. " - " .. timestamp(e["masterCapRecordTime"..course])
-        djui_hud_set_color(255, 255, 255*recordFlash, 255)
+        djui_hud_set_color(recordFlash, recordFlash, record and 0 or 255, 255)
         djui_hud_print_text(bestPersonal, sWidth*(isSingle and 0.5 or 0.25) - djui_hud_measure_text(bestPersonal)*0.25, sHeight - 22, 0.5)
 
         if not isSingle then
@@ -410,8 +417,9 @@ local function master_cap_render()
                 leaderboardTop = get_master_cap_leaderboard()[1]
             end
             local bestServer = TEXT_RESULT_SB .. leaderboardTop.displayCoins .. " - " .. leaderboardTop.displayTime
-            local serverRecordFlash = (e.masterCapCoins > leaderboardTop.coins or (e.masterCapCoins == leaderboardTop.coins and e.masterCapTimer < leaderboardTop.time)) and recordFlash or 1
-            djui_hud_set_color(255, 255, 255*serverRecordFlash, 255)
+            local serverRecord = (e.masterCapCoins > leaderboardTop.coins or (e.masterCapCoins == leaderboardTop.coins and e.masterCapTimer < leaderboardTop.time)) and m.actionState > 3
+            local serverRecordFlash = serverRecord and recordFlash or 1
+            djui_hud_set_color(serverRecordFlash, serverRecordFlash, serverRecord and 0 or 255, 255)
             djui_hud_print_text(bestServer, sWidth*0.75 - djui_hud_measure_text(bestServer)*0.25, sHeight - 22, 0.5)
         end
 
@@ -443,7 +451,8 @@ local function master_cap_render()
         djui_hud_print_text(timeRender, sWidth*0.5 - djui_hud_measure_text(timeRender)*0.5 - 2, 140, 1)
 
         if m.actionState > 3 and e.masterCapNewRecord then
-            djui_hud_set_color(255, 255, 255*recordFlash, 255)
+            djui_hud_set_font(FONT_HUD)
+            djui_hud_set_color(recordFlash, recordFlash, recordFlash, 255)
             djui_hud_print_text(TEXT_RECORD, sWidth*0.5 - djui_hud_measure_text(TEXT_RECORD)*0.5 - 2, sHeight - 70, 1)
         end
     else

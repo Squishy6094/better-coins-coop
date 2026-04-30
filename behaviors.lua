@@ -4,6 +4,12 @@ end
 
 -- Behaviors
 
+local function obj_force_model(o, model)
+    if obj_has_model_extended(o, model) == 0 then
+        obj_set_model_extended(o, model)
+    end
+end
+
 ---@param o Object
 local function bhv_moneybag_set_coins(o)
     -- in place of loot coins since the original func forces it to 0
@@ -305,12 +311,12 @@ end
 ---@param o Object
 local function bhv_1up_hidden_in_pole_loop(o)
     if o.oAction == 0 then
-        obj_set_model_extended(o, E_MODEL_BLUE_COIN)
+        obj_force_model(o, E_MODEL_BLUE_COIN)
     elseif o.oAction == 1 then
         o.oNumLootCoins = 5
         bhv_1up_to_blue_coin(o)
     end
-    o.oAnimState = o.oTimer%7
+    o.oAnimState = o.oAnimState + 1
 end
 
 ---@param o Object
@@ -324,15 +330,14 @@ local function bhv_blue_coin_init(o)
     o.oDamageOrCoinValue = 5
     o.oAnimState = -1
     obj_set_billboard(o)
-    if obj_has_model_extended(o, E_MODEL_1UP) ~= 0 then
-        obj_set_model_extended(o, E_MODEL_BLUE_COIN)
-    end
+    obj_force_model(o, E_MODEL_BLUE_COIN)
 
     network_init_object(o, true, {})
 end
 
 ---@param o Object
 local function bhv_blue_coin_loop(o)
+    obj_force_model(o, E_MODEL_BLUE_COIN)
     cur_obj_enable_rendering();
     cur_obj_become_tangible();
 
@@ -342,17 +347,18 @@ local function bhv_blue_coin_loop(o)
         obj_mark_for_deletion(o);
     end
 
-    o.oAnimState = o.oTimer%7
+    o.oAnimState = o.oAnimState + 1
     o.oInteractStatus = 0;
 end
 
 ---@param o Object
 local function bhv_moving_blue_coin_capped_loop(o)
     bhv_moving_blue_coin_loop()
+    obj_force_model(o, E_MODEL_BLUE_COIN)
     if (o.oForwardVel > 40.0) then
         o.oForwardVel = 40.0
     end
-    o.oAnimState = o.oTimer%7
+    o.oAnimState = o.oAnimState + 1
 end
 
 hook_coins_behavior(id_bhv1Up, true, bhv_blue_coin_init, bhv_blue_coin_loop)
