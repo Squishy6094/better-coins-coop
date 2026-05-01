@@ -625,3 +625,15 @@ local function bhv_wooden_post_loop(o)
 end
 
 hook_coins_behavior(id_bhvWoodenPost, false, nil, bhv_wooden_post_loop)
+
+local function bhv_exclamation_box_edit_contents(o)
+    local m = nearest_mario_state_to_object(o)
+    if m and mario_master_cap_active(m) then
+        -- Edit contents to 10 coins if box is a cap
+        if o.oBehParams2ndByte < 3 then
+            o.oBehParams2ndByte = 6
+        end
+    end
+end
+
+hook_coins_behavior(id_bhvExclamationBox, false, nil, bhv_exclamation_box_edit_contents)

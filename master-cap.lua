@@ -159,6 +159,11 @@ function master_cap_box_active()
     return true, o
 end
 
+---@param m MarioState
+function mario_master_cap_active(m)
+    return gMasterCapStates[m.playerIndex].masterCapTimer > 0
+end
+
 local nearestObjPos = {x = 0, y = 0, z = 0}
 local capSpawnRadius = 400
 local function level_init()
