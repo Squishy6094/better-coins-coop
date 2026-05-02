@@ -128,14 +128,11 @@ end
 
 local originalStayInLevel = gServerSettings.stayInLevelAfterStar
 local function allow_interact(m, o, int)
-    for i = 1, #starBhvs do
-        local bhvID = starBhvs[i]
-        if obj_has_behavior_id(o, bhvID) ~= 0 then
-            -- Make Transparent Stars turn off stay in level
-            if obj_is_star_collected(o) then
-                originalStayInLevel = gServerSettings.stayInLevelAfterStar
-                gServerSettings.stayInLevelAfterStar = 2
-            end
+    if (int == INTERACT_STAR_OR_KEY) then
+        -- Make Transparent Stars turn on nonstop
+        if obj_is_star_collected(o) then
+            originalStayInLevel = gServerSettings.stayInLevelAfterStar
+            gServerSettings.stayInLevelAfterStar = 2
         end
     end
 end
@@ -173,17 +170,16 @@ local function interact(m, o, int)
 
         -- Set Master Cap Coin Time
         gMasterCapStates[m.playerIndex].masterCapCoinTimer = gMasterCapStates[m.playerIndex].masterCapTotalTimer
+        return
     end
 
-    for i = 1, #starBhvs do
-        local bhvID = starBhvs[i]
-        if obj_has_behavior_id(o, bhvID) ~= 0 then
-            -- Spawn Coins and turn it back on
-            if gServerSettings.stayInLevelAfterStar == 2 then
-                spawn_coin_spawner(o, 10, true)
-            end
-            gServerSettings.stayInLevelAfterStar = originalStayInLevel
+    if (int == INTERACT_STAR_OR_KEY) then
+        -- Spawn Coins and turn it back on
+        if gServerSettings.stayInLevelAfterStar == 2 then
+            spawn_coin_spawner(o, 10, true)
         end
+        gServerSettings.stayInLevelAfterStar = originalStayInLevel
+        return
     end
 end
 
