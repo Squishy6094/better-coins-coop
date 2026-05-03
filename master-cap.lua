@@ -1,7 +1,12 @@
 
-local StreamToSeq = require("/lib/streamedToSeq")
+local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
 
-local SEQ_EVENT_MASTER_CAP = StreamToSeq.newStreamedSequence(0, "music-master-cap.ogg", {000917493, 003175168}, false, 1, 1)
+audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917493, 003175168)
+audio_stream_set_looping(MUSIC_MASTER_CAP, true)
+
+local masterCapMusicFreq = 1
+
+local MASTER_CAP_BOX_SCALE = 3
 
 gMasterCapStates = {}
 for i = 0, MAX_PLAYERS - 1 do
@@ -80,13 +85,9 @@ local function bhv_master_cap_box_init(o)
     smlua_anim_util_set_animation(o, "idle")
 end
 
-local MASTER_CAP_SCALE = 3
-
-local bgMusic = nil
-
 ---@param o Object
 local function bhv_master_cap_box_loop(o)
-    cur_obj_scale(MASTER_CAP_SCALE);
+    cur_obj_scale(MASTER_CAP_BOX_SCALE);
     o.oInteractType = INTERACT_BREAKABLE
     o.hitboxDownOffset = 5
     o.oDamageOrCoinValue = 0
@@ -145,11 +146,11 @@ local function bhv_master_cap_box_loop(o)
         end
         o.oExclamationBoxUnkF8 = (sins(o.oExclamationBoxUnkFC) + 1.0) * 0.3 + 0.0;
         o.oExclamationBoxUnkF4 = (-sins(o.oExclamationBoxUnkFC) + 1.0) * 0.5 + 1.0;
-        o.oGraphYOffset = (-sins(o.oExclamationBoxUnkFC) + 1.0) * (16.0 * MASTER_CAP_SCALE);
+        o.oGraphYOffset = (-sins(o.oExclamationBoxUnkFC) + 1.0) * (16.0 * MASTER_CAP_BOX_SCALE);
         o.oExclamationBoxUnkFC = o.oExclamationBoxUnkFC + 0x1000;
-        o.header.gfx.scale.x = o.oExclamationBoxUnkF4 * MASTER_CAP_SCALE;
-        o.header.gfx.scale.y = o.oExclamationBoxUnkF8 * MASTER_CAP_SCALE;
-        o.header.gfx.scale.z = o.oExclamationBoxUnkF4 * MASTER_CAP_SCALE;
+        o.header.gfx.scale.x = o.oExclamationBoxUnkF4 * MASTER_CAP_BOX_SCALE;
+        o.header.gfx.scale.y = o.oExclamationBoxUnkF8 * MASTER_CAP_BOX_SCALE;
+        o.header.gfx.scale.z = o.oExclamationBoxUnkF4 * MASTER_CAP_BOX_SCALE;
         if (o.oTimer == 7) then
             o.oAction = 3;
         end
@@ -166,7 +167,6 @@ local function bhv_master_cap_box_loop(o)
         cur_obj_hide();
         o.oAction = 4
         o.oSubAction = 2
-        bgMusic = nil
     end
 end
 
@@ -191,6 +191,7 @@ local capSpawnRadius = 400
 local function level_init()
     local m = gMarioStates[0]
     local e = gMasterCapStates[0]
+
     if obj_get_first_with_behavior_id(id_bhvBowser) == nil then
         e.masterCapTimer = 0
         e.masterCapTotalTimer = 0
@@ -394,25 +395,28 @@ local function master_cap_music_update()
     elseif m.action == ACT_MASTER_CAP_RESULTS then
         runState = 2
     end
+
     if runState > 0 then
+        audio_stream_set_volume(MUSIC_MASTER_CAP, is_game_paused() and 0 or 1)
         if prevRunState ~= runState then
             stop_cap_music()
-            bgMusic = bgMusic or get_current_background_music()
-            set_background_music(0, SEQ_EVENT_MASTER_CAP, 0)
+            audio_stream_play(MUSIC_MASTER_CAP, false, 1)
+            play_secondary_music(0, 0, 0, 50)
             prevRunState = runState
         end
         local freqTargetTime = 1 + (math.max(300 - e.masterCapTimer, 0)/300)*0.3
         local freqTargetEnd = 1 + (e.masterCapCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
-        local seq = StreamToSeq.getStreamFromSeqPlayer(SEQ_PLAYER_LEVEL)
-        if seq then
-            seq.freq = math.lerp(seq.freq, freqTarget, 0.1)
-        end
+        masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.1)
+        audio_stream_set_frequency(MUSIC_MASTER_CAP, masterCapMusicFreq)
 
     else
         if prevRunState ~= runState then
-            set_background_music(0, bgMusic, 0)
-            bgMusic = nil
+            audio_stream_set_position(MUSIC_MASTER_CAP, 0)
+            audio_stream_set_frequency(MUSIC_MASTER_CAP, 1)
+            masterCapMusicFreq = 0
+            audio_stream_stop(MUSIC_MASTER_CAP)
+            stop_secondary_music(50)
             prevRunState = runState
         end
     end
