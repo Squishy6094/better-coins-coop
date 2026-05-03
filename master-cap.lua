@@ -1,5 +1,5 @@
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
-audio_stream_set_loop_points(MUSIC_MASTER_CAP, 20.006*16000, 58.406*16000)
+audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917493, 003175168)
 audio_stream_set_looping(MUSIC_MASTER_CAP, true)
 local masterCapMusicFreq = 1
 
