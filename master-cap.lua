@@ -80,11 +80,15 @@ local function bhv_master_cap_box_init(o)
     o.areaTimerType = AREA_TIMER_TYPE_MAXIMUM
     o.areaTimer = 0
     o.areaTimerDuration = 300
+
+    smlua_anim_util_set_animation(o, "idle")
 end
+
+local MASTER_CAP_SCALE = 3
 
 ---@param o Object
 local function bhv_master_cap_box_loop(o)
-    cur_obj_scale(2.0);
+    cur_obj_scale(MASTER_CAP_SCALE);
     o.oInteractType = INTERACT_BREAKABLE
     o.hitboxDownOffset = 5
     o.oDamageOrCoinValue = 0
@@ -139,23 +143,31 @@ local function bhv_master_cap_box_loop(o)
         end
         o.oExclamationBoxUnkF8 = (sins(o.oExclamationBoxUnkFC) + 1.0) * 0.3 + 0.0;
         o.oExclamationBoxUnkF4 = (-sins(o.oExclamationBoxUnkFC) + 1.0) * 0.5 + 1.0;
-        o.oGraphYOffset = (-sins(o.oExclamationBoxUnkFC) + 1.0) * 26.0;
+        o.oGraphYOffset = (-sins(o.oExclamationBoxUnkFC) + 1.0) * (16.0 * MASTER_CAP_SCALE);
         o.oExclamationBoxUnkFC = o.oExclamationBoxUnkFC + 0x1000;
-        o.header.gfx.scale.x = o.oExclamationBoxUnkF4 * 2.0;
-        o.header.gfx.scale.y = o.oExclamationBoxUnkF8 * 2.0;
-        o.header.gfx.scale.z = o.oExclamationBoxUnkF4 * 2.0;
+        o.header.gfx.scale.x = o.oExclamationBoxUnkF4 * MASTER_CAP_SCALE;
+        o.header.gfx.scale.y = o.oExclamationBoxUnkF8 * MASTER_CAP_SCALE;
+        o.header.gfx.scale.z = o.oExclamationBoxUnkF4 * MASTER_CAP_SCALE;
         if (o.oTimer == 7) then
             o.oAction = 3;
         end
     elseif o.oAction == 3 then
         --exclamation_box_spawn_contents(gExclamationBoxContents, o->oBehParams2ndByte);
         gMasterCapStates[0].masterCapTimer = gLevelValues.wingCapDuration*0.5--(gNetworkPlayers[0].currCourseNum <= 15 and 0.5 or 0.25)
+        play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 0, 255, 255, 255)
+        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 255, 255, 255)
+        play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource)
+        play_character_sound(gMarioStates[0], CHAR_SOUND_HERE_WE_GO)
         spawn_mist_particles_variable(0, 0, 46.0);
         spawn_triangle_break_particles(20, 139, 0.3, o.oAnimState);
         create_sound_spawner(SOUND_GENERAL_BREAK_BOX);
         cur_obj_hide();
         o.oAction = 4
         o.oSubAction = 2
+    end
+
+    if cur_obj_check_if_at_animation_end() ~= 0 then
+        cur_obj_play_sound_1(SOUND_OBJ_BOWSER_SPINNING)
     end
 end
 
@@ -218,11 +230,11 @@ local function level_init()
         local objX = math.clamp(math.lerp(castFloorSpawn.x, nearestObjPos.x, 0.5), castFloorSpawn.x - capSpawnRadius, castFloorSpawn.x + capSpawnRadius)
         local objY = math.clamp(math.lerp(castFloorSpawn.y, nearestObjPos.y, 0.5), castFloorSpawn.y - 300, castFloorSpawn.y) + 350
         local objZ = math.clamp(math.lerp(castFloorSpawn.z, nearestObjPos.z, 0.5), castFloorSpawn.z - capSpawnRadius, castFloorSpawn.z + capSpawnRadius)
-        spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_EXCLAMATION_BOX, objX, objY, objZ, function (o) end)
+        spawn_non_sync_object(id_bhvMasterCapBox, smlua_model_util_get_id("master_box_geo"), objX, objY, objZ, function (o) end)
         --djui_chat_message_create(tostring(objX) .."|".. tostring(objY) .."|".. tostring(objZ))
     end
 end
-
+gLevelValues.entryLevel = LEVEL_VCUTM
 local ACT_MASTER_CAP_RESULTS = allocate_mario_action(ACT_GROUP_CUTSCENE | ACT_FLAG_INTANGIBLE)
 
 ---@param m MarioState

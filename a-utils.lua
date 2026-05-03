@@ -1,19 +1,23 @@
 ROMHACK = "sm64"
-for i in pairs(gActiveMods) do
-    local mod = gActiveMods[i]
-    if mod.incompatible ~= nil then
-        if mod.incompatible:find("romhack") then
-            ROMHACK = mod.relativePath
+
+local function get_romhack_name()
+    for i in pairs(gActiveMods) do
+        local mod = gActiveMods[i]
+        if mod.incompatible ~= nil then
+            if mod.incompatible:find("romhack") then
+                ROMHACK = mod.relativePath
+            end
         end
-    end
-    if mod.category ~= nil then
-        if mod.category:find("romhack") then
-            ROMHACK = mod.relativePath
+        if mod.category ~= nil then
+            if mod.category:find("romhack") then
+                ROMHACK = mod.relativePath
+            end
         end
+        ROMHACK = ROMHACK:gsub("[/\\]+$", "")
+        ROMHACK = ROMHACK:gsub(".*[/\\]", "")
     end
-    ROMHACK = ROMHACK:gsub("[/\\]+$", "")
-    ROMHACK = ROMHACK:gsub(".*[/\\]", "")
 end
+
 
 --- @param obj Object
 --- Replacement for DROP_TO_FLOOR()
@@ -117,6 +121,8 @@ end
 --------------------------
 
 local function on_mods_loaded()
+
+get_romhack_name()
 
 local sLevelTable = {
     LEVEL_BBH,

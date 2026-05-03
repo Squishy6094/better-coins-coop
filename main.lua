@@ -14,14 +14,6 @@ gLevelValues.hudCapTimer = 1
 gGlobalSyncTable.mouseGrab = false
 gGlobalSyncTable.courtyardSecretSolved = false
 
-local starBhvs = {
-    id_bhvStar,
-    id_bhvSpawnedStar,
-    id_bhvSpawnedStarNoLevelExit,
-    id_bhvHiddenStar,
-    id_bhvStarSpawnCoordinates,
-}
-
 local magnetBhvs = {
     id_bhvOneCoin,
     id_bhvYellowCoin,
@@ -159,7 +151,7 @@ local function interact(m, o, int)
         end
                                                     -- Lowest V  V Highest     Coins to Highest V
         audio_stream_set_frequency(currCoinSound, math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1)))
-        audio_stream_play(currCoinSound, true, 1.5)
+        audio_stream_play(currCoinSound, true, 1.25)
         coinSoundCount = (coinSoundCount + 1)%4
         coinSoundComboEnd = get_global_timer() + 90
 
