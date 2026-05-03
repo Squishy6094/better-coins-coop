@@ -185,6 +185,8 @@ function mario_master_cap_active(m)
     return gMasterCapStates[m.playerIndex].masterCapTimer > 0
 end
 
+local E_MODEL_MASTER_CAP = smlua_model_util_get_id("master_box_geo")
+
 local nearestObjPos = {x = 0, y = 0, z = 0}
 local capSpawnRadius = 400
 local function level_init()
@@ -230,11 +232,10 @@ local function level_init()
         local objX = math.clamp(math.lerp(castFloorSpawn.x, nearestObjPos.x, 0.5), castFloorSpawn.x - capSpawnRadius, castFloorSpawn.x + capSpawnRadius)
         local objY = math.clamp(math.lerp(castFloorSpawn.y, nearestObjPos.y, 0.5), castFloorSpawn.y - 300, castFloorSpawn.y) + 350
         local objZ = math.clamp(math.lerp(castFloorSpawn.z, nearestObjPos.z, 0.5), castFloorSpawn.z - capSpawnRadius, castFloorSpawn.z + capSpawnRadius)
-        spawn_non_sync_object(id_bhvMasterCapBox, smlua_model_util_get_id("master_box_geo"), objX, objY, objZ, function (o) end)
+        spawn_non_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, objX, objY, objZ, function (o) end)
         --djui_chat_message_create(tostring(objX) .."|".. tostring(objY) .."|".. tostring(objZ))
     end
 end
-gLevelValues.entryLevel = LEVEL_VCUTM
 local ACT_MASTER_CAP_RESULTS = allocate_mario_action(ACT_GROUP_CUTSCENE | ACT_FLAG_INTANGIBLE)
 
 ---@param m MarioState
