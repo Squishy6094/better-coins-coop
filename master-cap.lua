@@ -135,6 +135,10 @@ local function bhv_master_cap_box_loop(o)
             end
         end
         load_object_collision_model()
+
+        if cur_obj_check_if_at_animation_end() ~= 0 then
+            cur_obj_play_sound_1(SOUND_OBJ_BOWSER_SPINNING)
+        end
     elseif o.oAction == 2 then
         cur_obj_move_using_fvel_and_gravity();
         if (o.oVelY < 0.0) then
@@ -164,10 +168,6 @@ local function bhv_master_cap_box_loop(o)
         cur_obj_hide();
         o.oAction = 4
         o.oSubAction = 2
-    end
-
-    if cur_obj_check_if_at_animation_end() ~= 0 then
-        cur_obj_play_sound_1(SOUND_OBJ_BOWSER_SPINNING)
     end
 end
 
