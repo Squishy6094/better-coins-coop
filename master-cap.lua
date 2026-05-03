@@ -1,7 +1,7 @@
 
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
 
-audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917493, 003175168)
+audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917230, 003175168)
 audio_stream_set_looping(MUSIC_MASTER_CAP, true)
 
 local masterCapMusicFreq = 1
@@ -397,7 +397,7 @@ local function master_cap_music_update()
     end
 
     if runState > 0 then
-        audio_stream_set_volume(MUSIC_MASTER_CAP, is_game_paused() and 0 or 1)
+        audio_stream_set_volume(MUSIC_MASTER_CAP, is_game_paused() and 0 or 0.75)
         if prevRunState ~= runState then
             stop_cap_music()
             audio_stream_play(MUSIC_MASTER_CAP, false, 1)
