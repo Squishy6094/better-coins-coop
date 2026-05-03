@@ -405,7 +405,9 @@ local function master_cap_music_update()
         local freqTargetEnd = 1 + (e.masterCapCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
         local seq = StreamToSeq.getStreamFromSeqPlayer(SEQ_PLAYER_LEVEL)
-        seq.freq = math.lerp(seq.freq, freqTarget, 0.1)
+        if seq then
+            seq.freq = math.lerp(seq.freq, freqTarget, 0.1)
+        end
 
     else
         if prevRunState ~= runState then

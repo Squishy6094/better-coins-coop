@@ -32,6 +32,7 @@ function object_drop_to_floor(obj)
 end
 
 function obj_pos_to_vec3f(o)
+    if not o then o = get_current_object() end
     return {x = o.oPosX, y = o.oPosY, z = o.oPosZ}
 end
 
