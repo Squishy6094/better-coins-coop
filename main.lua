@@ -189,7 +189,6 @@ local function object_unload(o)
     end
 end
 
-local areaCoinCount = 0
 local function count_possible_coins()
     local areaCoinCount = 0
     -- Replace all Object Models

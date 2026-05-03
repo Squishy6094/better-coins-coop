@@ -1,11 +1,7 @@
-local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
-audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917493, 003175168)
-audio_stream_set_looping(MUSIC_MASTER_CAP, true)
-local masterCapMusicFreq = 1
 
-local function stop_master_cap_music()
-end
+local StreamToSeq = require("/lib/streamedToSeq")
 
+local SEQ_EVENT_MASTER_CAP = StreamToSeq.newStreamedSequence(0, "music-master-cap.ogg", {000917493, 003175168}, false, 1, 1)
 
 gMasterCapStates = {}
 for i = 0, MAX_PLAYERS - 1 do
@@ -301,9 +297,6 @@ local function act_master_cap_results(m)
         m.actionTimer = e.prevActionTimer
         m.actionState = e.prevActionState
         e.masterCapNewRecord = false
-        if m.playerIndex == 0 then
-            stop_master_cap_music()
-        end
     end
 
 
@@ -388,6 +381,7 @@ local function master_cap_update(m)
     end
 end
 
+local bgMusic = nil
 local prevRunState = 0
 local function master_cap_music_update()
     local m = gMarioStates[0]
@@ -400,23 +394,20 @@ local function master_cap_music_update()
     end
     if runState > 0 then
         if prevRunState ~= runState then
-            audio_stream_play(MUSIC_MASTER_CAP, false, 1)
-            play_secondary_music(0, 0, 0, 50)
+            stop_cap_music()
+            bgMusic = bgMusic or get_current_background_music()
+            set_background_music(0, SEQ_EVENT_MASTER_CAP, 0)
             prevRunState = runState
         end
-        audio_stream_set_volume(MUSIC_MASTER_CAP, is_game_paused() and 0 or 1)
         local freqTargetTime = 1 + (math.max(300 - e.masterCapTimer, 0)/300)*0.3
         local freqTargetEnd = 1 + (e.masterCapCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
-        masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.1)
-        audio_stream_set_frequency(MUSIC_MASTER_CAP, masterCapMusicFreq)
+        StreamToSeq.getStreamFromSeqPlayer(SEQ_PLAYER_LEVEL).freq = math.lerp(StreamToSeq.getStreamFromSeqPlayer(SEQ_PLAYER_LEVEL).freq, freqTarget, 0.1)
+
     else
         if prevRunState ~= runState then
-            audio_stream_set_position(MUSIC_MASTER_CAP, 0)
-            audio_stream_set_frequency(MUSIC_MASTER_CAP, 1)
-            masterCapMusicFreq = 0
-            audio_stream_stop(MUSIC_MASTER_CAP)
-            stop_secondary_music(50)
+            set_background_music(0, bgMusic, 0)
+            bgMusic = nil
             prevRunState = runState
         end
     end
@@ -621,4 +612,3 @@ hook_event(HOOK_UPDATE, master_cap_music_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_HUD_RENDER, hud_render)
 hook_event(HOOK_ON_DEATH, on_death)
-hook_event(HOOK_ON_EXIT, stop_master_cap_music)
