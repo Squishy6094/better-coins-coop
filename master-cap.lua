@@ -82,6 +82,8 @@ end
 
 local MASTER_CAP_SCALE = 3
 
+local bgMusic = nil
+
 ---@param o Object
 local function bhv_master_cap_box_loop(o)
     cur_obj_scale(MASTER_CAP_SCALE);
@@ -164,6 +166,7 @@ local function bhv_master_cap_box_loop(o)
         cur_obj_hide();
         o.oAction = 4
         o.oSubAction = 2
+        bgMusic = nil
     end
 end
 
@@ -381,7 +384,6 @@ local function master_cap_update(m)
     end
 end
 
-local bgMusic = nil
 local prevRunState = 0
 local function master_cap_music_update()
     local m = gMarioStates[0]
@@ -402,7 +404,8 @@ local function master_cap_music_update()
         local freqTargetTime = 1 + (math.max(300 - e.masterCapTimer, 0)/300)*0.3
         local freqTargetEnd = 1 + (e.masterCapCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
-        StreamToSeq.getStreamFromSeqPlayer(SEQ_PLAYER_LEVEL).freq = math.lerp(StreamToSeq.getStreamFromSeqPlayer(SEQ_PLAYER_LEVEL).freq, freqTarget, 0.1)
+        local seq = StreamToSeq.getStreamFromSeqPlayer(SEQ_PLAYER_LEVEL)
+        seq.freq = math.lerp(seq.freq, freqTarget, 0.1)
 
     else
         if prevRunState ~= runState then
