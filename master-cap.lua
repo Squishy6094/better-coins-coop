@@ -245,6 +245,7 @@ local function act_master_cap_results(m)
     m.marioObj.header.gfx.animInfo.animAccel = 0
     --camera_freeze()
     game_unpause()
+    set_menu_mode(-1)
     local pressedA = m.controller.buttonPressed & A_BUTTON ~= 0
     if m.actionState == 0 then -- Stall
         if m.actionTimer > 10 then
@@ -401,10 +402,12 @@ local function master_cap_music_update()
         if prevRunState ~= runState then
             stop_cap_music()
             audio_stream_play(MUSIC_MASTER_CAP, false, 1)
-            play_secondary_music(0, 0, 0, 50)
             prevRunState = runState
         end
-        local freqTargetTime = 1 + (math.max(300 - e.masterCapTimer, 0)/300)*0.3
+        if runState == 1 then
+            play_secondary_music(0, 0, 0, 50)
+        end
+        local freqTargetTime = 1 + (math.max(450 - e.masterCapTimer, 0)/450)*0.3
         local freqTargetEnd = 1 + (e.masterCapCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
         masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.1)
