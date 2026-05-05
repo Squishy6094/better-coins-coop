@@ -1,5 +1,5 @@
 -- Load Libraries
-require("libs/compatBhvs")
+--require("libs/compatBhvs")
 require("libs/oTagLib")
 
 ROMHACK = "sm64"
