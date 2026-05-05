@@ -74,9 +74,7 @@ local function bhv_master_cap_box_init(o)
     o.collisionData = gGlobalObjectCollisionData.exclamation_box_outline_seg8_collision_08025F78
     o.oCollisionDistance = 300
 
-    o.oHomeX = o.oPosX
-    o.oHomeY = o.oPosY
-    o.oHomeZ = o.oPosZ
+    cur_obj_set_home_once()
 
     o.oPosY = o.oHomeY + 0x8000
     o.oSubAction = 0
@@ -90,7 +88,7 @@ end
 
 ---@param o Object
 local function bhv_master_cap_box_loop(o)
-    cur_obj_scale(MASTER_CAP_BOX_SCALE);
+    cur_obj_scale(MASTER_CAP_BOX_SCALE)
     o.oInteractType = INTERACT_BREAKABLE
     o.hitboxDownOffset = 5
     o.oDamageOrCoinValue = 0
@@ -101,15 +99,15 @@ local function bhv_master_cap_box_loop(o)
     local nearestM = nearest_mario_state_to_object(o)
 
     if o.oAction == 0 then
-        o.oExclamationBoxForce = 0;
+        o.oExclamationBoxForce = 0
         o.oAction = 1
     elseif o.oAction == 1 then
         if (o.oTimer == 0) then
-            cur_obj_unhide();
-            cur_obj_become_tangible();
-            o.oInteractStatus = 0;
-            --o.oPosY = o.oHomeY;
-            o.oGraphYOffset = 0.0;
+            cur_obj_unhide()
+            cur_obj_become_tangible()
+            o.oInteractStatus = 0
+            --o.oPosY = o.oHomeY
+            o.oGraphYOffset = 0.0
         end
 
         o.oPosY = math.lerp(o.oPosY, o.oHomeY + math.sin(get_global_timer()/10)*30, 0.1)
@@ -119,21 +117,23 @@ local function bhv_master_cap_box_loop(o)
             o.oSubAction = 1
         end
 
-        local isNearest = (nearestM ~= nil and nearestM == gMarioStates[0]);
+        local isNearest = (nearestM ~= nil and nearestM == gMarioStates[0])
         if (o.oExclamationBoxForce ~= 0 or isNearest) then
             if (o.oExclamationBoxForce ~= 0 or (isNearest and cur_obj_was_attacked_or_ground_pounded() ~= 0)) then
                 if (o.oExclamationBoxForce == 0) then
-                    o.oExclamationBoxForce = 1;
-                    --network_send_object(o);
-                    o.oExclamationBoxForce = 0;
+                    o.oExclamationBoxForce = 1
+                    --network_send_object(o)
+                    o.oExclamationBoxForce = 0
                 end
-                cur_obj_become_intangible();
-                o.oExclamationBoxUnkFC = 0x4000;
-                o.oVelY = 30.0;
-                o.oGravity = -8.0;
-                o.oFloorHeight = o.oPosY;
-                o.oAction = 2;
-                queue_rumble_data_object(o, 5, 80);
+                o.oExclamationBoxUnkFC = 0x4000
+                o.oVelY = 30.0
+                o.oGravity = -8.0
+                o.oFloorHeight = o.oPosY
+                o.oAction = 2
+                spawn_mist_particles()
+                cur_obj_play_sound_1(SOUND_OBJ_KING_BOBOMB_JUMP)
+                queue_rumble_data_object(o, 5, 80)
+                cur_obj_become_intangible()
             end
         end
         load_object_collision_model()
@@ -142,32 +142,60 @@ local function bhv_master_cap_box_loop(o)
             cur_obj_play_sound_1(SOUND_OBJ_BOWSER_SPINNING)
         end
     elseif o.oAction == 2 then
-        cur_obj_move_using_fvel_and_gravity();
-        if (o.oVelY < 0.0) then
-            o.oVelY = 0.0;
-            o.oGravity = 0.0;
+        cur_obj_move_using_fvel_and_gravity()
+        if o.oPosY <= o.oHomeY then
+            o.oPosY = o.oHomeY
+            if o.oVelY < -4.0 then
+                o.oVelY = -o.oVelY * 0.35
+            else
+                o.oVelY = 0.0
+                o.oGravity = 0.0
+            end
         end
-        o.oExclamationBoxUnkF8 = (sins(o.oExclamationBoxUnkFC) + 1.0) * 0.3 + 0.0;
-        o.oExclamationBoxUnkF4 = (-sins(o.oExclamationBoxUnkFC) + 1.0) * 0.5 + 1.0;
-        o.oGraphYOffset = (-sins(o.oExclamationBoxUnkFC) + 1.0) * (16.0 * MASTER_CAP_BOX_SCALE);
-        o.oExclamationBoxUnkFC = o.oExclamationBoxUnkFC + 0x1000;
-        o.header.gfx.scale.x = o.oExclamationBoxUnkF4 * MASTER_CAP_BOX_SCALE;
-        o.header.gfx.scale.y = o.oExclamationBoxUnkF8 * MASTER_CAP_BOX_SCALE;
-        o.header.gfx.scale.z = o.oExclamationBoxUnkF4 * MASTER_CAP_BOX_SCALE;
-        if (o.oTimer == 7) then
-            o.oAction = 3;
+
+        local t = o.oTimer
+
+        o.oExclamationBoxUnkFC = o.oExclamationBoxUnkFC + 0x1800
+        local sin = sins(o.oExclamationBoxUnkFC)
+        local cos = coss(o.oExclamationBoxUnkFC)
+
+        local impact = math.max(0, 1 - t / 10)
+        local squash = 1.0 - 0.6 * impact * math.abs(sin)
+        local stretch = 1.0 + 0.8 * impact * math.abs(sin)
+
+        local increase = 1.0
+        if t < 5 then
+            increase = 1.0 + 0.35 * (1 - t / 5)
+        elseif t < 10 then
+            increase = 1.0 + 0.15 * ((t - 5) / 5)
+        end
+
+        local bounce = sin * (14.0 * MASTER_CAP_BOX_SCALE) * (0.8 ^ (t / 6))
+        o.oGraphYOffset = bounce
+
+        o.oFaceAngleYaw = o.oFaceAngleYaw + 0x900
+        o.oFaceAngleRoll = sin * 0x1200 * impact
+        o.oFaceAnglePitch = cos * 0x800 * impact
+
+        local scale = MASTER_CAP_BOX_SCALE * increase
+        o.header.gfx.scale.x = stretch * scale
+        o.header.gfx.scale.y = squash * scale
+        o.header.gfx.scale.z = stretch * scale
+
+        if t >= 14 then
+            o.oAction = 3
         end
     elseif o.oAction == 3 then
-        --exclamation_box_spawn_contents(gExclamationBoxContents, o->oBehParams2ndByte);
+        --exclamation_box_spawn_contents(gExclamationBoxContents, o->oBehParams2ndByte)
         gMasterCapStates[0].masterCapTimer = gLevelValues.wingCapDuration*0.5--(gNetworkPlayers[0].currCourseNum <= 15 and 0.5 or 0.25)
-        play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 0, 255, 255, 255)
-        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 255, 255, 255)
+        play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 0, 230, 230, 230)
+        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
         play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource)
         play_character_sound(gMarioStates[0], CHAR_SOUND_HERE_WE_GO)
-        spawn_mist_particles_variable(0, 0, 46.0);
-        spawn_triangle_break_particles(20, 139, 0.3, o.oAnimState);
-        create_sound_spawner(SOUND_GENERAL_BREAK_BOX);
-        cur_obj_hide();
+        spawn_mist_particles_variable(0, 0, 46.0)
+        spawn_triangle_break_particles(20, 139, 0.3, o.oAnimState)
+        create_sound_spawner(SOUND_GENERAL_BREAK_BOX)
+        cur_obj_hide()
         o.oAction = 4
         o.oSubAction = 2
     end
@@ -510,7 +538,7 @@ local function master_cap_render()
         djui_hud_set_font(FONT_RECOLOR_HUD)
         djui_hud_print_text(coinRender, sWidth*0.5 - djui_hud_measure_text(coinRender) - 4, 80, 2)
         if m.actionState > 1 then
-            local coinTimeRender = tostring(math.round(e.masterCapCoins/((e.masterCapCoinTimer > 0 and e.masterCapCoinTimer or 1)/30)*10)*0.1).."/s"
+            local coinTimeRender = tostring(math.round(e.masterCapCoins/((e.masterCapCoinTimer > 0 and e.masterCapCoinTimer or 1)/30)*10)*0.1).."/sin"
             djui_hud_print_text(coinTimeRender, sWidth*0.5 + djui_hud_measure_text(coinRender) + 16, 80 + 16, 1)
         end
 
