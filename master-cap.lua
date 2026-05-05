@@ -402,7 +402,6 @@ local function master_cap_music_update()
 
     if runState > 0 then
         local volShift = runState ~= 2 and 1 or math.clamp((masterCapMusicFreq - 0.7)/0.6, 0, 1)
-        djui_chat_message_create(tostring(volShift))
         local volShiftInv = 1 - volShift
         audio_stream_set_volume(MUSIC_MASTER_CAP, (is_game_paused() and 0 or 0.75)*volShift)
         audio_stream_set_volume(MUSIC_MASTER_CAP_END, (is_game_paused() and 0 or 0.75)*volShiftInv)

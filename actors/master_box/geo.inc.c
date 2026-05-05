@@ -1,3 +1,4 @@
+
 const GeoLayout master_box_geo[] = {
    GEO_CULLING_RADIUS(300),
    GEO_OPEN_NODE(),
@@ -6,8 +7,8 @@ const GeoLayout master_box_geo[] = {
 		GEO_ANIMATED_PART(LAYER_OPAQUE, 0, 0, 0, master_box_Bone_mesh_layer_1),
 		GEO_OPEN_NODE(),
 			GEO_DISPLAY_LIST(LAYER_ALPHA, master_box_Bone_mesh_layer_4),
-			GEO_ANIMATED_PART(LAYER_ALPHA, -3, 22, 26, master_box_Bone_002_mesh_layer_4),
-			GEO_ANIMATED_PART(LAYER_ALPHA, -3, 22, -26, master_box_Bone_003_mesh_layer_4),
+			GEO_ANIMATED_PART(LAYER_ALPHA, 0, 22, 20, master_box_Bone_002_mesh_layer_4),
+			GEO_ANIMATED_PART(LAYER_ALPHA, 0, 22, -20, master_box_Bone_003_mesh_layer_4),
 		GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),
    GEO_CLOSE_NODE(),
