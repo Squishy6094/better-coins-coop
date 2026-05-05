@@ -1,19 +1,23 @@
 local modIndex = get_active_mod().index
 local appendBhvs = {}
 local hookedBhvs = {}
+local namedBhvs = {}
 local fieldTable = {}
 local og_hook_behavior = hook_behavior
 local og_define_custom_obj_fields = define_custom_obj_fields
+local og_get_behavior_name_from_id = get_behavior_name_from_id
 
 local function inject_bhvs()
     for id, hookInfo in pairs(hookedBhvs) do
-        og_hook_behavior(id, hookInfo.objectList, hookInfo.replaceBehavior, hookInfo.initFunction, hookInfo.loopFunction, hookInfo.behaviorName)
+        og_hook_behavior(id, hookInfo.objectList, hookInfo.replaceBehavior, hookInfo.initFunction, hookInfo.loopFunction, get_behavior_name_from_id(id))
     end
 end
 
 _G.define_custom_obj_fields = function(objFieldTable)
     for id, type in pairs(objFieldTable) do
-        fieldTable[id] = type
+        if fieldTable[id] == nil then
+            fieldTable[id] = type
+        end
     end
     og_define_custom_obj_fields(fieldTable)
     inject_bhvs()
@@ -21,6 +25,8 @@ end
 
 local function hook_behavior_local(behaviorId, objectList, replaceBehavior, initFunction, loopFunction, behaviorName)
     if not behaviorId then return end
+    namedBhvs[behaviorId] = behaviorName or get_behavior_name_from_id(behaviorId)
+
     -- Create external-compatible init func
     local function initFunc(o)
         local returnValue = nil
@@ -63,7 +69,10 @@ local function hook_behavior_local(behaviorId, objectList, replaceBehavior, init
 end
 
 local function hook_behavior_remote(behaviorId, objectList, replaceBehavior, initFunction, loopFunction, behaviorName)
-    if appendBhvs[behaviorId] == nil then
+    namedBhvs[behaviorId] = behaviorName or get_behavior_name_from_id(behaviorId)
+    if hookedBhvs[behaviorId] == nil then
+        return hook_behavior_local(behaviorId, objectList, replaceBehavior, initFunction, loopFunction, behaviorName)
+    elseif appendBhvs[behaviorId] == nil then
         appendBhvs[behaviorId] = {
             init = initFunction,
             loop = loopFunction,
@@ -85,4 +94,9 @@ _G.hook_behavior = function(behaviorId, objectList, replaceBehavior, initFunctio
             return hook_behavior_remote(behaviorId, objectList, replaceBehavior, initFunction, loopFunction, behaviorName)
         end
     end
+end
+
+_G.get_behavior_name_from_id = function(id)
+    if id == nil then return end
+    return namedBhvs[id] or og_get_behavior_name_from_id(id)
 end
