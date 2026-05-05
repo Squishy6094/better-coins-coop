@@ -1,8 +1,11 @@
 
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
+local MUSIC_MASTER_CAP_END = audio_stream_load("music-master-cap-end.ogg")
 
 audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917230, 003175168)
+audio_stream_set_loop_points(MUSIC_MASTER_CAP_END, 000917230, 003175168)
 audio_stream_set_looping(MUSIC_MASTER_CAP, true)
+audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
 
 local masterCapMusicFreq = 1
 
@@ -398,10 +401,15 @@ local function master_cap_music_update()
     end
 
     if runState > 0 then
-        audio_stream_set_volume(MUSIC_MASTER_CAP, is_game_paused() and 0 or 0.75)
+        local volShift = runState ~= 2 and 1 or math.clamp((masterCapMusicFreq - 0.7)/0.6, 0, 1)
+        djui_chat_message_create(tostring(volShift))
+        local volShiftInv = 1 - volShift
+        audio_stream_set_volume(MUSIC_MASTER_CAP, (is_game_paused() and 0 or 0.75)*volShift)
+        audio_stream_set_volume(MUSIC_MASTER_CAP_END, (is_game_paused() and 0 or 0.75)*volShiftInv)
         if prevRunState ~= runState then
             stop_cap_music()
             audio_stream_play(MUSIC_MASTER_CAP, false, 1)
+            audio_stream_play(MUSIC_MASTER_CAP_END, false, 1)
             prevRunState = runState
         end
         if runState == 1 then
@@ -410,15 +418,19 @@ local function master_cap_music_update()
         local freqTargetTime = 1 + (math.max(450 - e.masterCapTimer, 0)/450)*0.3
         local freqTargetEnd = 1 + (e.masterCapCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
-        masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.1)
+        masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.02)
         audio_stream_set_frequency(MUSIC_MASTER_CAP, masterCapMusicFreq)
+        audio_stream_set_frequency(MUSIC_MASTER_CAP_END, masterCapMusicFreq)
 
     else
         if prevRunState ~= runState then
             audio_stream_set_position(MUSIC_MASTER_CAP, 0)
+            audio_stream_set_position(MUSIC_MASTER_CAP_END, 0)
             audio_stream_set_frequency(MUSIC_MASTER_CAP, 1)
+            audio_stream_set_frequency(MUSIC_MASTER_CAP_END, 1)
             masterCapMusicFreq = 0
             audio_stream_stop(MUSIC_MASTER_CAP)
+            audio_stream_stop(MUSIC_MASTER_CAP_END)
             stop_secondary_music(50)
             prevRunState = runState
         end
