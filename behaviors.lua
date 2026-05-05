@@ -3,7 +3,7 @@
 ---@param init function?
 ---@param loop function?
 local function hook_coins_behavior(id, override, init, loop)
-    hook_behavior(id, get_object_list_from_behavior(get_behavior_from_id(id)), override, init, loop, get_behavior_name_from_id(id):gsub("bhv", "bhvCoins", 1))
+    hook_behavior(id, get_object_list_from_behavior(get_behavior_from_id(id)), override, init, loop, (get_behavior_name_from_id(id):gsub("bhv", "bhvCoins", 1)))
 end
 
 local function obj_force_model(o, model)
