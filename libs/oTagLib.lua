@@ -1,3 +1,30 @@
+local objTags = {}
+
+define_custom_obj_fields({
+    oNametagID = "f32"
+})
+
+---@param o Object
+---@param name string
+---@param color table
+local function obj_set_nametag(o, name, color)
+    if o.oNametagID ~= 0 then return end
+    table.insert(objTags, {
+        obj = o,
+        name = name,
+        color = color,
+        prevPos = {x = 0, y = 0, z = 0};
+        prevScale = 0;
+        inited = false;
+    })
+    o.oNametagID = #objTags
+end
+
+---@param o Object
+local function obj_remove_nametag(o)
+    objTags[o.oNametagID] = nil
+    o.oNametagID = 0
+end
 
 local function djui_hud_print_outlined_text_interpolated(text, prevX, prevY, prevScale, x, y, scale, r, g, b, a, outlineDarkness)
     local offset = 1 * (scale * 2);
@@ -15,36 +42,24 @@ local function djui_hud_print_outlined_text_interpolated(text, prevX, prevY, pre
     djui_hud_set_color(255, 255, 255, 255);
 end
 
-local objTag = {}
-
----@param o Object
-function obj_set_nametag(o, name, color)
-    --o.oFlyGuyUnusedJitter = 1
-    objTag[o] = {
-        name = name,
-        color = color,
-        prevPos = {x = 0, y = 0, z = 0};
-        prevScale = 0;
-        inited = false;
-    }
-end
-
-function obj_remove_nametag(o)
-    objTag[o] = nil
-end
-
 local function nametags_render()
     djui_hud_set_resolution(RESOLUTION_N64);
     djui_hud_set_font(FONT_SPECIAL);
 
-    for o, tag in pairs(objTag) do
+    for id, tag in pairs(objTags) do
+        local o = tag.obj
         local pos = {x = o.oPosX, y = o.oPosY + o.hitboxHeight, z = o.oPosZ};
         local out = {x = 0, y = 0, z = 0};
         pos.y = pos.y + 50;
 
+        if o.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+            obj_remove_nametag(o)
+            goto continue;
+        end
+
         djui_hud_world_pos_to_screen_pos(pos, out)
 
-        if (not djui_hud_world_pos_to_screen_pos(pos, out) --[[or o.oFlyGuyUnusedJitter == 0]]) then
+        if not djui_hud_world_pos_to_screen_pos(pos, out) then
             goto continue;
         end
 
@@ -84,8 +99,15 @@ local function nametags_render()
 end
 
 local function level_init()
-    objTag = {}
+    for id, tag in pairs(objTags) do
+        objTags[id] = nil
+    end
 end
 
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, nametags_render)
 hook_event(HOOK_ON_LEVEL_INIT, level_init)
+
+oTagLib = {
+    obj_set_nametag = obj_set_nametag,
+    obj_remove_nametag = obj_remove_nametag,
+}

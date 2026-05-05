@@ -1,8 +1,11 @@
-local function hook_coins_behavior(id, override, init_f, loop_f)
-    hook_behavior(id, get_object_list_from_behavior(get_behavior_from_id(id)), override, init_f, loop_f, "bhvCoins" .. get_behavior_name_from_id(id):sub(4))
-end
-
 -- Behaviors
+---@param id BehaviorId|number
+---@param override boolean
+---@param init function?
+---@param loop function?
+local function hook_coins_behavior(id, override, init, loop)
+    hook_behavior(id, get_object_list_from_behavior(get_behavior_from_id(id)), override, init, loop, "bhvCoins" .. get_behavior_name_from_id(id):gsub("id_bhv", "", 1):gsub("bhv", "", 1))
+end
 
 local function obj_force_model(o, model)
     if obj_has_model_extended(o, model) == 0 then
@@ -115,7 +118,7 @@ local function bhv_bubble_cannon_init(o)
     local nBobombBuddy = obj_get_nearest_object_with_behavior_id(o, id_bhvBobombBuddy)
     o.parentObj = vec3f_dist(cannonPos, obj_pos_to_vec3f(nBombomb)) < vec3f_dist(cannonPos, obj_pos_to_vec3f(nBobombBuddy)) and nBombomb or nBobombBuddy
     if o.parentObj == nBombomb then
-        obj_set_nametag(o.parentObj, "Jim", {r = 50, g = 50, b = 100})
+        oTagLib.obj_set_nametag(o.parentObj, "Jim", {r = 50, g = 50, b = 100})
     end
 end
 
@@ -125,7 +128,6 @@ local function bhv_bubble_cannon_explode(o)
     local owner = o.parentObj
     if owner ~= nil and obj_has_behavior_id(owner, id_bhvBobomb) ~= 0 then
         if owner.oAction == BOBOMB_ACT_EXPLODE and owner.oTimer >= 5 then
-            obj_remove_nametag(owner)
             spawn_coin_spawner(o, 10, true)
             obj_mark_for_deletion(o)
         end

@@ -1,3 +1,7 @@
+-- Load Libraries
+require("libs/compatBhvs")
+require("libs/oTagLib")
+
 ROMHACK = "sm64"
 
 local function get_romhack_name()
