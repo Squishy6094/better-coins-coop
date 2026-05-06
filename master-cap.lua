@@ -338,22 +338,14 @@ local function bhv_master_cap_box_loop(o)
     cur_obj_scale(MASTER_CAP_BOX_SCALE)
     local masterCapHitbox = get_temp_object_hitbox()
     masterCapHitbox.interactType = INTERACT_BREAKABLE
-    masterCapHitbox.downOffset = 5
-    masterCapHitbox.damageOrCoinValue = 0
-    masterCapHitbox.health = 1
-    masterCapHitbox.numLootCoins = 0
-    masterCapHitbox.hurtboxRadius = 40*2
-    masterCapHitbox.hurtboxHeight = 30*2
-
-    masterCapHitbox.interactType = INTERACT_BREAKABLE
     masterCapHitbox.downOffset = 0
     masterCapHitbox.damageOrCoinValue = 0
     masterCapHitbox.health = 1
     masterCapHitbox.numLootCoins = 0
-    masterCapHitbox.radius = 50
-    masterCapHitbox.height = 45
-    masterCapHitbox.hurtboxRadius = 50
-    masterCapHitbox.hurtboxHeight = 45
+    masterCapHitbox.radius = 30
+    masterCapHitbox.height = 30
+    masterCapHitbox.hurtboxRadius = 30
+    masterCapHitbox.hurtboxHeight = 30
     obj_set_hitbox(o, masterCapHitbox)
     local nearestM = nearest_mario_state_to_object(o)
 
