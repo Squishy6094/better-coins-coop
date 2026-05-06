@@ -1,4 +1,5 @@
-smlua_anim_util_register_animation('idle', 0, 0, 0, 1, 36, { 
+ANIM_MASTER_CAP_BOX_IDLE = "master_cap_box_idle"
+smlua_anim_util_register_animation(ANIM_MASTER_CAP_BOX_IDLE, 0, 0, 0, 1, 36, { 
 	0, 0, 0, 0, 0, 0, 0, 93, 363, 
 	793, 1361, 2030, 2748, 3458, 4119, 4723, 5308, 5953, 
 	6756, 7669, 8563, 9405, 10162, 10793, 11263, 11538, 11497, 

@@ -1,6 +1,5 @@
 -- Load Libraries
---require("libs/compatBhvs")
-require("libs/oTagLib")
+oTagLib = require("libs/oTagLib")
 
 ROMHACK = "sm64"
 
@@ -223,6 +222,15 @@ function mario_set_master_cap_bubbled(m)
     soft_reset_camera(m.area.camera);
 end
 
+
+local levelTimer = 0
+function get_level_timer() return levelTimer end
+
+local function level_timer_update() levelTimer = levelTimer + 1 end
+local function level_timer_reset() levelTimer = 0 end
+hook_event(HOOK_UPDATE, level_timer_update)
+hook_event(HOOK_ON_LEVEL_INIT, level_timer_reset)
+
 --------------------------
 -- Romhack Star Counter --
 --------------------------
@@ -410,6 +418,8 @@ function get_max_possible_stars()
     return count
 end
 
+ROMHACK_STARS = get_max_possible_stars()
+
 local function mario_update(m)
     if m.playerIndex ~= 0 then return end
 
@@ -420,7 +430,7 @@ local function mario_update(m)
     --djui_chat_message_create("all "..get_max_possible_stars())
 end
 
-hook_event(HOOK_MARIO_UPDATE, mario_update)
+--hook_event(HOOK_MARIO_UPDATE, mario_update)
 
 end
 

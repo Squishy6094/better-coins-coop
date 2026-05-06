@@ -107,7 +107,7 @@ end
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, nametags_render)
 hook_event(HOOK_ON_LEVEL_INIT, level_init)
 
-oTagLib = {
+return {
     obj_set_nametag = obj_set_nametag,
     obj_remove_nametag = obj_remove_nametag,
 }

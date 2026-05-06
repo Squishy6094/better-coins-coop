@@ -1,3 +1,18 @@
+---@class Object
+---@field oCustomCoins integer
+---@field oThwompGroundPounded integer
+---@field oThwompHitstun integer
+---@field oHitMario integer
+---@field oPrevHealth number
+define_custom_obj_fields({
+    oCustomCoins = "u32",
+    oThwompGroundPounded = "u32",
+    oThwompHitstun = "u32",
+    oThwompPrevAngle = "u32",
+    oHitMario = "u32",
+    oPrevHealth = "f32",
+})
+
 ---@param id BehaviorId|number
 ---@param override boolean
 ---@param init function?
@@ -6,39 +21,33 @@ local function hook_coins_behavior(id, override, init, loop)
     hook_behavior(id, get_object_list_from_behavior(get_behavior_from_id(id)), override, init, loop, (get_behavior_name_from_id(id):gsub("bhv", "bhvCoins", 1)))
 end
 
-local function obj_force_model(o, model)
-    if obj_has_model_extended(o, model) == 0 then
-        obj_set_model_extended(o, model)
-    end
-end
-
 ---@param o Object
 local function bhv_moneybag_set_coins(o)
     -- in place of loot coins since the original func forces it to 0
-    o.oCoinUnk110 = (o.parentObj ~= nil and o.parentObj.oCoinUnk110 ~= 0) and o.parentObj.oCoinUnk110 or 15
+    o.oCustomCoins = (o.parentObj ~= nil and o.parentObj.oCustomCoins ~= 0) and o.parentObj.oCustomCoins or 15
     network_init_object(o, false, {
         "oHomeX",
         "oHomeY",
         "oHomeZ",
         "oMoneybagJumpState",
         "oOpacity",
-        "oCoinUnk110",
+        "oCustomCoins",
     })
 end
 
 ---@param o Object
 local function bhv_moneybag_squirt_jump(o)
     -- Squirt Coins while moving
-    if o.oCoinUnk110 > 5 and o.oMoneybagJumpState == MONEYBAG_JUMP_PREPARE and o.header.gfx.animInfo.animFrame == 5 then
+    if o.oCustomCoins > 5 and o.oMoneybagJumpState == MONEYBAG_JUMP_PREPARE and o.header.gfx.animInfo.animFrame == 5 then
         obj_spawn_yellow_coins(o, 1);
-        o.oCoinUnk110 = o.oCoinUnk110 - 1
+        o.oCustomCoins = o.oCustomCoins - 1
         network_send_object(o, true)
     end
 
     -- Spawn coins that haven't been given
     if o.oAction == MONEYBAG_ACT_DEATH then
-        if (o.oTimer == 1 and o.oCoinUnk110 > 5) then
-            obj_spawn_yellow_coins(o, o.oCoinUnk110 - 5);
+        if (o.oTimer == 1 and o.oCustomCoins > 5) then
+            obj_spawn_yellow_coins(o, o.oCustomCoins - 5);
         end
     end
 end
@@ -49,18 +58,18 @@ hook_coins_behavior(id_bhvMoneybagHidden, false, bhv_moneybag_set_coins, nil)
 --[[
 ---@param o Object
 local function bhv_message_panel_set_coins(o)
-    o.oCoinUnk110 = 1
+    o.oCustomCoins = 1
     network_init_object(o, false, {
-        "oCoinUnk110",
+        "oCustomCoins",
     })
 end
 
 ---@param o Object
 local function bhv_message_panel_reward(o)
-    if o.oCoinUnk110 > 0 and is_point_within_radius_of_mario(o.oPosX, o.oPosY, o.oPosZ, 200) ~= 0 and nearest_mario_state_to_object(o).prevAction == ACT_READING_SIGN then
+    if o.oCustomCoins > 0 and is_point_within_radius_of_mario(o.oPosX, o.oPosY, o.oPosZ, 200) ~= 0 and nearest_mario_state_to_object(o).prevAction == ACT_READING_SIGN then
         local m = nearest_mario_state_to_object(o)
-        spawn_coin_spawner((m.pos.x + o.oPosX)*0.5, math.max(m.pos.y, o.oPosY) + 100, (m.pos.z + o.oPosZ)*0.5, o.oCoinUnk110, true);
-        o.oCoinUnk110 = 0
+        spawn_coin_spawner((m.pos.x + o.oPosX)*0.5, math.max(m.pos.y, o.oPosY) + 100, (m.pos.z + o.oPosZ)*0.5, o.oCustomCoins, true);
+        o.oCustomCoins = 0
         network_send_object(o, true)
     end
 end
@@ -92,17 +101,17 @@ hook_coins_behavior(id_bhvYoshi, false, bhv_yoshi_blew_up, bhv_yoshi_reward)
 
 ---@param o Object
 local function bhv_recovery_heart_set_coins(o)
-    o.oCoinUnk110 = 5
+    o.oCustomCoins = 5
     network_init_object(o, false, {
-        "oCoinUnk110",
+        "oCustomCoins",
     })
 end
 
 ---@param o Object
 local function bhv_recovery_heart_squirt_coins(o)
-    if o.oAngleVelYaw > 400 and o.oSpinningHeartTotalSpin - o.oAngleVelYaw < 0 and o.oCoinUnk110 > 0 then
+    if o.oAngleVelYaw > 400 and o.oSpinningHeartTotalSpin - o.oAngleVelYaw < 0 and o.oCustomCoins > 0 then
         obj_spawn_yellow_coins(o, 1)
-        o.oCoinUnk110 = o.oCoinUnk110 - 1
+        o.oCustomCoins = o.oCustomCoins - 1
         network_send_object(o, true)
     end
 end
@@ -155,7 +164,7 @@ local function bhv_whomp_init(o)
         "oForwardVel",
         "oHealth",
         "oFaceAnglePitch",
-        "oCoinUnk110",
+        "oCustomCoins",
     })
 end
 
@@ -166,12 +175,12 @@ local function bhv_whomp_loop(o)
         if o.oAction == 6 and o.oBehParams2ndByte == 0 and o.oSubAction == 0 and cur_obj_is_any_player_on_platform() ~= 0 and cur_obj_is_mario_ground_pounding_platform() ~= 0 then
             -- Do nothing if pounding whomp
         else
-            o.oCoinUnk110 = o.oNumLootCoins
+            o.oCustomCoins = o.oNumLootCoins
         end
     else
-        if o.oCoinUnk110 > 0 then
-            obj_spawn_yellow_coins(o, o.oCoinUnk110)
-            o.oCoinUnk110 = 0
+        if o.oCustomCoins > 0 then
+            obj_spawn_yellow_coins(o, o.oCustomCoins)
+            o.oCustomCoins = 0
         end
     end
 end
@@ -181,7 +190,7 @@ hook_coins_behavior(id_bhvSmallWhomp, false, bhv_whomp_init, bhv_whomp_loop)
 ---@param o Object
 local function thwomp_break_init(o)
     o.oHealth = 5
-    o.oFishYawVel = o.oMoveAngleYaw
+    o.oThwompPrevAngle = o.oFaceAngleYaw
     network_init_object(o, true, {
         "oAction",
         "oPosY",
@@ -189,30 +198,30 @@ local function thwomp_break_init(o)
         "oTimer",
         "oVelY",
 
-        "oDorrieGroundPounded",
+        "oThwompGroundPounded",
         "oHealth",
-        "oBooOscillationTimer",
+        "oThwompHitstun",
     })
 end
 
 ---@param o Object
 local function thwomp_break_loop(o)
     if cur_obj_is_any_player_on_platform() ~= 0 and cur_obj_is_mario_ground_pounding_platform() ~= 0 then
-        if (o.oSyncID == 0 or sync_object_is_owned_locally(o.oSyncID)) and o.oDorrieGroundPounded == 0 then
+        if (o.oSyncID == 0 or sync_object_is_owned_locally(o.oSyncID)) and o.oThwompGroundPounded == 0 then
             local m = nearest_mario_state_to_object(o)
-            o.oDorrieGroundPounded = 1
+            o.oThwompGroundPounded = 1
             o.oHealth = math.max(o.oHealth - (m.flags & MARIO_METAL_CAP ~= 0 and 3 or 1), 0)
             network_send_object(o, true)
         end
     else
-        o.oDorrieGroundPounded = 0
+        o.oThwompGroundPounded = 0
     end
 
 
     if o.oHealth > 0 then
-        if o.oDorrieGroundPounded == 1 then
-            o.oDorrieGroundPounded = 2
-            o.oBooOscillationTimer = o.oBooOscillationTimer + 30
+        if o.oThwompGroundPounded == 1 then
+            o.oThwompGroundPounded = 2
+            o.oThwompHitstun = o.oThwompHitstun + 30
             o.oThwompRandomTimer = o.oThwompRandomTimer + 30
             spawn_triangle_break_particles(5, 138, 1.0, 4);
             play_sound_with_freq_scale(SOUND_OBJ_THWOMP, o.header.gfx.cameraToObject, 1 + (5 - o.oHealth)/5*0.3)
@@ -224,9 +233,11 @@ local function thwomp_break_loop(o)
         obj_mark_for_deletion(o)
     end
 
-    if o.oBooOscillationTimer > 0 then
-        o.oMoveAngleYaw = o.oFishYawVel + math.sin(o.oBooOscillationTimer/3)*0x1000*(5 - o.oHealth)/5*o.oBooOscillationTimer/30
-        o.oBooOscillationTimer = o.oBooOscillationTimer - 1
+    if o.oThwompHitstun > 0 then
+        o.oMoveAngleYaw = o.oThwompPrevAngle + math.sin(o.oThwompHitstun/3)*0x1000*(5 - o.oHealth)/5*o.oThwompHitstun/30
+        o.oThwompHitstun = o.oThwompHitstun - 1
+    else
+        o.oThwompPrevAngle = o.oMoveAngleYaw
     end
 end
 
@@ -310,7 +321,7 @@ end
 ---@param o Object
 local function bhv_1up_hidden_in_pole_loop(o)
     if o.oAction == 0 then
-        obj_force_model(o, E_MODEL_BLUE_COIN)
+        obj_set_model_extended(o, E_MODEL_BLUE_COIN)
     elseif o.oAction == 1 then
         o.oNumLootCoins = 5
         bhv_1up_to_blue_coin(o)
@@ -329,14 +340,14 @@ local function bhv_blue_coin_init(o)
     o.oDamageOrCoinValue = 5
     o.oAnimState = -1
     obj_set_billboard(o)
-    obj_force_model(o, E_MODEL_BLUE_COIN)
+    obj_set_model_extended(o, E_MODEL_BLUE_COIN)
 
     network_init_object(o, true, {})
 end
 
 ---@param o Object
 local function bhv_blue_coin_loop(o)
-    obj_force_model(o, E_MODEL_BLUE_COIN)
+    obj_set_model_extended(o, E_MODEL_BLUE_COIN)
     cur_obj_enable_rendering();
     cur_obj_become_tangible();
 
@@ -353,7 +364,7 @@ end
 ---@param o Object
 local function bhv_moving_blue_coin_capped_loop(o)
     bhv_moving_blue_coin_loop()
-    obj_force_model(o, E_MODEL_BLUE_COIN)
+    obj_set_model_extended(o, E_MODEL_BLUE_COIN)
     if (o.oForwardVel > 40.0) then
         o.oForwardVel = 40.0
     end
@@ -368,20 +379,20 @@ hook_coins_behavior(id_bhvHidden1up, false, nil, bhv_1up_hidden_in_pole_loop)
 hook_coins_behavior(id_bhvHidden1upInPole, false, nil, bhv_1up_hidden_in_pole_loop)
 
 ---@param o Object
-local function bhv_purple_switch_coins_init(o)
-    o.oNumLootCoins = 3
-    network_init_object(o, true, {
+function bhv_purple_switch_coins_init(o)
+    o.oCustomCoins = 3
+    network_init_object(o, false, {
         "oAction",
         "oTimer",
-        "oNumLootCoins",
+        "oCustomCoins",
     })
 end
 
 ---@param o Object
-local function bhv_purple_switch_coins_loop(o)
-    if o.oAction == PURPLE_SWITCH_PRESSED and o.oNumLootCoins > 0 then
-        spawn_coin_spawner(o, o.oNumLootCoins, true)
-        o.oNumLootCoins = 0
+function bhv_purple_switch_coins_loop(o)
+    if o.oAction == PURPLE_SWITCH_PRESSED and o.oCustomCoins > 0 then
+        spawn_coin_spawner(o, o.oCustomCoins, true)
+        o.oCustomCoins = 0
         network_send_object(o, true)
     end
 end
@@ -423,18 +434,18 @@ local function bhv_haunted_chair_coin_init(o)
         "oMoveAnglePitch",
         "oMoveAngleYaw",
 
-        "oCoinUnk110",
-        "oMarioBurnTimer",
+        "oCustomCoins",
+        "oHitMario",
     })
-    o.oMarioBurnTimer = 0
+    o.oHitMario = 0
 end
 
 ---@param o Object
 local function bhv_haunted_chair_coin_loop(o)
     local m = nearest_mario_state_to_object(o)
-    if o.oAction == 0 or o.oMarioBurnTimer ~= 0 or m == nil then return end
+    if o.oAction == 0 or o.oHitMario ~= 0 or m == nil then return end
     if m.interactObj == o then
-        o.oMarioBurnTimer = 1
+        o.oHitMario = 1
         play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.5)
         network_send_object(o, true)
         return
@@ -442,7 +453,7 @@ local function bhv_haunted_chair_coin_loop(o)
     
     if o.oTimer >= 70 and o.oMoveFlags & (OBJ_MOVE_MASK_ON_GROUND | OBJ_MOVE_HIT_WALL) ~= 0 then
         spawn_coin_spawner(o, 2)
-        o.oMarioBurnTimer = 1
+        o.oHitMario = 1
         network_send_object(o, true)
     end
 end
@@ -451,18 +462,18 @@ hook_coins_behavior(id_bhvHauntedChair, false, bhv_haunted_chair_coin_init, bhv_
 
 ---@param o Object
 local function bhv_snowmans_head_coins_init(o)
-    o.oNumLootCoins = 15
+    o.oCustomCoins = 15
     network_init_object(o, true, {
         "oAction",
-        "oNumLootCoins",
+        "oCustomCoins",
     })
 end
 
 ---@param o Object
 local function bhv_snowmans_head_coins_loop(o)
-    if o.oAction == 4 and o.oNumLootCoins > 0 then
-        spawn_coin_spawner(o, o.oNumLootCoins, true, 0, o.hitboxHeight, 0)
-        o.oNumLootCoins = 0
+    if o.oAction == 4 and o.oCustomCoins > 0 then
+        spawn_coin_spawner(o, o.oCustomCoins, true, 0, o.hitboxHeight, 0)
+        o.oCustomCoins = 0
         network_send_object(o, true)
     end
 end
@@ -471,16 +482,16 @@ hook_coins_behavior(id_bhvSnowmansHead, false, bhv_snowmans_head_coins_init, bhv
 
 ---@param o Object
 local function bhv_water_pillar_init(o)
-    o.oNumLootCoins = gLevelValues.numCoinsToLife
+    o.oCustomCoins = gLevelValues.numCoinsToLife
 end
 
 ---@param o Object
 local function bhv_water_pillar_loop(o)
-    if o.oAction == 4 and o.oNumLootCoins > 0 then
+    if o.oAction == 4 and o.oCustomCoins > 0 then
         otherWaterPillar = cur_obj_nearest_object_with_behavior(o.behavior)
-        spawn_coin_spawner(o, o.oNumLootCoins*0.5, true)
-        spawn_coin_spawner(otherWaterPillar, o.oNumLootCoins*0.5, true)
-        o.oNumLootCoins = 0
+        spawn_coin_spawner(o, o.oCustomCoins*0.5, true)
+        spawn_coin_spawner(otherWaterPillar, o.oCustomCoins*0.5, true)
+        o.oCustomCoins = 0
     end
 end
 
@@ -519,20 +530,20 @@ hook_coins_behavior(id_bhvHidden1upTrigger, false, nil, bhv_secret_follow_coin_l
 
 ---@param o Object
 local function bhv_thi_pound_coins_init(o)
-    o.oNumLootCoins = 5
+    o.oCustomCoins = 5
     network_init_object(o, true, {
         "oAction",
         "oPrevAction",
         "oTimer",
-        "oNumLootCoins",
+        "oCustomCoins",
     })
 end
 
 ---@param o Object
 local function bhv_thi_pound_coins_loop(o)
-    if o.oAction > 0 and o.oNumLootCoins > 0 then
-        spawn_coin_spawner(o, o.oNumLootCoins)
-        o.oNumLootCoins = 0
+    if o.oAction > 0 and o.oCustomCoins > 0 then
+        spawn_coin_spawner(o, o.oCustomCoins)
+        o.oCustomCoins = 0
     end
 end
 
@@ -541,32 +552,29 @@ hook_coins_behavior(id_bhvThiTinyIslandTop, false, bhv_thi_pound_coins_init, bhv
 ---@param o Object
 local function bhv_generic_boss_coins_init(o)
     local health = o.oHealth ~= 2048 and o.oHealth or 4
-    o.oNumLootCoins = health*5
-    o.oCoinUnk1B0 = health*5 -- failsafe for loot coin being overwritten
-    o.oCoinUnk110 = health
+    o.oCustomCoins = health*5
+    o.oPrevHealth = health
 end
 
 ---@param o Object
 local function bhv_coins_on_damage_loop(o)
-    if o.oCoinUnk110 > o.oHealth and (o.oNumLootCoins > 0 or o.oCoinUnk1B0 > 0) then
+    if o.oPrevHealth > o.oHealth and (o.oCustomCoins > 0) then
         spawn_coin_spawner(o, 5, true, 0, o.hitboxHeight, 0)
-        o.oNumLootCoins = o.oNumLootCoins - 5
-        o.oCoinUnk1B0 = o.oCoinUnk1B0 - 5
+        o.oCustomCoins = o.oCustomCoins - 5
     end
-    o.oCoinUnk110 = math.min(o.oCoinUnk110, o.oHealth)
+    o.oPrevHealth = math.min(o.oPrevHealth, o.oHealth)
 end
 
 ---@param o Object
 local function bhv_coins_on_damage_at_mario_loop(o)
-    if o.oCoinUnk110 > o.oHealth and (o.oNumLootCoins > 0 or o.oCoinUnk1B0 > 0) then
+    if o.oPrevHealth > o.oHealth and (o.oCustomCoins > 0) then
         local marioState = nearest_mario_state_to_object(o);
         if (marioState) then
             spawn_coin_spawner(o, 5, true, marioState.pos.x - o.oPosX, marioState.pos.y - o.oPosY, marioState.pos.z - o.oPosZ)
-            o.oNumLootCoins = o.oNumLootCoins - 5
-            o.oCoinUnk1B0 = o.oCoinUnk1B0 - 5
+            o.oCustomCoins = o.oCustomCoins - 5
         end
     end
-    o.oCoinUnk110 = math.min(o.oCoinUnk110, o.oHealth)
+    o.oPrevHealth = math.min(o.oPrevHealth, o.oHealth)
 end
 
 hook_coins_behavior(id_bhvKingBobomb, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
@@ -575,7 +583,7 @@ hook_coins_behavior(id_bhvBalconyBigBoo, false, bhv_generic_boss_coins_init, bhv
 hook_coins_behavior(id_bhvGhostHuntBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvMerryGoRoundBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvEyerokHand, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_at_mario_loop)
---hook_coins_behavior(id_bhvWigglerHead, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
+hook_coins_behavior(id_bhvWigglerHead, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 
 local function bhv_big_bully_coins(o)
     if o.oAction == BULLY_ACT_LAVA_DEATH and o.oTimer == 1 then
@@ -612,6 +620,7 @@ local function bhv_wooden_post_loop(o)
     if cur_obj_is_mario_ground_pounding_platform() ~= 0 then
         if m.flags & MARIO_METAL_CAP ~= 0 then
             o.oWoodenPostSpeedY = -85
+            network_send_object(o, true)
         end
     end
 

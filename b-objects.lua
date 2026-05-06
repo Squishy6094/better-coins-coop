@@ -1,8 +1,8 @@
-local levelTimer = 0
-local function update() levelTimer = levelTimer + 1 end
-hook_event(HOOK_UPDATE, update)
-local function level_init() levelTimer = 0 end
-hook_event(HOOK_ON_LEVEL_INIT, level_init)
+---@class Object
+---@field oIsCarried integer
+define_custom_obj_fields({
+    oIsCarried = "u32"
+})
 
 
 --- @param o Object
@@ -19,6 +19,7 @@ local function bhv_coin_carry_loop(o)
     cur_obj_hide()
     if o.globalPlayerIndex == MAX_PLAYERS then return end
     if o.parentObj.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+        network_send_object(o.parentObj, true)
         obj_mark_for_deletion(o)
         return
     end
@@ -82,6 +83,7 @@ local id_bhvCoinCarry = hook_behavior(nil, OBJ_LIST_LEVEL, true, bhv_coin_carry_
 function carry_object_to_mario(m, o)
     local gIndex = network_global_index_from_local(m.playerIndex)
     local spawn_func = o.oSyncID ~= 0 and spawn_sync_object or spawn_non_sync_object
+    o.oIsCarried = 1
     --- @param oCarry Object
     return spawn_func(id_bhvCoinCarry, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(oCarry)
         oCarry.globalPlayerIndex = gIndex
@@ -90,16 +92,7 @@ function carry_object_to_mario(m, o)
 end
 
 function is_object_being_carried(o)
-    local carried = false
-    local oCarry = obj_get_first_with_behavior_id(id_bhvCoinCarry)
-    while oCarry ~= nil do
-        if oCarry.parentObj == o then
-            carried = true
-        end
-
-        oCarry = obj_get_next_with_same_behavior_id(oCarry)
-    end
-    return carried
+    return o.oIsCarried ~= 0
 end
 
 function count_carrier_objects(oTarget)
@@ -120,22 +113,24 @@ end
 --- @param o Object
 local function coin_spawner_init(o)
     network_init_object(o, false, {
-        "oNumLootCoins",
+        "oCustomCoins",
     })
 end
 
 --- @param o Object
 local function coin_spawner_loop(o)
-    if o.oNumLootCoins > 0 then
+    if o.oCustomCoins > 0 then
         local m = nearest_mario_state_to_object(o)
         if m and m.playerIndex == 0 then
-            if o.oNumLootCoins >= 5 and o.oAction == 0 and (math.random() > 0.25 or o.oNumLootCoins == 5) then
+            if o.oCustomCoins >= 5 and o.oAction == 0 and (math.random() > 0.25 or o.oCustomCoins == 5) then
+                o.oNumLootCoins = 5
                 cur_obj_spawn_loot_blue_coin();
-                o.oNumLootCoins = o.oNumLootCoins - 5
+                o.oCustomCoins = o.oCustomCoins - 5
                 network_send_object(o, false)
             else
+                o.oNumLootCoins = 1
                 obj_spawn_yellow_coins(o, 1);
-                o.oNumLootCoins = o.oNumLootCoins - 1
+                o.oCustomCoins = o.oCustomCoins - 1
                 network_send_object(o, false)
             end
         end
@@ -171,7 +166,7 @@ function spawn_coin_spawner(o, coins, forceYellow, rX, rY, rZ)
     end
     --- @param oCoins Object
     return spawn_sync_object(id_bhvCoinSpawner, E_MODEL_NONE, rX, rY, rZ, function(oCoins)
-        oCoins.oNumLootCoins = coins
+        oCoins.oCustomCoins = coins
         oCoins.oAction = forceYellow and 1 or 0
     end)
 end

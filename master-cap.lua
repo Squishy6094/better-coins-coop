@@ -2,6 +2,12 @@
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
 local MUSIC_MASTER_CAP_END = audio_stream_load("music-master-cap-end.ogg")
 
+--[[
+    Fix intangible bug at the end of run
+    Optimize packets
+    Actually use custom object variables
+]]
+
 audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917230, 003175168)
 audio_stream_set_loop_points(MUSIC_MASTER_CAP_END, 000917230, 003175168)
 audio_stream_set_looping(MUSIC_MASTER_CAP, true)
@@ -26,10 +32,12 @@ for i = 0, MAX_PLAYERS - 1 do
 end
 
 -- Load save into sync table
+--[[
 for i = 1, COURSE_MAX do
     gMasterCapStates[0]["masterCapRecordCoins"..i] = tonumber(mod_storage_load(ROMHACK.."recordCoins"..tostring(i))) or 0
     gMasterCapStates[0]["masterCapRecordTime"..i] = tonumber(mod_storage_load(ROMHACK.."recordTime"..tostring(i))) or 0
 end
+]]
 
 local function on_packet_recieve(data)
     local index = network_local_index_from_global(data.index)
@@ -326,7 +334,7 @@ local function bhv_master_cap_box_init(o)
     o.areaTimer = 0
     o.areaTimerDuration = 300
 
-    smlua_anim_util_set_animation(o, "idle")
+    smlua_anim_util_set_animation(o, ANIM_MASTER_CAP_BOX_IDLE)
 
     network_init_object(o, true, {
         "oExclamationBoxForce",
@@ -474,7 +482,7 @@ local function on_sync()
 
     if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
 
-    if hud_get_value(HUD_DISPLAY_STARS) >= get_max_possible_stars() and gNetworkPlayers[0].currCourseNum > 0 and e.masterCapTimer <= 0 and m.numCoins <= 0 then
+    if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS and gNetworkPlayers[0].currCourseNum > 0 and e.masterCapTimer <= 0 and m.numCoins <= 0 then
         local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
         castFloorSpawn = {x = castFloorSpawn.x, y = math.max(castFloorSpawn.y, (m.waterLevel or -0x8000) - 200), z = castFloorSpawn.z}
         nearestObjPos.x = m.pos.x
@@ -518,7 +526,7 @@ end
 ---@param m MarioState
 local function master_cap_update(m)
     if m.playerIndex == 0 then
-        if hud_get_value(HUD_DISPLAY_STARS) >= get_max_possible_stars() then
+        if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS then
             gLevelValues.disableActs = true
         end
     end
@@ -533,6 +541,7 @@ local function master_cap_update(m)
         end
 
         -- Get best active mario stats
+        --[[
         if m.playerIndex == 0 then
             local e0 = e
             local coinCount = e0.masterCapCoins
@@ -547,6 +556,7 @@ local function master_cap_update(m)
             end
             collectiveCoinCount = math.max(collectiveCoinCount, coinCount)
         end
+        ]]
 
         -- Save previous actions to unfreeze from
         if m.action ~= ACT_MASTER_CAP_RESULTS then
@@ -585,9 +595,10 @@ local function master_cap_update(m)
         end
     end
 
-    if m.playerIndex == 0 then 
-        network_send(false, gMasterCapStates[0])
-    end
+    -- Network sync shitt
+    --if m.playerIndex == 0 and get_global_timer()%10 == 0 then 
+    --    network_send(false, gMasterCapStates[0])
+    --end
 end
 
 local prevRunState = 0
@@ -744,10 +755,10 @@ local function star_select_leaderboard()
         leaderboardView = false
         leaderboard = nil
         --log_to_console(tostring(hud_get_value(HUD_DISPLAY_STARS)), CONSOLE_MESSAGE_INFO)
-        --log_to_console(tostring(get_max_possible_stars()), CONSOLE_MESSAGE_INFO)
+        --log_to_console(tostring(ROMHACK_STARS), CONSOLE_MESSAGE_INFO)
         return
     end
-    if hud_get_value(HUD_DISPLAY_STARS) < get_max_possible_stars() then return end
+    if hud_get_value(HUD_DISPLAY_STARS) < ROMHACK_STARS then return end
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
@@ -794,7 +805,7 @@ local function pause_leaderboard()
     if not is_game_paused() or djui_hud_is_pause_menu_created() then--or gNetworkPlayers[0].currCourseNum == 0 then
         return
     end
-    if hud_get_value(HUD_DISPLAY_STARS) < get_max_possible_stars() then return end
+    if hud_get_value(HUD_DISPLAY_STARS) < ROMHACK_STARS then return end
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()

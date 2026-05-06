@@ -32,6 +32,7 @@ local mouseX = 0
 local mouseY = 0
 local function update()
     local m = gMarioStates[0]
+    if m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
 
     coinRange = 400 + math.sqrt(m.vel.x^2 + m.vel.y^2 + m.vel.z^2)
     if m.flags & MARIO_METAL_CAP ~= 0 then
@@ -46,16 +47,17 @@ local function update()
         if bhvID == nil then
             break
         end
+
         local o = obj_get_first_with_behavior_id(bhvID)
         while o ~= nil do
-            if not is_object_being_carried(o) then
+            if o.oIntangibleTimer == 0 and not is_object_being_carried(o) then
                 local oPos = obj_pos_to_vec3f(o)
 
                 -- Attract if coin is yours
                 local mN = nearest_mario_state_to_object(o)
                 if (m.playerIndex == mN.playerIndex) then
                     local dist = vec3f_dist(oPos, m.pos)
-                    if (dist < coinRange or o.oVelY < 0) and o.oVelY <= 0 and (bhvID ~= id_bhvHiddenBlueCoin or o.oAction == HIDDEN_BLUE_COIN_ACT_ACTIVE) then
+                    if (dist <= coinRange or o.oVelY < 0) and o.oVelY <= 0 then
                         local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
                         if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
                             carry_object_to_mario(m, o)
@@ -83,7 +85,7 @@ local function update()
     end
 
     if m.controller.buttonPressed & (U_JPAD) ~= 0 then
-        --spawn_coin_spawner(nil, 1000, nil, m.pos.x, m.pos.y, m.pos.z)
+        spawn_coin_spawner(nil, 1000, nil, m.pos.x, m.pos.y, m.pos.z)
     end
 end
 
