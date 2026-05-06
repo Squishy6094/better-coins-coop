@@ -218,9 +218,7 @@ local function thwomp_break_loop(o)
             play_sound_with_freq_scale(SOUND_OBJ_THWOMP, o.header.gfx.cameraToObject, 1 + (5 - o.oHealth)/5*0.3)
         end
     else
-        if sync_object_is_owned_locally(o.oSyncID) then
-            obj_spawn_yellow_coins(o, 10)
-        end
+        spawn_coin_spawner(o, 10, true)
         spawn_triangle_break_particles(20, 138, 3.0, 4);
         play_sound_with_freq_scale(SOUND_OBJ_THWOMP, o.header.gfx.cameraToObject, 0.8)
         obj_mark_for_deletion(o)

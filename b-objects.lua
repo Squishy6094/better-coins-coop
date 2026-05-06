@@ -127,7 +127,8 @@ end
 --- @param o Object
 local function coin_spawner_loop(o)
     if o.oNumLootCoins > 0 then
-        if sync_object_is_owned_locally(o.oSyncID) then
+        local m = nearest_mario_state_to_object(o)
+        if m and m.playerIndex == 0 then
             if o.oNumLootCoins >= 5 and o.oAction == 0 and (math.random() > 0.25 or o.oNumLootCoins == 5) then
                 cur_obj_spawn_loot_blue_coin();
                 o.oNumLootCoins = o.oNumLootCoins - 5
