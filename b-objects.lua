@@ -40,7 +40,7 @@ local function bhv_coin_carry_loop(o)
 
     -- Make objs circle mario when uninteractable
 
-    local masterCapStall = master_cap_box_active() and levelTimer < 90
+    local masterCapStall = master_cap_box_active() and get_level_timer() < 90
     if m.action & ACT_FLAG_INTANGIBLE ~= 0 or masterCapStall then
         local total, curr = count_carrier_objects(o)
         local angle = 0x10000*((curr - 1)/total) + get_global_timer()*0x200
