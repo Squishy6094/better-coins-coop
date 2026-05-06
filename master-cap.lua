@@ -310,20 +310,11 @@ function set_mario_finished_master_cap(m)
     end
 end
 
-local masterCapHitbox = get_temp_object_hitbox()
-masterCapHitbox.interactType = INTERACT_BREAKABLE
-masterCapHitbox.downOffset = 5
-masterCapHitbox.damageOrCoinValue = 0
-masterCapHitbox.health = 1
-masterCapHitbox.numLootCoins = 0
-masterCapHitbox.hurtboxRadius = 40
-masterCapHitbox.hurtboxHeight = 30
-
 ---@param o Object
 local function bhv_master_cap_box_init(o)
     o.oFlags = o.oFlags | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.collisionData = gGlobalObjectCollisionData.exclamation_box_outline_seg8_collision_08025F78
-    o.oCollisionDistance = 300
+    o.oCollisionDistance = 450
 
     cur_obj_set_home_once()
 
@@ -345,6 +336,24 @@ end
 ---@param o Object
 local function bhv_master_cap_box_loop(o)
     cur_obj_scale(MASTER_CAP_BOX_SCALE)
+    local masterCapHitbox = get_temp_object_hitbox()
+    masterCapHitbox.interactType = INTERACT_BREAKABLE
+    masterCapHitbox.downOffset = 5
+    masterCapHitbox.damageOrCoinValue = 0
+    masterCapHitbox.health = 1
+    masterCapHitbox.numLootCoins = 0
+    masterCapHitbox.hurtboxRadius = 40*2
+    masterCapHitbox.hurtboxHeight = 30*2
+
+    masterCapHitbox.interactType = INTERACT_BREAKABLE
+    masterCapHitbox.downOffset = 0
+    masterCapHitbox.damageOrCoinValue = 0
+    masterCapHitbox.health = 1
+    masterCapHitbox.numLootCoins = 0
+    masterCapHitbox.radius = 50
+    masterCapHitbox.height = 45
+    masterCapHitbox.hurtboxRadius = 50
+    masterCapHitbox.hurtboxHeight = 45
     obj_set_hitbox(o, masterCapHitbox)
     local nearestM = nearest_mario_state_to_object(o)
 
