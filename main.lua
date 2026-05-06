@@ -141,6 +141,8 @@ local coinsSounds = {
 
 ---@param m MarioState
 local function interact(m, o, int)
+    local m = gMarioStates[0]
+    local e = gMasterCapStates[0]
     if int == INTERACT_COIN then
         -- Make Coin Sound
         local currCoinSound = coinsSounds[coinSoundCount]
@@ -157,11 +159,15 @@ local function interact(m, o, int)
 
         -- Up cap timer
         if m.capTimer ~= 0 then
-            m.capTimer = m.capTimer + o.oDamageOrCoinValue*25
+            m.capTimer = math.max(math.min(m.capTimer + o.oDamageOrCoinValue*25*(1/network_player_master_cap_count()), 999*30), m.capTimer)
+        end
+
+        if mario_master_cap_active(m) then
+            e.masterCapCoins = e.masterCapCoins + o.oDamageOrCoinValue
         end
 
         -- Set Master Cap Coin Time
-        gMasterCapStates[m.playerIndex].masterCapCoinTimer = gMasterCapStates[m.playerIndex].masterCapTotalTimer
+        gMasterCapStates[0].masterCapCoinTimer = gMasterCapStates[0].masterCapTotalTimer
         return
     end
 

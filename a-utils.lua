@@ -121,6 +121,108 @@ function ordinal(n)
     end
 end
 
+function nearest_antibubble_mario_state_to_object(obj)
+    if (not obj) then return nil end
+    local nearest = nil;
+    local nearestDist = 0;
+    for i = 0, MAX_PLAYERS - 1 do
+        local m = gMarioStates[i];
+        if (not m.marioObj) then goto continue end
+        if (m.marioObj == obj) then goto continue end
+        if (m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED) then goto continue end
+        if (is_player_active(m) == 0) then goto continue end
+
+        if m.action == ACT_DEATH_ON_BACK then
+            goto continue
+        end
+
+        local dist = dist_between_objects(obj, m.marioObj);
+        if (nearest == nil or dist < nearestDist) then
+            nearest = m;
+            nearestDist = dist;
+        end
+
+        ::continue::
+    end
+
+    return nearest;
+end
+
+function get_area_minimum_y()
+    local m = gMarioStates[0] ---@type MarioState
+    local np = gNetworkPlayers[0]
+    if (m.area.camera and m.area.camera.mode == CAMERA_MODE_ROM_HACK) then return end
+    if np.currCourseNum == COURSE_WF then    return true, 8; end;
+    if np.currCourseNum == COURSE_CCM then   return true, (np.currAreaIndex == 2) and -5856 or -5068; end;
+    if np.currCourseNum == COURSE_PSS then   return true, -4600; end;
+    if np.currCourseNum == COURSE_BITDW then return true, -3416; end;
+    if np.currCourseNum == COURSE_TTM then   return (np.currAreaIndex == 1) and true, -6000 or false end
+    if np.currCourseNum == COURSE_RR then    return true, -4790; end;
+    if np.currCourseNum == COURSE_BITS then  return true, -5065; end;
+end
+
+function bubbled_offset_visual(m)
+    if not m then return end
+    -- scary 3d trig ahead
+
+    local forwardOffset = 25;
+    local upOffset = -35;
+
+    -- figure out forward vector
+    local forward = {
+        x = sins(m.faceAngle.y) * coss(m.faceAngle.x),
+        y = -sins(m.faceAngle.x),
+        z = coss(m.faceAngle.y) * coss(m.faceAngle.x),
+    };
+    vec3f_normalize(forward);
+
+    -- figure out right vector
+    local globalUp = { x = 0, y = 1, z = 0 };
+    local right = { x = 0, y = 0, z = 0 };
+    vec3f_cross(right, forward, globalUp);
+    vec3f_normalize(right);
+
+    -- figure out up vector
+    local up = { x = 0, y = 0, z = 0 };
+    vec3f_cross(up, right, forward);
+    vec3f_normalize(up);
+
+    -- offset forward direction
+    vec3f_mul(forward, forwardOffset);
+    vec3f_add(m.marioObj.header.gfx.pos, forward);
+
+    -- offset up direction
+    vec3f_mul(up, upOffset);
+    vec3f_add(m.marioObj.header.gfx.pos, up);
+
+    -- offset global up direction
+    m.marioObj.header.gfx.pos.y = m.marioObj.header.gfx.pos.y - upOffset;
+end
+
+function mario_set_master_cap_bubbled(m)
+    if not m then return end
+    if (m.playerIndex ~= 0) then return end
+    if (m.action == ACT_MASTER_CAP_BUBBLED) then return end
+
+    gLocalBubbleCounter = 20;
+
+    --if (m.numLives > -1) {
+    --    m.numLives--;
+    --}
+    m.health = 0x880
+    m.healCounter = 0;
+    m.hurtCounter = 0;
+    m.area.camera.cutscene = 0;
+    m.statusForCamera.action = m.action;
+    m.statusForCamera.cameraEvent = 0;
+    m.marioObj.activeFlags = m.marioObj.activeFlags | ACTIVE_FLAG_MOVE_THROUGH_GRATE;
+    set_mario_action(m, ACT_MASTER_CAP_BUBBLED, 0);
+
+    --extern s16 gCutsceneTimer;
+    --gCutsceneTimer = 0;
+    soft_reset_camera(m.area.camera);
+end
+
 --------------------------
 -- Romhack Star Counter --
 --------------------------

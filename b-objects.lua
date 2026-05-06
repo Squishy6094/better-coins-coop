@@ -16,6 +16,7 @@ local carrierMax = 30
 
 --- @param o Object
 local function bhv_coin_carry_loop(o)
+    cur_obj_hide()
     if o.globalPlayerIndex == MAX_PLAYERS then return end
     if o.parentObj.activeFlags == ACTIVE_FLAG_DEACTIVATED then
         obj_mark_for_deletion(o)
@@ -222,3 +223,36 @@ local function courtyard_condition_loop(o)
 end
 
 id_bhvCourtyardCondition = hook_behavior(nil, OBJ_LIST_SPAWNER, true, courtyard_condition_init, courtyard_condition_loop, "bhvCourtyardCondition")
+
+function bhv_master_cap_bubble_player_loop(o)
+    if (o.heldByPlayerIndex >= MAX_PLAYERS) then return end
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    local marioState = gMarioStates[o.heldByPlayerIndex];
+    if (not marioState) then return end
+
+    -- set position
+    o.oPosX = marioState.pos.x;
+    o.oPosY = marioState.pos.y + 35;
+    o.oPosZ = marioState.pos.z;
+
+    -- slowly rotate the bubble
+    o.oFaceAnglePitch = o.oFaceAnglePitch + 300;
+    o.oFaceAngleYaw = o.oFaceAngleYaw + 230;
+    o.oFaceAngleRoll = o.oFaceAngleRoll + 170;
+
+    -- scale the bubble
+    local scale = sins(get_global_timer() * 800) * 0.1 + 1.4;
+    o.header.gfx.scale.x = scale;
+    o.header.gfx.scale.y = sins(get_global_timer() * 1500) * 0.2 + scale;
+    o.header.gfx.scale.z = scale;
+
+    -- check if the bubble popped
+    if (marioState.action ~= ACT_MASTER_CAP_BUBBLED or is_player_in_local_area(marioState) == 0) then
+        spawn_mist_particles();
+        create_sound_spawner(SOUND_OBJ_DIVING_IN_WATER);
+        marioState.bubbleObj = nil;
+        obj_mark_for_deletion(o);
+    end
+end
+
+id_bhvMasterCapBubblePlayer = hook_behavior(nil, OBJ_LIST_SPAWNER, true, nil, bhv_master_cap_bubble_player_loop, "bhvMasterCapBubblePlayer")
