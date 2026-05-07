@@ -214,6 +214,7 @@ local function act_master_cap_results(m)
     local masterCapCoinTimer = master_cap_data_get_feild(nil, "coinTimer")
     m.marioObj.header.gfx.animInfo.animFrame = pA.prevActionAnimFrame or 0
     m.marioObj.header.gfx.animInfo.animAccel = 0
+    m.flags = m.flags & ~(MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
     --camera_freeze()
     if m.playerIndex == 0 then
         game_unpause()
@@ -383,7 +384,6 @@ hook_mario_action(ACT_MASTER_CAP_RESULTS, act_master_cap_results)
 hook_mario_action(ACT_MASTER_CAP_BUBBLED, {every_frame = act_master_cap_bubbled, gravity = function(m) return 1 end})
 
 function set_mario_finished_master_cap(m)
-    m.flags = m.flags & ~(MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
     if network_player_master_cap_count() == 0 then
         set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
     else
@@ -552,6 +552,10 @@ local capSpawnRadius = 400
 local prevCoinsBest = 0
 local prevTimeBest = 0
 local function on_sync()
+    if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS then
+        gLevelValues.disableActs = true
+    end
+
     local m = gMarioStates[0]
     local courseNum = gNetworkPlayers[0].currCourseNum
 
@@ -648,9 +652,6 @@ local function master_cap_music_update()
 end
 
 local function master_cap_update()
-    if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS then
-        gLevelValues.disableActs = true
-    end
     local m = gMarioStates[0]
     master_cap_music_update()
     --if m.playerIndex ~= 0 then return end
@@ -677,7 +678,9 @@ local function master_cap_update()
             if master_cap_data_get_feild(i, "runActive") then
                 local capTimer = master_cap_data_get_feild(i, "capTimer")
                 if capTimer > 0 then
-                    if m.action & ACT_FLAG_INTANGIBLE == 0 or network_player_connected_count() > 1 then
+                    if network_player_connected_count() <= 1 and (m.action & ACT_FLAG_INTANGIBLE ~= 0 or is_game_paused()) then
+                        -- Don't decrease
+                    else
                         capTimer = capTimer - 1
                     end
                 else
@@ -837,6 +840,7 @@ local function master_cap_render()
     end
 end
 
+--[[
 local leaderboardView = false
 local TEXT_LEADERBOARD = "Master Cap Challenge Leaderboard"
 local TEXT_LEADERBOARD_TOGGLE = "R Button - Toggle Leaderboard"
@@ -920,6 +924,7 @@ local function hud_render()
     --star_select_leaderboard()
     --pause_leaderboard()
 end
+]]
 
 local function on_death()
     local m = gMarioStates[0]
@@ -935,5 +940,5 @@ end
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
-hook_event(HOOK_ON_HUD_RENDER, hud_render)
+--hook_event(HOOK_ON_HUD_RENDER, hud_render)
 hook_event(HOOK_ON_DEATH, on_death)
