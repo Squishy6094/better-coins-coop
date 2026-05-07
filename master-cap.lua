@@ -1,47 +1,162 @@
 
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
 local MUSIC_MASTER_CAP_END = audio_stream_load("music-master-cap-end.ogg")
-
---[[
-    Fix intangible bug at the end of run
-    Optimize packets
-    Actually use custom object variables
-]]
-
+local masterCapMusicFreq = 1
 audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917230, 003175168)
 audio_stream_set_loop_points(MUSIC_MASTER_CAP_END, 000917230, 003175168)
 audio_stream_set_looping(MUSIC_MASTER_CAP, true)
 audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
 
-local masterCapMusicFreq = 1
-
 local MASTER_CAP_BOX_SCALE = 3
 
-local collectiveCoinCount = 0
-gMasterCapStates = {}
-for i = 0, MAX_PLAYERS - 1 do
-    gMasterCapStates[i] = {
-        index = network_global_index_from_local(i),
-        masterCapTimer = -1,
-        masterCapTotalTimer = 0,
-        masterCapCoinTimer = 0,
-        masterCapCoins = 0,
-        masterCapNewRecord = false,
-        masterCapCrouchTimer = 0
+local PACKET_TYPE_MASTER_CAP_START = 1
+local PACKET_TYPE_MASTER_CAP_STOP = 2
+local PACKET_TYPE_MASTER_CAP_COIN = 3
+local PACKET_TYPE_MASTER_CAP_UPDATE = 4
+gMasterCapServerState = {}
+for i = 0, COURSE_MAX do
+    gMasterCapServerState[i] = {
+        runActive = false,
+        newRecord = false,
+        capTimer = 0,
+        totalTimer = 0,
+        coinTimer = 0,
+        coins = 0,
     }
+    
+    if network_is_server() then
+        local saveCoins = ROMHACK .. tostring(i) .. "coins"
+        local saveTime = ROMHACK .. tostring(i) .. "time"
+        gGlobalSyncTable[saveCoins] = tonumber(mod_storage_load(saveCoins)) or 0
+        gGlobalSyncTable[saveTime] = tonumber(mod_storage_load(saveTime)) or 0
+    end
 end
 
--- Load save into sync table
---[[
-for i = 1, COURSE_MAX do
-    gMasterCapStates[0]["masterCapRecordCoins"..i] = tonumber(mod_storage_load(ROMHACK.."recordCoins"..tostring(i))) or 0
-    gMasterCapStates[0]["masterCapRecordTime"..i] = tonumber(mod_storage_load(ROMHACK.."recordTime"..tostring(i))) or 0
+function master_cap_get_record(courseNum)
+    courseNum = courseNum or gNetworkPlayers[0].currCourseNum
+    return gGlobalSyncTable[ROMHACK .. tostring(courseNum) .. "coins"], gGlobalSyncTable[ROMHACK .. tostring(courseNum) .. "time"]
 end
-]]
+
+function master_cap_data_get_feild(courseNum, feild)
+    courseNum = courseNum or gNetworkPlayers[0].currCourseNum
+    return gMasterCapServerState[courseNum][feild]
+end
+
+function master_cap_data_set_feild(courseNum, feild, value)
+    courseNum = courseNum or gNetworkPlayers[0].currCourseNum
+    gMasterCapServerState[courseNum][feild] = value
+end
+
+---@param m MarioState
+function mario_master_cap_active(m, currCourse)
+    currCourse = currCourse or gNetworkPlayers[0].currCourseNum
+    if currCourse ~= gNetworkPlayers[m.playerIndex].currCourseNum then return false end
+    return master_cap_data_get_feild(nil, "runActive") and m.action ~= ACT_MASTER_CAP_BUBBLED
+end
+
+function network_player_master_cap_count(currCourse)
+    local count = 0
+    for i = 0, MAX_PLAYERS - 1 do
+        if mario_master_cap_active(gMarioStates[i], currCourse) then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+
+function master_cap_start_course(courseNum, noSync)
+    courseNum = courseNum or gNetworkPlayers[0].currCourseNum
+    masterCapMusicFreq = 1
+
+    master_cap_data_set_feild(courseNum, "capTimer", math.floor(gLevelValues.wingCapDuration*0.5))
+    master_cap_data_set_feild(courseNum, "coins", 0)
+    master_cap_data_set_feild(courseNum, "runActive", true)
+    master_cap_data_set_feild(courseNum, "newRecord", false)
+
+    if not noSync then
+        network_send(true, {
+            packetType = PACKET_TYPE_MASTER_CAP_START,
+            courseNum = courseNum,
+        })
+    end
+end
+
+function master_cap_stop_course(courseNum, newRecord, coinTimer, noSync)
+    courseNum = courseNum or gNetworkPlayers[0].currCourseNum
+
+    master_cap_data_set_feild(courseNum, "capTimer", math.floor(gLevelValues.wingCapDuration*0.5))
+    master_cap_data_set_feild(courseNum, "runActive", false)
+    if newRecord then
+        master_cap_data_set_feild(courseNum, "newRecord", true)
+    end
+    if coinTimer then
+        master_cap_data_set_feild(courseNum, "coinTimer", coinTimer)
+    end
+
+    if network_is_server() then
+        local saveCoins, saveTime = master_cap_get_record(courseNum)
+        local currCoins = master_cap_data_get_feild(courseNum, "coins")
+        local currTime = master_cap_data_get_feild(courseNum, "coinTimer") or 0
+        if currCoins > 0 and
+        currCoins > saveCoins or
+        (currCoins == saveCoins and
+        currTime < saveTime) then
+            mod_storage_save(ROMHACK .. tostring(courseNum) .. "coins", tostring(math.round(currCoins)))
+            mod_storage_save(ROMHACK .. tostring(courseNum) .. "time", tostring(math.round(currTime)))
+            master_cap_data_set_feild(courseNum, "newRecord", true)
+            newRecord = true
+        end
+    end
+
+    if courseNum == gNetworkPlayers[0].currCourseNum then
+        set_mario_finished_master_cap(gMarioStates[0])
+    end
+
+    if not noSync then
+        network_send(true, {
+            packetType = PACKET_TYPE_MASTER_CAP_STOP,
+            courseNum = courseNum,
+            newRecord = newRecord,
+            coinTimer = master_cap_data_get_feild(courseNum, "coinTimer"),
+        })
+    end
+end
+
+function master_cap_add_coin(courseNum, value, noSync)
+    courseNum = courseNum or gNetworkPlayers[0].currCourseNum
+    
+    local prevCapTimer = master_cap_data_get_feild(courseNum, "capTimer")
+    local prevCoins = master_cap_data_get_feild(courseNum, "coins")
+
+    master_cap_data_set_feild(courseNum, "capTimer", prevCapTimer + value*25*(1/network_player_master_cap_count(courseNum)))
+    master_cap_data_set_feild(courseNum, "coins", prevCoins + value)
+
+    if network_is_server() then
+        master_cap_data_set_feild(courseNum, "coinTimer", master_cap_data_get_feild(courseNum, "totalTimer"))
+    end
+
+    if not noSync then
+        network_send(true, {
+            packetType = PACKET_TYPE_MASTER_CAP_COIN,
+            courseNum = courseNum,
+            coinsAdd = value,
+        })
+    end
+end
+
+--local function update_master_cap_courses 
 
 local function on_packet_recieve(data)
-    local index = network_local_index_from_global(data.index)
-    gMasterCapStates[index] = data
+    if data.packetType == PACKET_TYPE_MASTER_CAP_START then
+        master_cap_start_course(data.courseNum, true)
+    elseif data.packetType == PACKET_TYPE_MASTER_CAP_STOP then
+        master_cap_stop_course(data.courseNum, data.newRecord, data.coinTimer, true)
+    elseif data.packetType == PACKET_TYPE_MASTER_CAP_COIN then
+        master_cap_add_coin(data.courseNum, data.coinsAdd, true)
+    elseif data.packetType == PACKET_TYPE_MASTER_CAP_UPDATE then
+        master_cap_data_set_feild(data.courseNum, "capTimer", data.capTimer)
+    end
 end
 
 hook_event(HOOK_ON_PACKET_RECEIVE, on_packet_recieve)
@@ -80,11 +195,24 @@ end
 ACT_MASTER_CAP_RESULTS = allocate_mario_action(ACT_GROUP_CUTSCENE | ACT_FLAG_INTANGIBLE)
 ACT_MASTER_CAP_BUBBLED = allocate_mario_action(ACT_FLAG_MOVING)
 
+local sPrevAct = {}
+for i = 0, MAX_PLAYERS - 1 do
+    sPrevAct[i] = {
+        prevActionAnimFrame = 0,
+        prevActionAnimAccel = 0,
+        prevAction = 0,
+        prevActionTimer = 0,
+        prevActionState = 0,
+        prevActionArg = 0,
+    }
+end
 ---@param m MarioState
 local function act_master_cap_results(m)
     if not m then return end
-    local e = gMasterCapStates[m.playerIndex]
-    m.marioObj.header.gfx.animInfo.animFrame = e.prevActionAnimFrame or 0
+    local pA = sPrevAct[m.playerIndex]
+    local masterCapCoins = master_cap_data_get_feild(nil, "coins")
+    local masterCapCoinTimer = master_cap_data_get_feild(nil, "coinTimer")
+    m.marioObj.header.gfx.animInfo.animFrame = pA.prevActionAnimFrame or 0
     m.marioObj.header.gfx.animInfo.animAccel = 0
     --camera_freeze()
     if m.playerIndex == 0 then
@@ -98,7 +226,7 @@ local function act_master_cap_results(m)
             m.actionTimer = 0
         end
     elseif m.actionState == 1 then -- Count Coins
-        if m.actionTimer > math.min(e.masterCapCoins, 150) or pressedA then
+        if m.actionTimer > math.min(masterCapCoins, 150) or pressedA then
             m.actionState = m.actionState + 1
             m.actionTimer = 0
         end
@@ -108,49 +236,27 @@ local function act_master_cap_results(m)
             m.actionTimer = 0
         end
     elseif m.actionState == 3 then -- Count Time
-        if m.actionTimer > math.min(e.masterCapCoinTimer/30, 150) or pressedA then
+        if m.actionTimer > math.min(masterCapCoinTimer/30, 150) or pressedA then
             m.actionState = m.actionState + 1
             m.actionTimer = 0
         end
-    elseif m.actionState == 4 then
-        -- Save high score
-        if m.playerIndex == 0 then
-            local course = gNetworkPlayers[0].currCourseNum
-
-            local prevCoins = e["masterCapRecordCoins"..course]
-            local currCoins = e.masterCapCoins
-            local prevTime = e["masterCapRecordTime"..course]
-            local currTime = e.masterCapCoinTimer
-            if prevCoins and (currCoins > prevCoins or (currCoins == prevCoins and currTime < prevTime)) then
-                e["masterCapRecordCoins"..course] = e.masterCapCoins
-                mod_storage_save(ROMHACK.."recordCoins"..tostring(course), tostring(e.masterCapCoins))
-                e["masterCapRecordTime"..course] = e.masterCapCoinTimer
-                mod_storage_save(ROMHACK.."recordTime"..tostring(course), tostring(e.masterCapCoinTimer))
-                e.masterCapNewRecord = true
-                if m.playerIndex == 0 then
-                    play_star_fanfare()
-                end
-            end
-            m.actionState = m.actionState + 1
-        end
-    elseif m.actionState == 5 then -- Await Input
+    elseif m.actionState == 4 then -- Await Input
         if pressedA then
             m.actionState = m.actionState + 1
             m.actionTimer = 0
         end
     else
         --camera_unfreeze()
-        if e.prevAction == ACT_MASTER_CAP_BUBBLED then
-            djui_chat_message_create("i'll save you")
+        if pA.prevAction == ACT_MASTER_CAP_BUBBLED then
+            m.marioObj.oIntangibleTimer = 0;
             mario_pop_bubble(m)
+        else
+            m.action = pA.prevAction
+            m.marioObj.header.gfx.animInfo.animAccel = pA.prevActionAnimAccel
+            m.actionArg = pA.prevActionArg
+            m.actionTimer = pA.prevActionTimer
+            m.actionState = pA.prevActionState
         end
-        m.action = e.prevAction
-        m.marioObj.header.gfx.animInfo.animAccel = e.prevActionAnimAccel
-        m.actionArg = e.prevActionArg
-        m.actionTimer = e.prevActionTimer
-        m.actionState = e.prevActionState
-        e.masterCapCrouchTimer = 0
-        e.masterCapNewRecord = false
     end
 
 
@@ -276,32 +382,7 @@ end
 hook_mario_action(ACT_MASTER_CAP_RESULTS, act_master_cap_results)
 hook_mario_action(ACT_MASTER_CAP_BUBBLED, {every_frame = act_master_cap_bubbled, gravity = function(m) return 1 end})
 
----@param m MarioState
-function mario_master_cap_active(m)
-    if gNetworkPlayers[0].currLevelNum ~= gNetworkPlayers[m.playerIndex].currLevelNum then return false end
-    return gMasterCapStates[m.playerIndex].masterCapTimer > 0
-end
-
-function network_player_master_cap_count()
-    local count = 0
-    for i = 0, MAX_PLAYERS - 1 do
-        if mario_master_cap_active(gMarioStates[i]) then
-            count = count + 1
-        end
-    end
-    return count
-end
-
-function set_mario_start_master_cap(m, time)
-    if not mario_master_cap_active(m) then
-        local e = gMasterCapStates[m.playerIndex]
-        e.masterCapTimer = time or gLevelValues.wingCapDuration*0.5
-    end
-end
-
 function set_mario_finished_master_cap(m)
-    local e = gMasterCapStates[m.playerIndex]
-    e.masterCapTimer = 0
     m.flags = m.flags & ~(MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
     if network_player_master_cap_count() == 0 then
         set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
@@ -436,10 +517,13 @@ local function bhv_master_cap_box_loop(o)
         if t >= 14 then
             o.oAction = 3
         end
+        if t >= 4 then
+            play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 10, 230, 230, 230)
+        end
     elseif o.oAction == 3 then
-        --exclamation_box_spawn_contents(gExclamationBoxContents, o->oBehParams2ndByte)
-        set_mario_start_master_cap(gMarioStates[0])
-        play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 0, 230, 230, 230)
+        if sync_object_is_owned_locally(o.oSyncID) ~= 0 then
+            master_cap_start_course()
+        end
         play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
         play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource)
         play_character_sound(gMarioStates[0], CHAR_SOUND_HERE_WE_GO)
@@ -465,25 +549,17 @@ local E_MODEL_MASTER_CAP = smlua_model_util_get_id("master_box_geo")
 
 local nearestObjPos = {x = 0, y = 0, z = 0}
 local capSpawnRadius = 400
-local function level_init()
-    local m = gMarioStates[0]
-    local e = gMasterCapStates[0]
-
-    if obj_get_first_with_behavior_id(id_bhvBowser) == nil then
-        e.masterCapTimer = 0
-        e.masterCapTotalTimer = 0
-        e.masterCapCoins = 0
-        collectiveCoinCount = 0
-    end
-end
-
+local prevCoinsBest = 0
+local prevTimeBest = 0
 local function on_sync()
     local m = gMarioStates[0]
-    local e = gMasterCapStates[0]
+    local courseNum = gNetworkPlayers[0].currCourseNum
+
+    prevCoinsBest, prevTimeBest = master_cap_get_record(courseNum)
 
     if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
 
-    if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS and gNetworkPlayers[0].currCourseNum > 0 and e.masterCapTimer <= 0 and m.numCoins <= 0 then
+    if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS and courseNum > 0 then
         local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
         castFloorSpawn = {x = castFloorSpawn.x, y = math.max(castFloorSpawn.y, (m.waterLevel or -0x8000) - 200), z = castFloorSpawn.z}
         nearestObjPos.x = m.pos.x
@@ -524,100 +600,22 @@ local function on_sync()
     end
 end
 
----@param m MarioState
-local function master_cap_update(m)
-    if m.playerIndex == 0 then
-        if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS then
-            gLevelValues.disableActs = true
-        end
-    end
-    local e = gMasterCapStates[m.playerIndex]
-    --if m.playerIndex ~= 0 then return end
-    if e.masterCapTimer > 0 then
-        e.masterCapTimer = math.max(m.capTimer, e.masterCapTimer)
-        -- Hold timer on acts
-        if m.action & ACT_FLAG_INTANGIBLE == 0 then
-            e.masterCapTimer = math.max(e.masterCapTimer - 1, 0)
-            e.masterCapTotalTimer = e.masterCapTotalTimer + 1
-        end
-
-        -- Get best active mario stats
-        --[[
-        if m.playerIndex == 0 then
-            local e0 = e
-            local coinCount = e0.masterCapCoins
-            for i = 1, MAX_PLAYERS - 1 do
-                local e = gMasterCapStates[i]
-                if gNetworkPlayers[0].currLevelNum == gNetworkPlayers[i].currLevelNum then
-                    e0.masterCapTimer = math.max(e0.masterCapTimer, e.masterCapTimer - 1)
-                    e0.masterCapCoinTimer = math.max(e0.masterCapCoinTimer, e.masterCapCoinTimer)
-                    e0.masterCapCrouchTimer = math.max(e0.masterCapCrouchTimer, e.masterCapCrouchTimer)
-                    coinCount = coinCount + e.masterCapCoins
-                end
-            end
-            collectiveCoinCount = math.max(collectiveCoinCount, coinCount)
-        end
-        ]]
-
-        -- Save previous actions to unfreeze from
-        if m.action ~= ACT_MASTER_CAP_RESULTS then
-            e.prevActionAnimFrame = m.marioObj.header.gfx.animInfo.animFrame
-            e.prevActionAnimAccel = m.marioObj.header.gfx.animInfo.animAccel
-            e.prevAction = m.action
-            e.prevActionTimer = m.actionTimer
-            e.prevActionState = m.actionState
-            e.prevActionArg = m.actionArg
-        end
-        
-        -- End at 999 coins
-        if m.numCoins >= 999 then
-            set_mario_finished_master_cap(m)
-        end
-
-        -- End on key collect
-        if m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE then
-            set_mario_finished_master_cap(m)
-        end
-
-        m.capTimer = e.masterCapTimer
-        if e.masterCapTimer > 0 then
-            m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
-        else
-            set_mario_finished_master_cap(m)
-        end
-
-        if m.action == ACT_CROUCHING then
-            e.masterCapCrouchTimer = e.masterCapCrouchTimer + 1
-            if e.masterCapCrouchTimer > 90 then
-                set_mario_finished_master_cap(m)
-            end
-        else
-            e.masterCapCrouchTimer = math.max(e.masterCapCrouchTimer - 3, 0)
-        end
-    end
-
-    -- Network sync shitt
-    --if m.playerIndex == 0 and get_global_timer()%10 == 0 then 
-    --    network_send(false, gMasterCapStates[0])
-    --end
-end
-
 local prevRunState = 0
 local function master_cap_music_update()
     local m = gMarioStates[0]
-    local e = gMasterCapStates[0]
+    local runActive = master_cap_data_get_feild(nil, "runActive")
+    local masterCapTimer = master_cap_data_get_feild(nil, "capTimer")
     local runState = 0
-    if e.masterCapTimer > 0 then
+    if runActive then
         runState = 1
-    elseif m.action == ACT_MASTER_CAP_RESULTS or m.action == ACT_MASTER_CAP_BUBBLED then
+    end
+    if m.action == ACT_MASTER_CAP_RESULTS or m.action == ACT_MASTER_CAP_BUBBLED then
         runState = 2
     end
 
     if runState > 0 then
         local volShift = runState ~= 2 and 1 or math.clamp((masterCapMusicFreq - 0.7)/0.6, 0, 1)
         local volShiftInv = 1 - volShift
-        audio_stream_set_volume(MUSIC_MASTER_CAP, (is_game_paused() and 0 or 0.75)*volShift)
-        audio_stream_set_volume(MUSIC_MASTER_CAP_END, (is_game_paused() and 0 or 0.75)*volShiftInv)
         if prevRunState ~= runState then
             stop_cap_music()
             audio_stream_play(MUSIC_MASTER_CAP, false, 1)
@@ -627,13 +625,14 @@ local function master_cap_music_update()
         if runState == 1 then
             play_secondary_music(0, 0, 0, 50)
         end
-        local freqTargetTime = 1 + (math.max(450 - e.masterCapTimer, 0)/450)*0.3
-        local freqTargetEnd = 1 + (e.masterCapCrouchTimer/90)*0.3
+        local freqTargetTime = 1 + (math.max(450 - masterCapTimer, 0)/450)*0.3
+        local freqTargetEnd = 1 --+ (e.masterCapCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
         masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.02)
         audio_stream_set_frequency(MUSIC_MASTER_CAP, masterCapMusicFreq)
         audio_stream_set_frequency(MUSIC_MASTER_CAP_END, masterCapMusicFreq)
-
+        audio_stream_set_volume(MUSIC_MASTER_CAP, (is_game_paused() and 0 or 1)*volShift)
+        audio_stream_set_volume(MUSIC_MASTER_CAP_END, (is_game_paused() and 0 or 1)*volShiftInv)
     else
         if prevRunState ~= runState then
             audio_stream_set_position(MUSIC_MASTER_CAP, 0)
@@ -644,9 +643,108 @@ local function master_cap_music_update()
             audio_stream_stop(MUSIC_MASTER_CAP)
             audio_stream_stop(MUSIC_MASTER_CAP_END)
             stop_secondary_music(50)
-            prevRunState = runState
         end
     end
+end
+
+local function master_cap_update()
+    if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS then
+        gLevelValues.disableActs = true
+    end
+    local m = gMarioStates[0]
+    master_cap_music_update()
+    --if m.playerIndex ~= 0 then return end
+    -- Locally Apply Master Cap
+    local runActive = master_cap_data_get_feild(nil, "runActive")
+    if runActive then
+        m.capTimer = master_cap_data_get_feild(nil, "capTimer")
+        m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
+        if m.action ~= ACT_MASTER_CAP_RESULTS then
+            sPrevAct[m.playerIndex].prevActionAnimFrame = m.marioObj.header.gfx.animInfo.animFrame
+            sPrevAct[m.playerIndex].prevActionAnimAccel = m.marioObj.header.gfx.animInfo.animAccel
+            sPrevAct[m.playerIndex].prevAction = m.action
+            sPrevAct[m.playerIndex].prevActionTimer = m.actionTimer
+            sPrevAct[m.playerIndex].prevActionState = m.actionState
+            sPrevAct[m.playerIndex].prevActionArg = m.actionArg
+        end
+    end
+
+    prevRunState = master_cap_data_get_feild(nil, "runActive")
+
+    if network_is_server() then
+        -- Update All Levels' Runs
+        for i = 1, COURSE_MAX do
+            if master_cap_data_get_feild(i, "runActive") then
+                local capTimer = master_cap_data_get_feild(i, "capTimer")
+                if capTimer > 0 then
+                    if m.action & ACT_FLAG_INTANGIBLE == 0 or network_player_connected_count() > 1 then
+                        capTimer = capTimer - 1
+                    end
+                else
+                    master_cap_stop_course(i)
+                end
+
+                if network_player_master_cap_count(i) == 0 then
+                    master_cap_stop_course(i)
+                end
+
+                local coins = master_cap_data_get_feild(i, "coins")
+                if coins > 999 then
+                    master_cap_stop_course(i)
+                end
+
+                master_cap_data_set_feild(i, "capTimer", capTimer)
+                if capTimer%30 == 0 then
+                    network_send(false, {
+                        packetType = PACKET_TYPE_MASTER_CAP_UPDATE,
+                        courseNum = i,
+                        capTimer = capTimer,
+                    })
+                end
+
+                local totalTimer = master_cap_data_get_feild(i, "totalTimer")
+                totalTimer = totalTimer + 1
+                master_cap_data_set_feild(i, "totalTimer", totalTimer)
+            end
+        end
+    else
+        local capTimer = master_cap_data_get_feild(nil, "capTimer")
+        if capTimer > 0 then
+            if m.action & ACT_FLAG_INTANGIBLE == 0 or network_player_connected_count() > 1 then
+                capTimer = math.max(capTimer - 1, 1)
+            end
+        end
+        master_cap_data_set_feild(nil, "capTimer", capTimer)
+    end
+
+
+
+        --set_mario_finished_master_cap(m)
+        
+        -- Hold timer on acts
+        --if m.action & ACT_FLAG_INTANGIBLE == 0 then
+        --    e.masterCapTimer = math.max(e.masterCapTimer - 1, 0)
+        --    e.masterCapTotalTimer = e.masterCapTotalTimer + 1
+        --end
+
+        -- Get best active mario stats
+        --[[
+
+
+        if m.action == ACT_CROUCHING then
+            e.masterCapCrouchTimer = e.masterCapCrouchTimer + 1
+            if e.masterCapCrouchTimer > 90 then
+                set_mario_finished_master_cap(m)
+            end
+        else
+            e.masterCapCrouchTimer = math.max(e.masterCapCrouchTimer - 3, 0)
+        end
+        ]]
+
+    -- Network sync shitt
+    --if m.playerIndex == 0 and get_global_timer()%10 == 0 then 
+    --    network_send(false, gMasterCapStates[0])
+    --end
 end
 
 local TEXT_MASTER_CAP = "Collect as many coins as possible!"
@@ -660,18 +758,17 @@ local leaderboardTop = nil
 local leaderboard = nil
 local function master_cap_render()
     local m = gMarioStates[0]
-    local e = gMasterCapStates[0]
-    local course = gNetworkPlayers[0].currCourseNum
-    local isSingle = network_player_connected_count() <= 1
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
-    if e.masterCapTimer > 0 then
+    local runActive = master_cap_data_get_feild(nil, "runActive")
+    if runActive then
         djui_hud_set_font(FONT_HUD)
         local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
         local textScale = math.min(sWidth/(textW + 32), 1)
-        djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (32 + math.abs(math.sin(e.masterCapTotalTimer/30))*8)*textScale, textScale)
+        --djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (32 + math.abs(math.sin(e.masterCapTotalTimer/30))*8)*textScale, textScale)
 
+        --[[
         if e.masterCapCrouchTimer > 15 then
             local untilCancelInterp = math.max(e.masterCapCrouchTimer + (m.action == ACT_CROUCHING and -1 or 3) - 15, 0)/75
             local untilCancel = math.max(e.masterCapCrouchTimer - 15, 0)/75
@@ -684,67 +781,59 @@ local function master_cap_render()
             local yShake = math.random(-2, 2)*untilCancel
             djui_hud_print_text(TEXT_ENDING_RUN, sWidth*0.5 - djui_hud_measure_text(TEXT_ENDING_RUN)*0.5 + xShake, sHeight*0.5 - 8 + yShake, 1)
         end
+        ]]
     end
 
     if m.action == ACT_MASTER_CAP_RESULTS then
-        local record = (e.masterCapNewRecord and m.actionState > 3)
+        local record = master_cap_data_get_feild(nil, "newRecord") and m.actionState > 3
         local recordFlash = record and sins(m.actionTimer*0x1000) * 50.0 + 200.0 or 255
         djui_hud_set_color(0, 0, 0, 150)
         djui_hud_render_rect(0, 0, sWidth, sHeight)
         djui_hud_set_color(255, 255, 255, 255)
 
+        local currCoins = master_cap_data_get_feild(nil, "coins")
+        local currTime = master_cap_data_get_feild(nil, "coinTimer")
 
         -- Render Personal and Server Best
         djui_hud_set_font(FONT_NORMAL)
-        local bestPersonal = TEXT_RESULT_PB .. tostring(e["masterCapRecordCoins"..course]) .. " - " .. timestamp(e["masterCapRecordTime"..course])
+        local printCoinsBest = record and currCoins or prevCoinsBest
+        local printTimeBest = record and currTime or prevTimeBest
+        local printBest = TEXT_RESULT_PB .. tostring(printCoinsBest) .. " - " .. timestamp(printTimeBest)
         djui_hud_set_color(recordFlash, recordFlash, record and 0 or 255, 255)
-        djui_hud_print_text(bestPersonal, sWidth*(isSingle and 0.5 or 0.25) - djui_hud_measure_text(bestPersonal)*0.25, sHeight - 22, 0.5)
-
-        if not isSingle then
-            if leaderboardTop == nil then
-                leaderboardTop = get_master_cap_leaderboard()[1]
-            end
-            local bestServer = TEXT_RESULT_SB .. leaderboardTop.displayCoins .. " - " .. leaderboardTop.displayTime
-            local serverRecord = (collectiveCoinCount > leaderboardTop.coins or (collectiveCoinCount == leaderboardTop.coins and e.masterCapTimer < leaderboardTop.time)) and m.actionState > 3
-            local serverRecordFlash = serverRecord and recordFlash or 255
-            djui_hud_set_color(serverRecordFlash, serverRecordFlash, serverRecord and 0 or 255, 255)
-            djui_hud_print_text(bestServer, sWidth*0.75 - djui_hud_measure_text(bestServer)*0.25, sHeight - 22, 0.5)
-        end
+        djui_hud_print_text(printBest, sWidth*0.5 - djui_hud_measure_text(printBest)*0.25, sHeight - 22, 0.5)
 
         -- Render Coins Collected
         djui_hud_set_color(255, 255, 255, 255)
         djui_hud_set_font(FONT_NORMAL)
         djui_hud_print_text(TEXT_RESULT_COINS, sWidth*0.5 - djui_hud_measure_text(TEXT_RESULT_COINS)*0.25, 60, 0.5)
-        local coinCount = m.actionState < 1 and 0 or collectiveCoinCount
+        local coinCount = m.actionState < 1 and 0 or currCoins
         if m.actionState == 1 then
-            coinCount = math.ceil(math.lerp(0, collectiveCoinCount, math.clamp(m.actionTimer/math.min(collectiveCoinCount, 150), 0, 1)))
+            coinCount = math.ceil(math.lerp(0, currCoins, math.clamp(m.actionTimer/math.min(currCoins, 150), 0, 1)))
         end
         local coinRender = tostring(coinCount)
         djui_hud_set_font(FONT_RECOLOR_HUD)
         djui_hud_print_text(coinRender, sWidth*0.5 - djui_hud_measure_text(coinRender) - 4, 80, 2)
         if m.actionState > 1 then
-            local coinTimeRender = tostring(math.round(collectiveCoinCount/((e.masterCapCoinTimer > 0 and e.masterCapCoinTimer or 1)/30)*10)*0.1).."/sin"
+            local coinTimeRender = tostring(math.round(currCoins/(math.max(currTime, 1)/30)*10)*0.1).."/s"
             djui_hud_print_text(coinTimeRender, sWidth*0.5 + djui_hud_measure_text(coinRender) + 16, 80 + 16, 1)
         end
 
         -- Render Timestamp
         djui_hud_set_font(FONT_NORMAL)
         djui_hud_print_text(TEXT_RESULT_TIME, sWidth*0.5 - djui_hud_measure_text(TEXT_RESULT_TIME)*0.25, 120, 0.5)
-        local timeCount = m.actionState < 3 and 0 or e.masterCapCoinTimer
+        local timeCount = m.actionState < 3 and 0 or currTime
         if m.actionState == 3 then
-            timeCount = math.lerp(0, e.masterCapCoinTimer, math.clamp(m.actionTimer/math.min(e.masterCapCoinTimer/30, 150), 0, 1))
+            timeCount = math.lerp(0, currTime, math.clamp(m.actionTimer/math.min(currTime/30, 150), 0, 1))
         end
         local timeRender = timestamp(timeCount)
         djui_hud_set_font(FONT_RECOLOR_HUD)
         djui_hud_print_text(timeRender, sWidth*0.5 - djui_hud_measure_text(timeRender)*0.5 - 2, 140, 1)
 
-        if m.actionState > 3 and e.masterCapNewRecord then
+        if record then
             djui_hud_set_font(FONT_HUD)
             djui_hud_set_color(recordFlash, recordFlash, recordFlash, 255)
             djui_hud_print_text(TEXT_RECORD, sWidth*0.5 - djui_hud_measure_text(TEXT_RECORD)*0.5 - 2, sHeight - 70, 1)
         end
-    else
-        leaderboardTop = nil
     end
 end
 
@@ -828,15 +917,14 @@ local function pause_leaderboard()
 end
 
 local function hud_render()
-    star_select_leaderboard()
-    pause_leaderboard()
+    --star_select_leaderboard()
+    --pause_leaderboard()
 end
 
 local function on_death()
     local m = gMarioStates[0]
-    local e = gMasterCapStates[0]
-    if e.masterCapTimer > 0 then
-        set_mario_finished_master_cap(gMarioStates[0])
+    if master_cap_data_get_feild(nil, "runActive") then
+        set_mario_finished_master_cap(m)
         return false
     end
     if m.action == ACT_MASTER_CAP_RESULTS or m.action == ACT_MASTER_CAP_BUBBLED then
@@ -844,10 +932,8 @@ local function on_death()
     end
 end
 
-hook_event(HOOK_ON_LEVEL_INIT, level_init)
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
-hook_event(HOOK_MARIO_UPDATE, master_cap_update)
-hook_event(HOOK_UPDATE, master_cap_music_update)
+hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_HUD_RENDER, hud_render)
 hook_event(HOOK_ON_DEATH, on_death)

@@ -122,6 +122,7 @@ end
 
 local originalStayInLevel = gServerSettings.stayInLevelAfterStar
 local function allow_interact(m, o, int)
+    if o.oIntangibleTimer ~= 0 then return end
     if (int == INTERACT_STAR_OR_KEY) then
         -- Make Transparent Stars turn on nonstop
         if obj_is_star_collected(o) then
@@ -134,42 +135,38 @@ end
 local coinSoundCount = 0
 local coinSoundCombo = 0
 local coinSoundComboEnd = 0
+--[[
 local coinsSounds = {
     [0] = audio_stream_load("coin1.ogg"),
     [1] = audio_stream_load("coin2.ogg"),
     [2] = audio_stream_load("coin3.ogg"),
     [3] = audio_stream_load("coin4.ogg"),
 }
-
+]]
+local customCoin = false
 ---@param m MarioState
 local function interact(m, o, int)
-    local m = gMarioStates[0]
-    local e = gMasterCapStates[0]
+    if m.playerIndex ~= 0 then return end
+    if o.oIntangibleTimer ~= 0 then return end
     if int == INTERACT_COIN then
         -- Make Coin Sound
-        local currCoinSound = coinsSounds[coinSoundCount]
+        --local currCoinSound = coinsSounds[coinSoundCount]
         if get_global_timer() > coinSoundComboEnd then
             coinSoundCombo = 0
         else
             coinSoundCombo = coinSoundCombo + 1
         end
-                                                    -- Lowest V  V Highest     Coins to Highest V
-        audio_stream_set_frequency(currCoinSound, math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1)))
-        audio_stream_play(currCoinSound, true, 1.25)
+        local freqScale = math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1))
+        customCoin = true
+        play_sound_with_freq_scale(SOUND_GENERAL_COIN, gGlobalSoundSource, freqScale)
+        --audio_stream_set_frequency(currCoinSound, math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1)))
+        --audio_stream_play(currCoinSound, true, 1.25)
         coinSoundCount = (coinSoundCount + 1)%4
         coinSoundComboEnd = get_global_timer() + 90
 
-        -- Up cap timer
-        if m.capTimer ~= 0 then
-            m.capTimer = math.max(math.min(m.capTimer + o.oDamageOrCoinValue*25*(1/network_player_master_cap_count()), 999*30), m.capTimer)
-        end
-
         if mario_master_cap_active(m) then
-            e.masterCapCoins = e.masterCapCoins + o.oDamageOrCoinValue
+            master_cap_add_coin(nil, o.oDamageOrCoinValue)
         end
-
-        -- Set Master Cap Coin Time
-        gMasterCapStates[0].masterCapCoinTimer = gMasterCapStates[0].masterCapTotalTimer
         return
     end
 
@@ -211,9 +208,10 @@ local function count_possible_coins()
 end
 
 local function on_coin_sound(sound, pos)
-    if sound == SOUND_GENERAL_COIN then
+    if sound == SOUND_GENERAL_COIN and not customCoin then
         return NO_SOUND
     end
+    customCoin = false
 end
 
 local function courtyard_secret()
