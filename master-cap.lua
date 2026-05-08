@@ -788,7 +788,8 @@ local function master_cap_update()
 
                         if stallNoPlayers > 30 then
                             master_cap_stop_course(levelNum)
-                            djui_popup_create_global(get_level_name(get_level_num_from_course_num(levelNum), levelNum, 1).."'s\nMaster Cap Challenge\nwas Ditched...", 3)
+                            local courseNum = get_level_course_num(levelNum)
+                            djui_popup_create_global(get_level_name(courseNum, levelNum, 1).."'s\nMaster Cap Challenge\nwas Ditched...", 3)
                         end
                     else
                         master_cap_data_set_feild(levelNum, "stallNoPlayers", 0)
