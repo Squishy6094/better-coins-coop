@@ -654,6 +654,11 @@ local function master_cap_update()
     if runActive then
         m.capTimer = master_cap_data_get_field(nil, "capTimer")
         m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
+        if m and m.area ~= nil and m.area.camera ~= nil and (m.area.camera.cutscene == CUTSCENE_STAR_SPAWN) or (m.area.camera.cutscene == CUTSCENE_RED_COIN_STAR_SPAWN) then
+            disable_time_stop_including_mario()
+            m.freeze = 1
+            m.area.camera.cutscene = 0
+        end
         if m.action ~= ACT_MASTER_CAP_RESULTS then
             sPrevAct[m.playerIndex].prevActionAnimFrame = m.marioObj.header.gfx.animInfo.animFrame
             sPrevAct[m.playerIndex].prevActionAnimAccel = m.marioObj.header.gfx.animInfo.animAccel
