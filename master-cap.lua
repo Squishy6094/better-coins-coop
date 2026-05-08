@@ -1,10 +1,9 @@
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
 local MUSIC_MASTER_CAP_END = audio_stream_load("music-master-cap-end.ogg")
-local masterCapMusicFreq = 1
-audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917230, 003175168)
 audio_stream_set_loop_points(MUSIC_MASTER_CAP_END, 000917230, 003175168)
-audio_stream_set_looping(MUSIC_MASTER_CAP, true)
 audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
+
+local prevBgm = nil
 
 local levelMerge = {
     [LEVEL_BOWSER_1] = LEVEL_BITDW,
@@ -520,6 +519,7 @@ local function bhv_master_cap_box_loop(o)
         cur_obj_hide()
         o.oAction = 4
         o.oSubAction = 2
+        prevBgm = nil
     end
 end
 
@@ -594,6 +594,108 @@ local function on_sync()
 end
 
 local prevRunState = 0
+
+-- this won't get fixed until next update :/
+local REAL_SAMPLE_RATE = 44100
+local BROKEN_SAMPLE_RATE = 48000
+
+local BROKEN_RATIO = REAL_SAMPLE_RATE / BROKEN_SAMPLE_RATE
+
+local function get_broken_time(t)
+    return t * BROKEN_RATIO
+end
+
+local NORMAL_LOOP_START = get_broken_time(20.82)
+local NORMAL_LOOP_END   = get_broken_time(72)
+
+local GRASS_SECTION = {
+    get_broken_time(72),
+    get_broken_time(84.8)
+}
+
+local SNOW_SECTION = {
+    get_broken_time(84.8),
+    get_broken_time(97.55)
+}
+
+local WATER_SECTION = {
+    get_broken_time(97.6),
+    get_broken_time(110.4)
+}
+
+local KOOPAS_ROAD_SECTION = {
+    get_broken_time(110.4),
+    get_broken_time(123.2)
+}
+
+local SPOOKY_SECTION = {
+    get_broken_time(123.2),
+    get_broken_time(136)
+}
+
+local SLIDE_SECTION = {
+    get_broken_time(136),
+    get_broken_time(148.8)
+}
+
+local UNDERGROUND_SECTION = {
+    get_broken_time(148.8),
+    get_broken_time(161.6)
+}
+
+local sSeqToLoop = {
+    [SEQ_LEVEL_GRASS] = GRASS_SECTION,
+    [SEQ_LEVEL_SNOW] = SNOW_SECTION,
+    [SEQ_LEVEL_WATER] = WATER_SECTION,
+    [SEQ_LEVEL_KOOPA_ROAD] = KOOPAS_ROAD_SECTION,
+    [SEQ_LEVEL_SPOOKY] = SPOOKY_SECTION,
+    [SEQ_LEVEL_SLIDE] = SLIDE_SECTION,
+    [SEQ_LEVEL_UNDERGROUND] = UNDERGROUND_SECTION,
+}
+
+local LOOP_SECTION_LENGTH = GRASS_SECTION[2] - GRASS_SECTION[1]
+
+local function update_master_cap_update_loop()
+    local m = gMarioStates[0]
+    local pos = audio_stream_get_position(MUSIC_MASTER_CAP)
+    local bgm = get_current_background_music()
+    local loopSection = sSeqToLoop[bgm]
+
+    if not prevBgm then audio_stream_set_position(MUSIC_MASTER_CAP, 0) prevBgm = bgm return end
+
+    if bgm ~= prevBgm then
+        if prevBgm ~= nil then
+            local newLoopSection = sSeqToLoop[bgm]
+            if newLoopSection then
+                local prevLoopSection = sSeqToLoop[prevBgm]
+                local currentLoopStart = prevLoopSection and prevLoopSection[1] or NORMAL_LOOP_START
+                local offset = (pos - currentLoopStart) % LOOP_SECTION_LENGTH
+                pos = newLoopSection[1] + offset
+                audio_stream_set_position(MUSIC_MASTER_CAP, pos)
+            end
+            -- if no dedicated section let the loop play out normally
+        end
+        prevBgm = bgm
+    end
+
+    if not loopSection then
+        if pos >= NORMAL_LOOP_END then
+            audio_stream_set_position(MUSIC_MASTER_CAP, NORMAL_LOOP_START)
+        end
+        return false
+    end
+
+    local loopStart = loopSection[1]
+    local loopEnd   = loopSection[2]
+    if pos >= NORMAL_LOOP_END and pos < loopStart then
+        audio_stream_set_position(MUSIC_MASTER_CAP, loopStart)
+    elseif pos >= loopEnd then
+        audio_stream_set_position(MUSIC_MASTER_CAP, NORMAL_LOOP_START)
+    end
+
+    return true
+end
+
 local function master_cap_music_update()
     local m = gMarioStates[0]
     local runActive = master_cap_data_get_feild(nil, "runActive")
@@ -607,12 +709,13 @@ local function master_cap_music_update()
     end
 
     if runState > 0 then
+        local volume = is_game_paused() and 0.25 or 0.80
         local volShift = runState ~= 2 and 1 or math.clamp((masterCapMusicFreq - 0.7)/0.6, 0, 1)
         local volShiftInv = 1 - volShift
         if prevRunState ~= runState then
             stop_cap_music()
-            audio_stream_play(MUSIC_MASTER_CAP, false, 1)
-            audio_stream_play(MUSIC_MASTER_CAP_END, false, 1)
+            audio_stream_play(MUSIC_MASTER_CAP, false, 0.75)
+            audio_stream_play(MUSIC_MASTER_CAP_END, false, 0.75)
             prevRunState = runState
         end
         if runState == 1 then
@@ -621,21 +724,24 @@ local function master_cap_music_update()
         local freqTargetTime = 1 + (math.max(450 - masterCapTimer, 0)/450)*0.3
         local freqTargetEnd = 1 --+ (e.masterCapCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
+
+        update_master_cap_update_loop()
+
         masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.02)
         audio_stream_set_frequency(MUSIC_MASTER_CAP, masterCapMusicFreq)
         audio_stream_set_frequency(MUSIC_MASTER_CAP_END, masterCapMusicFreq)
-        audio_stream_set_volume(MUSIC_MASTER_CAP, (is_game_paused() and 0 or 1)*volShift)
-        audio_stream_set_volume(MUSIC_MASTER_CAP_END, (is_game_paused() and 0 or 1)*volShiftInv)
+        audio_stream_set_volume(MUSIC_MASTER_CAP, volume * volShift)
+        audio_stream_set_volume(MUSIC_MASTER_CAP_END, volume * volShiftInv)
     else
         if prevRunState ~= runState then
             audio_stream_set_position(MUSIC_MASTER_CAP, 0)
             audio_stream_set_position(MUSIC_MASTER_CAP_END, 0)
             audio_stream_set_frequency(MUSIC_MASTER_CAP, 1)
             audio_stream_set_frequency(MUSIC_MASTER_CAP_END, 1)
-            masterCapMusicFreq = 0
             audio_stream_stop(MUSIC_MASTER_CAP)
             audio_stream_stop(MUSIC_MASTER_CAP_END)
             stop_secondary_music(50)
+            masterCapMusicFreq = 0
         end
     end
 end
