@@ -760,6 +760,7 @@ end
 local levelsProcessed = {}
 local function master_cap_update()
     local m = gMarioStates[0]
+    gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
     master_cap_music_update()
     --if m.playerIndex ~= 0 then return end
     -- Locally Apply Master Cap
@@ -799,8 +800,12 @@ local function master_cap_update()
 
                         if stallNoPlayers > 30 then
                             master_cap_stop_course(levelNum)
+<<<<<<< HEAD
                             local courseNum = get_level_course_num(levelNum)
                             djui_popup_create_global(get_level_name(courseNum, levelNum, 1).."'s\nMaster Cap Challenge\nwas Ditched...", 3)
+=======
+                            --djui_popup_create_global(get_level_name(get_level_num_from_course_num(levelNum), levelNum, 1).."'s\nMaster Cap Challenge\nwas Ditched...", 3)
+>>>>>>> 5cdc6cbeba94502457c8a40a0bb561e41bd770d7
                         end
                     else
                         master_cap_data_set_feild(levelNum, "stallNoPlayers", 0)
@@ -815,7 +820,8 @@ local function master_cap_update()
                 end
 
                 for pI = 0, MAX_PLAYERS - 1 do
-                    if mario_master_cap_active(gMarioStates[pI], levelNum) and (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE) then
+                    local m = gMarioStates[pI]
+                    if mario_master_cap_active(m, levelNum) and gPlayerSyncTable[pI].starExitAct then
                         master_cap_stop_course(levelNum)
                     end
                 end
