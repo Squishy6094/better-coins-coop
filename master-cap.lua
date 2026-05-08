@@ -61,21 +61,21 @@ function master_cap_set_record(levelNum, coins, time)
     mod_storage_save(recordPrefixTime..level, tostring(math.round(time)))
 end
 
-function master_cap_data_get_feild(levelNum, feild)
+function master_cap_data_get_field(levelNum, field)
     levelNum = get_merged_level_num(levelNum)
-    return gMasterCapServerState[levelNum][feild]
+    return gMasterCapServerState[levelNum][field]
 end
 
-function master_cap_data_set_feild(levelNum, feild, value)
+function master_cap_data_set_field(levelNum, field, value)
     levelNum = get_merged_level_num(levelNum)
-    gMasterCapServerState[levelNum][feild] = value
+    gMasterCapServerState[levelNum][field] = value
 end
 
 ---@param m MarioState
 function mario_master_cap_active(m, levelNum)
     levelNum = get_merged_level_num(levelNum)
     if levelNum ~= get_merged_level_num(gNetworkPlayers[m.playerIndex].currLevelNum) then return false end
-    return master_cap_data_get_feild(levelNum, "runActive") and (m.action ~= ACT_MASTER_CAP_BUBBLED and m.action ~= ACT_MASTER_CAP_RESULTS)
+    return master_cap_data_get_field(levelNum, "runActive") and (m.action ~= ACT_MASTER_CAP_BUBBLED and m.action ~= ACT_MASTER_CAP_RESULTS)
 end
 
 function network_player_master_cap_count(currLevel)
@@ -93,12 +93,12 @@ function master_cap_start_course(levelNum, noSync)
     levelNum = get_merged_level_num(levelNum)
     masterCapMusicFreq = 1
 
-    master_cap_data_set_feild(levelNum, "runActive", true)
-    master_cap_data_set_feild(levelNum, "newRecord", false)
-    master_cap_data_set_feild(levelNum, "capTimer", math.floor(gLevelValues.wingCapDuration*0.5))
-    master_cap_data_set_feild(levelNum, "totalTimer", 0)
-    master_cap_data_set_feild(levelNum, "coinTimer", 0)
-    master_cap_data_set_feild(levelNum, "coins", 0)
+    master_cap_data_set_field(levelNum, "runActive", true)
+    master_cap_data_set_field(levelNum, "newRecord", false)
+    master_cap_data_set_field(levelNum, "capTimer", math.floor(gLevelValues.wingCapDuration*0.5))
+    master_cap_data_set_field(levelNum, "totalTimer", 0)
+    master_cap_data_set_field(levelNum, "coinTimer", 0)
+    master_cap_data_set_field(levelNum, "coins", 0)
 
     if not noSync then
         network_send(true, {
@@ -111,25 +111,25 @@ end
 function master_cap_stop_course(levelNum, newRecord, coinTimer, noSync)
     levelNum = get_merged_level_num(levelNum)
 
-    master_cap_data_set_feild(levelNum, "capTimer", math.floor(gLevelValues.wingCapDuration*0.5))
-    master_cap_data_set_feild(levelNum, "runActive", false)
+    master_cap_data_set_field(levelNum, "capTimer", math.floor(gLevelValues.wingCapDuration*0.5))
+    master_cap_data_set_field(levelNum, "runActive", false)
     if newRecord then
-        master_cap_data_set_feild(levelNum, "newRecord", true)
+        master_cap_data_set_field(levelNum, "newRecord", true)
     end
     if coinTimer then
-        master_cap_data_set_feild(levelNum, "coinTimer", coinTimer)
+        master_cap_data_set_field(levelNum, "coinTimer", coinTimer)
     end
 
     if network_is_server() then
         local saveCoins, saveTime = master_cap_get_record(levelNum)
-        local currCoins = master_cap_data_get_feild(levelNum, "coins")
-        local currTime = master_cap_data_get_feild(levelNum, "coinTimer") or 0
+        local currCoins = master_cap_data_get_field(levelNum, "coins")
+        local currTime = master_cap_data_get_field(levelNum, "coinTimer") or 0
         if currCoins > 0 and
         currCoins > saveCoins or
         (currCoins == saveCoins and
         currTime < saveTime) then
             master_cap_set_record(levelNum, currCoins, currTime)
-            master_cap_data_set_feild(levelNum, "newRecord", true)
+            master_cap_data_set_field(levelNum, "newRecord", true)
             newRecord = true
         end
     end
@@ -143,7 +143,7 @@ function master_cap_stop_course(levelNum, newRecord, coinTimer, noSync)
             packetType = PACKET_TYPE_MASTER_CAP_STOP,
             levelNum = levelNum,
             newRecord = newRecord,
-            coinTimer = master_cap_data_get_feild(levelNum, "coinTimer"),
+            coinTimer = master_cap_data_get_field(levelNum, "coinTimer"),
         })
     end
 end
@@ -151,14 +151,14 @@ end
 function master_cap_add_coin(levelNum, value, noSync)
     levelNum = get_merged_level_num(levelNum)
     
-    local prevCapTimer = master_cap_data_get_feild(levelNum, "capTimer")
-    local prevCoins = master_cap_data_get_feild(levelNum, "coins")
+    local prevCapTimer = master_cap_data_get_field(levelNum, "capTimer")
+    local prevCoins = master_cap_data_get_field(levelNum, "coins")
 
-    master_cap_data_set_feild(levelNum, "capTimer", prevCapTimer + value*25*(1/network_player_master_cap_count(levelNum)))
-    master_cap_data_set_feild(levelNum, "coins", prevCoins + value)
+    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*25*(1/network_player_master_cap_count(levelNum)))
+    master_cap_data_set_field(levelNum, "coins", prevCoins + value)
 
     if network_is_server() then
-        master_cap_data_set_feild(levelNum, "coinTimer", master_cap_data_get_feild(levelNum, "totalTimer"))
+        master_cap_data_set_field(levelNum, "coinTimer", master_cap_data_get_field(levelNum, "totalTimer"))
     end
 
     if not noSync then
@@ -180,7 +180,7 @@ local function on_packet_recieve(data)
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_COIN then
         master_cap_add_coin(data.levelNum, data.coinsAdd, true)
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_UPDATE then
-        master_cap_data_set_feild(data.levelNum, "capTimer", data.capTimer)
+        master_cap_data_set_field(data.levelNum, "capTimer", data.capTimer)
     end
 end
 
@@ -208,8 +208,8 @@ end
 local function act_master_cap_results(m)
     if not m then return end
     local pA = sPrevAct[m.playerIndex]
-    local masterCapCoins = master_cap_data_get_feild(nil, "coins")
-    local masterCapCoinTimer = master_cap_data_get_feild(nil, "coinTimer")
+    local masterCapCoins = master_cap_data_get_field(nil, "coins")
+    local masterCapCoinTimer = master_cap_data_get_field(nil, "coinTimer")
     m.marioObj.header.gfx.animInfo.animFrame = pA.prevActionAnimFrame or 0
     m.marioObj.header.gfx.animInfo.animAccel = 0
     m.flags = m.flags & ~(MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
@@ -279,7 +279,7 @@ local function act_master_cap_bubbled(m)
 
     -- Show results if run has ended
     if (m.playerIndex == 0) then
-        if not master_cap_data_get_feild(nil, "runActive") then
+        if not master_cap_data_get_field(nil, "runActive") then
             return set_mario_finished_master_cap(m)
         end
     end
@@ -552,7 +552,7 @@ local function on_sync()
     if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS and levelNum ~= -1 then
         if prevLevelNum ~= levelNum then
             prevLevelNum = levelNum
-            if master_cap_data_get_feild(levelNum, "runActive") then
+            if master_cap_data_get_field(levelNum, "runActive") then
                 set_mario_finished_master_cap(m)
                 return
             end
@@ -597,8 +597,8 @@ local prevRunState = 0
 
 local function master_cap_music_update()
     local m = gMarioStates[0]
-    local runActive = master_cap_data_get_feild(nil, "runActive")
-    local masterCapTimer = master_cap_data_get_feild(nil, "capTimer")
+    local runActive = master_cap_data_get_field(nil, "runActive")
+    local masterCapTimer = master_cap_data_get_field(nil, "capTimer")
     local runState = 0
     if runActive then
         runState = 1
@@ -650,9 +650,9 @@ local function master_cap_update()
     master_cap_music_update()
     --if m.playerIndex ~= 0 then return end
     -- Locally Apply Master Cap
-    local runActive = master_cap_data_get_feild(nil, "runActive")
+    local runActive = master_cap_data_get_field(nil, "runActive")
     if runActive then
-        m.capTimer = master_cap_data_get_feild(nil, "capTimer")
+        m.capTimer = master_cap_data_get_field(nil, "capTimer")
         m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
         if m.action ~= ACT_MASTER_CAP_RESULTS then
             sPrevAct[m.playerIndex].prevActionAnimFrame = m.marioObj.header.gfx.animInfo.animFrame
@@ -664,15 +664,15 @@ local function master_cap_update()
         end
     end
 
-    prevRunState = master_cap_data_get_feild(nil, "runActive")
+    prevRunState = master_cap_data_get_field(nil, "runActive")
 
     if network_is_server() then
         -- Update All Levels' Runs
         for i = 1, LEVEL_COUNT do
             local levelNum = get_merged_level_num(i)
-            if master_cap_data_get_feild(levelNum, "runActive") and not levelsProcessed[levelNum] then
+            if master_cap_data_get_field(levelNum, "runActive") and not levelsProcessed[levelNum] then
                 levelsProcessed[levelNum] = true
-                local capTimer = master_cap_data_get_feild(levelNum, "capTimer")
+                local capTimer = master_cap_data_get_field(levelNum, "capTimer")
                 if capTimer > 0 then
                     if network_player_connected_count() <= 1 and (m.action & ACT_FLAG_INTANGIBLE ~= 0 or is_game_paused()) then
                         -- Don't decrease
@@ -680,9 +680,9 @@ local function master_cap_update()
                         capTimer = capTimer - 1
                     end
                     if network_player_master_cap_count(levelNum) == 0 then
-                        local stallNoPlayers = master_cap_data_get_feild(levelNum, "stallNoPlayers")
+                        local stallNoPlayers = master_cap_data_get_field(levelNum, "stallNoPlayers")
                         stallNoPlayers = stallNoPlayers + 1
-                        master_cap_data_set_feild(levelNum, "stallNoPlayers", stallNoPlayers)
+                        master_cap_data_set_field(levelNum, "stallNoPlayers", stallNoPlayers)
 
                         if stallNoPlayers > 30 then
                             master_cap_stop_course(levelNum)
@@ -690,13 +690,13 @@ local function master_cap_update()
                             djui_popup_create_global(get_level_name(courseNum, levelNum, 1).."'s\nMaster Cap Challenge\nwas Ditched...", 3)
                         end
                     else
-                        master_cap_data_set_feild(levelNum, "stallNoPlayers", 0)
+                        master_cap_data_set_field(levelNum, "stallNoPlayers", 0)
                     end
                 else
                     master_cap_stop_course(levelNum)
                 end
 
-                local coins = master_cap_data_get_feild(levelNum, "coins")
+                local coins = master_cap_data_get_field(levelNum, "coins")
                 if coins > 999 then
                     master_cap_stop_course(levelNum)
                 end
@@ -708,7 +708,7 @@ local function master_cap_update()
                     end
                 end
 
-                master_cap_data_set_feild(levelNum, "capTimer", capTimer)
+                master_cap_data_set_field(levelNum, "capTimer", capTimer)
                 if capTimer%30 == 0 then
                     network_send(false, {
                         packetType = PACKET_TYPE_MASTER_CAP_UPDATE,
@@ -717,9 +717,9 @@ local function master_cap_update()
                     })
                 end
 
-                local totalTimer = master_cap_data_get_feild(levelNum, "totalTimer")
+                local totalTimer = master_cap_data_get_field(levelNum, "totalTimer")
                 totalTimer = totalTimer + 1
-                master_cap_data_set_feild(levelNum, "totalTimer", totalTimer)
+                master_cap_data_set_field(levelNum, "totalTimer", totalTimer)
             end
         end
 
@@ -727,13 +727,13 @@ local function master_cap_update()
             levelsProcessed[i] = false
         end
     else
-        local capTimer = master_cap_data_get_feild(nil, "capTimer")
+        local capTimer = master_cap_data_get_field(nil, "capTimer")
         if capTimer > 0 then
             if m.action & ACT_FLAG_INTANGIBLE == 0 or network_player_connected_count() > 1 then
                 capTimer = math.max(capTimer - 1, 5)
             end
         end
-        master_cap_data_set_feild(nil, "capTimer", capTimer)
+        master_cap_data_set_field(nil, "capTimer", capTimer)
     end
 
 
@@ -780,7 +780,7 @@ local function master_cap_render()
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
-    local runActive = master_cap_data_get_feild(nil, "runActive")
+    local runActive = master_cap_data_get_field(nil, "runActive")
     if runActive then
         djui_hud_set_font(FONT_HUD)
         local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
@@ -804,14 +804,14 @@ local function master_cap_render()
     end
 
     if m.action == ACT_MASTER_CAP_RESULTS then
-        local record = master_cap_data_get_feild(nil, "newRecord") and m.actionState > 3
+        local record = master_cap_data_get_field(nil, "newRecord") and m.actionState > 3
         local recordFlash = record and sins(m.actionTimer*0x1000) * 50.0 + 200.0 or 255
         djui_hud_set_color(0, 0, 0, 150)
         djui_hud_render_rect(0, 0, sWidth, sHeight)
         djui_hud_set_color(255, 255, 255, 255)
 
-        local currCoins = master_cap_data_get_feild(nil, "coins")
-        local currTime = master_cap_data_get_feild(nil, "coinTimer")
+        local currCoins = master_cap_data_get_field(nil, "coins")
+        local currTime = master_cap_data_get_field(nil, "coinTimer")
 
         -- Render Personal and Server Best
         djui_hud_set_font(FONT_NORMAL)
@@ -944,7 +944,7 @@ end
 
 local function on_death()
     local m = gMarioStates[0]
-    if master_cap_data_get_feild(nil, "runActive") then
+    if master_cap_data_get_field(nil, "runActive") then
         set_mario_finished_master_cap(m)
         return false
     end
