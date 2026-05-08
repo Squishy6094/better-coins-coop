@@ -1,7 +1,14 @@
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
 local MUSIC_MASTER_CAP_END = audio_stream_load("music-master-cap-end.ogg")
-audio_stream_set_loop_points(MUSIC_MASTER_CAP_END, 000917230, 003175168)
-audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
+
+local function on_mods_loaded()
+    audio_stream_set_loop_points(MUSIC_MASTER_CAP_END, 000917230, 003175168)
+    audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
+    if ROMHACK == "sm64" then return end
+
+    audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917230, 003175168)
+    audio_stream_set_looping(MUSIC_MASTER_CAP, true)
+end
 
 local prevBgm = nil
 
@@ -614,7 +621,7 @@ local GRASS_SECTION = {
 }
 
 local SNOW_SECTION = {
-    get_broken_time(84.8),
+    get_broken_time(84.79),
     get_broken_time(97.55)
 }
 
@@ -656,7 +663,7 @@ local sSeqToLoop = {
 local LOOP_SECTION_LENGTH = GRASS_SECTION[2] - GRASS_SECTION[1]
 
 local function update_master_cap_update_loop()
-    local m = gMarioStates[0]
+    if ROMHACK ~= "sm64" then return end
     local pos = audio_stream_get_position(MUSIC_MASTER_CAP)
     local bgm = get_current_background_music()
     local loopSection = sSeqToLoop[bgm]
@@ -664,16 +671,20 @@ local function update_master_cap_update_loop()
     if not prevBgm then audio_stream_set_position(MUSIC_MASTER_CAP, 0) prevBgm = bgm return end
 
     if bgm ~= prevBgm then
-        if prevBgm ~= nil then
-            local newLoopSection = sSeqToLoop[bgm]
-            if newLoopSection then
-                local prevLoopSection = sSeqToLoop[prevBgm]
-                local currentLoopStart = prevLoopSection and prevLoopSection[1] or NORMAL_LOOP_START
-                local offset = (pos - currentLoopStart) % LOOP_SECTION_LENGTH
-                pos = newLoopSection[1] + offset
-                audio_stream_set_position(MUSIC_MASTER_CAP, pos)
+        local prevLoopSection = sSeqToLoop[prevBgm]
+        local newLoopSection  = sSeqToLoop[bgm]
+
+        if prevLoopSection and newLoopSection then
+            local prevLoopStart = prevLoopSection[1]
+            local prevLoopEnd   = prevLoopSection[2]
+
+            if pos >= prevLoopStart and pos < prevLoopEnd then
+                local offset = (pos - prevLoopStart) % LOOP_SECTION_LENGTH
+                audio_stream_set_position(
+                    MUSIC_MASTER_CAP,
+                    newLoopSection[1] + offset
+                )
             end
-            -- if no dedicated section let the loop play out normally
         end
         prevBgm = bgm
     end
@@ -1059,3 +1070,4 @@ hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 --hook_event(HOOK_ON_HUD_RENDER, hud_render)
 hook_event(HOOK_ON_DEATH, on_death)
+hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
