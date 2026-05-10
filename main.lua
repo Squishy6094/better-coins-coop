@@ -14,22 +14,36 @@ gLevelValues.hudCapTimer = 1
 gGlobalSyncTable.mouseGrab = false
 gGlobalSyncTable.courtyardSecretSolved = false
 
-local magnetBhvs = {
-    id_bhvOneCoin,
-    id_bhvYellowCoin,
-    id_bhvMovingYellowCoin,
-    id_bhvSingleCoinGetsSpawned,
-    id_bhvRedCoin,
-    id_bhvMrIBlueCoin,
-    id_bhvHiddenBlueCoin,
-    id_bhvMovingBlueCoin,
-    id_bhv1Up,
-    id_bhv1upSliding,
-}
-
 local coinRange = 0
 local mouseX = 0
 local mouseY = 0
+local function obj_attempt_magnetize(m, o)
+    if o.oIntangibleTimer == 0 and not is_object_being_carried(o) then
+        -- Attract if coin is yours
+        local dist = obj_to_obj_dist(o, m.marioObj)
+        if (dist <= coinRange or o.oVelY < 0) then
+            local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
+            if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
+                carry_object_to_mario(m, o)
+            end
+        end
+
+        -- Check Galaxy Controls
+        if gGlobalSyncTable.mouseGrab == true then
+            djui_hud_set_resolution(RESOLUTION_N64)
+            local out = {x = 0, y = 0, z = 0}
+            djui_hud_world_pos_to_screen_pos({x = o.oPosX, y = o.oPosY, z = o.oPosZ}, out)
+            local mouseDist = math.sqrt((out.x - mouseX)^2 + (out.y - mouseY)^2)
+            if mouseDist < 10 then
+                local isWall = collision_find_surface_on_ray(gLakituState.pos.x, gLakituState.pos.y, gLakituState.pos.z, o.oPosX - gLakituState.pos.x, (o.oPosY + 50) - gLakituState.pos.y, o.oPosZ - gLakituState.pos.z, 128).surface ~= nil
+                if not isWall then
+                    carry_object_to_mario(m, o)
+                end
+            end
+        end
+    end
+end
+
 local function update()
     local m = gMarioStates[0]
     if m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
@@ -42,46 +56,13 @@ local function update()
         coinRange = coinRange * 1.25
     end
 
-    for i = 1, #magnetBhvs do
-        local bhvID = magnetBhvs[i]
-        if bhvID == nil then
-            break
+    local o = obj_get_first(OBJ_LIST_LEVEL)
+    while o ~= nil do
+        if o.oInteractType == INTERACT_COIN then
+            obj_attempt_magnetize(m, o)
         end
 
-        local o = obj_get_first_with_behavior_id(bhvID)
-        while o ~= nil do
-            if o.oIntangibleTimer == 0 and not is_object_being_carried(o) then
-                local oPos = obj_pos_to_vec3f(o)
-
-                -- Attract if coin is yours
-                local mN = nearest_mario_state_to_object(o)
-                if (m.playerIndex == mN.playerIndex) then
-                    local dist = vec3f_dist(oPos, m.pos)
-                    if (dist <= coinRange or o.oVelY < 0) and o.oVelY <= 0 then
-                        local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
-                        if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
-                            carry_object_to_mario(m, o)
-                        end
-                    end
-                end
-
-                -- Check Galaxy Controls
-                if gGlobalSyncTable.mouseGrab == true then
-                    djui_hud_set_resolution(RESOLUTION_N64)
-                    local out = {x = 0, y = 0, z = 0}
-                    djui_hud_world_pos_to_screen_pos(oPos, out)
-                    local mouseDist = math.sqrt((out.x - mouseX)^2 + (out.y - mouseY)^2)
-                    if mouseDist < 10 then
-                        local isWall = collision_find_surface_on_ray(gLakituState.pos.x, gLakituState.pos.y, gLakituState.pos.z, o.oPosX - gLakituState.pos.x, (o.oPosY + 50) - gLakituState.pos.y, o.oPosZ - gLakituState.pos.z, 128).surface ~= nil
-                        if not isWall then
-                            carry_object_to_mario(m, o)
-                        end
-                    end
-                end
-            end
-
-            o = obj_get_next_with_same_behavior_id(o)
-        end
+        o = obj_get_next(o)
     end
 
     if m.controller.buttonPressed & (U_JPAD) ~= 0 then

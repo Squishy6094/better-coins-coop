@@ -121,10 +121,9 @@ hook_coins_behavior(id_bhvRecoveryHeart, false, bhv_recovery_heart_set_coins, bh
 
 ---@param o Object
 local function bhv_bubble_cannon_init(o)
-    local cannonPos = obj_pos_to_vec3f(o)
     local nBombomb = obj_get_nearest_object_with_behavior_id(o, id_bhvBobomb)
     local nBobombBuddy = obj_get_nearest_object_with_behavior_id(o, id_bhvBobombBuddy)
-    o.parentObj = vec3f_dist(cannonPos, obj_pos_to_vec3f(nBombomb)) < vec3f_dist(cannonPos, obj_pos_to_vec3f(nBobombBuddy)) and nBombomb or nBobombBuddy
+    o.parentObj = obj_to_obj_dist(o, nBombomb) < obj_to_obj_dist(o, nBobombBuddy) and nBombomb or nBobombBuddy
     if o.parentObj == nBombomb then
         oTagLib.obj_set_nametag(o.parentObj, "Jim", {r = 50, g = 50, b = 100})
     end
@@ -518,7 +517,7 @@ local function bhv_secret_follow_coin_loop(o)
     else
         if o.oTimer < 5 then
             local oCoin = obj_get_nearest_object_with_behavior_id(o, id_bhvYellowCoin)
-            if oCoin ~= nil and vec3f_dist(obj_pos_to_vec3f(o), obj_pos_to_vec3f(oCoin)) < 100 then
+            if oCoin ~= nil and obj_to_obj_dist(o, oCoin) < 100 then
                 o.parentObj = oCoin
             end
         end

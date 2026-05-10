@@ -1,7 +1,8 @@
 ---@class Object
 ---@field oIsCarried integer
+---@field oQueueCarry integer
 define_custom_obj_fields({
-    oIsCarried = "u32"
+    oIsCarried = "u32",
 })
 
 

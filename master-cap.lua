@@ -570,12 +570,11 @@ local function on_sync()
                 local o = obj_get_first(i)
                 while o ~= nil do
                     if obj_has_model_extended(o, E_MODEL_NONE) == 0 and (m.waterLevel == nil or o.oPosY > m.waterLevel) then
-                        local objPos = obj_pos_to_vec3f(o)
-                        local currDist = math.sqrt((castFloorSpawn.x - objPos.x)^2 + (castFloorSpawn.y - objPos.y)^2 + (objPos.z - nearestObjPos.z)^2)
+                        local currDist = math.sqrt((castFloorSpawn.x - o.oPosX)^2 + (castFloorSpawn.y - o.oPosY)^2 + (nearestObjPos.z - o.oPosZ)^2)
                         if (currDist < prevDist) then
-                            nearestObjPos.x = objPos.x
-                            nearestObjPos.y = objPos.y
-                            nearestObjPos.z = objPos.z
+                            nearestObjPos.x = o.oPosX
+                            nearestObjPos.y = o.oPosY
+                            nearestObjPos.z = o.oPosZ
                             prevDist = math.sqrt((castFloorSpawn.x - nearestObjPos.x)^2 + (castFloorSpawn.y - nearestObjPos.y)^2 + (castFloorSpawn.z - nearestObjPos.z)^2)
                         end
                     end
