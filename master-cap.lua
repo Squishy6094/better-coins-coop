@@ -155,7 +155,7 @@ function master_cap_add_coin(levelNum, value, noSync)
     local prevCoins = master_cap_data_get_field(levelNum, "coins")
 
     master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*25*(1/network_player_master_cap_count(levelNum)))
-    master_cap_data_set_field(levelNum, "coins", prevCoins + value)
+    master_cap_data_set_field(levelNum, "coins", math.clamp(prevCoins + value, 0, 999))
 
     if network_is_server() then
         master_cap_data_set_field(levelNum, "coinTimer", master_cap_data_get_field(levelNum, "totalTimer"))
@@ -430,10 +430,11 @@ local function bhv_master_cap_box_loop(o)
         end
 
         o.oPosY = math.lerp(o.oPosY, o.oHomeY + math.sin(o.areaTimer/10)*30, 0.1)
-        if nearestM and nearestM.numCoins > 0 then
+        if hud_get_value(HUD_DISPLAY_COINS) > 0 then
             o.oHomeY = o.oHomeY + o.oVelY
-            o.oVelY = o.oVelY + 1
+            o.oVelY = math.clamp(o.oVelY + 1, 0, 50)
             o.oSubAction = 1
+            o.header.gfx.animInfo.animAccel = 0x10000 + 0x600*o.oVelY
         end
 
         local isNearest = (nearestM ~= nil and nearestM == gMarioStates[0])
@@ -701,7 +702,7 @@ local function master_cap_update()
                 end
 
                 local coins = master_cap_data_get_field(levelNum, "coins")
-                if coins > 999 then
+                if coins >= 999 then
                     master_cap_stop_course(levelNum)
                 end
 

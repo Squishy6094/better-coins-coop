@@ -18,7 +18,7 @@ local coinRange = 0
 local mouseX = 0
 local mouseY = 0
 local function obj_attempt_magnetize(m, o)
-    if o.oIntangibleTimer == 0 and not is_object_being_carried(o) then
+    if o.oIntangibleTimer == 0 and not is_object_being_carried(o) and o.oDamageOrCoinValue > 0 then
         -- Attract if coin is yours
         local dist = obj_to_obj_dist(o, m.marioObj)
         if (dist <= coinRange or o.oVelY < 0) then

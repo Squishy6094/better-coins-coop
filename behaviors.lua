@@ -584,6 +584,7 @@ hook_coins_behavior(id_bhvMerryGoRoundBigBoo, false, bhv_generic_boss_coins_init
 hook_coins_behavior(id_bhvEyerokHand, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_at_mario_loop)
 hook_coins_behavior(id_bhvWigglerHead, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 
+---@param o Object
 local function bhv_big_bully_coins(o)
     if o.oAction == BULLY_ACT_LAVA_DEATH and o.oTimer == 1 then
         spawn_coin_spawner(o, 10, true, 0, 310, 0)
@@ -594,6 +595,7 @@ hook_coins_behavior(id_bhvBigBully, false, nil, bhv_big_bully_coins)
 hook_coins_behavior(id_bhvBigBullyWithMinions, false, nil, bhv_big_bully_coins)
 hook_coins_behavior(id_bhvBigChillBully, false, nil, bhv_big_bully_coins)
 
+---@param o Object
 local function bhv_big_goomba_loop(o)
     if o.oGoombaSize == 1 then
         o.oNumLootCoins = -1
@@ -606,6 +608,7 @@ end
 
 hook_coins_behavior(id_bhvGoomba, false, nil, bhv_big_goomba_loop)
 
+---@param o Object
 local function bhv_breakable_box_coins(o)
     if o.oNumLootCoins < 3 then
         o.oNumLootCoins = 3
@@ -614,6 +617,7 @@ end
 
 hook_coins_behavior(id_bhvBreakableBox, false, nil, bhv_breakable_box_coins)
 
+---@param o Object
 local function bhv_wooden_post_loop(o)
     local m = nearest_mario_state_to_object(o)
     if cur_obj_is_mario_ground_pounding_platform() ~= 0 then
@@ -633,6 +637,7 @@ end
 
 hook_coins_behavior(id_bhvWoodenPost, false, nil, bhv_wooden_post_loop)
 
+---@param o Object
 local function bhv_exclamation_box_edit_contents(o)
     local m = nearest_mario_state_to_object(o)
     if m and mario_master_cap_active(m) then
@@ -644,3 +649,19 @@ local function bhv_exclamation_box_edit_contents(o)
 end
 
 hook_coins_behavior(id_bhvExclamationBox, false, nil, bhv_exclamation_box_edit_contents)
+
+---@param o Object
+local function bhv_kickable_board_coins_init(o)
+    o.oCustomCoins = 5
+end
+
+---@param o Object
+local function bhv_kickable_board_coins_loop(o)
+    if o.oAction == 3 and o.oCustomCoins > 0 then
+        spawn_coin_spawner(o, o.oCustomCoins, false, sins(o.oMoveAngleYaw + 0x8000)*o.hitboxHeight, o.hitboxRadius, coss(o.oMoveAngleYaw + 0x8000)*o.hitboxHeight)
+        o.oCustomCoins = 0
+    end
+end
+
+
+hook_coins_behavior(id_bhvKickableBoard, false, bhv_kickable_board_coins_init, bhv_kickable_board_coins_loop)
