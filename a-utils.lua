@@ -238,6 +238,29 @@ local function level_timer_reset() levelTimer = 0 end
 hook_event(HOOK_UPDATE, level_timer_update)
 hook_event(HOOK_ON_LEVEL_INIT, level_timer_reset)
 
+function num_to_hex(num)
+    if num == 0 then
+        return '0'
+    end
+    local neg = false
+    if num < 0 then
+        neg = true
+        num = num * -1
+    end
+    local hexstr = "0123456789ABCDEF"
+    local result = ""
+    while num > 0 do
+        local n = (num%16)
+        result = string.sub(hexstr, n + 1, n + 1) .. result
+        num = math.floor(num / 16)
+    end
+    result = '0x'..result
+    if neg then
+        result = '-' .. result
+    end
+    return result
+end
+
 --------------------------
 -- Romhack Star Counter --
 --------------------------

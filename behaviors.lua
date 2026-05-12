@@ -101,17 +101,19 @@ hook_coins_behavior(id_bhvYoshi, false, bhv_yoshi_blew_up, bhv_yoshi_reward)
 
 ---@param o Object
 local function bhv_recovery_heart_set_coins(o)
-    o.oCustomCoins = 5
+    o.oCustomCoins = o.oBehParams & 0x100 == 0 and 5 or o.oCustomCoins
     network_init_object(o, false, {
         "oCustomCoins",
     })
+    --djui_chat_message_create(num_to_hex(o.oBehParams))
 end
 
 ---@param o Object
 local function bhv_recovery_heart_squirt_coins(o)
-    if o.oAngleVelYaw > 400 and o.oSpinningHeartTotalSpin - o.oAngleVelYaw < 0 and o.oCustomCoins > 0 then
+    if o.oAngleVelYaw > 800 and o.oSpinningHeartTotalSpin - o.oAngleVelYaw < 0 and o.oCustomCoins > 0 then
         obj_spawn_yellow_coins(o, 1)
         o.oCustomCoins = o.oCustomCoins - 1
+        set_object_respawn_info_bits(o, 1);
         network_send_object(o, true)
     end
 end
