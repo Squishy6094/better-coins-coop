@@ -15,6 +15,14 @@ local levelMerge = {
     [LEVEL_CASTLE_COURTYARD] = -1,
 }
 
+local modLevelCount = {
+    [CURR_ROMHACK] = LEVEL_COUNT
+}
+
+local function set_merge_level_num(ogLevelNum, levelNum)
+    levelMerge[ogLevelNum] = levelNum
+end
+
 local function get_merged_level_num(levelNum)
     levelNum = levelNum or gNetworkPlayers[0].currLevelNum
     return levelMerge[levelNum] or levelNum
@@ -22,17 +30,30 @@ end
 
 local MASTER_CAP_BOX_SCALE = 3
 
-local recordPrefixCoins = ROMHACK.."bestCoins"
-local recordPrefixTime = ROMHACK.."bestTime"
+local recordPrefixCoins = "bestCoins"
+local recordPrefixTime = "bestTime"
 
 local PACKET_TYPE_MASTER_CAP_START = 1
 local PACKET_TYPE_MASTER_CAP_STOP = 2
 local PACKET_TYPE_MASTER_CAP_COIN = 3
 local PACKET_TYPE_MASTER_CAP_UPDATE = 4
 gMasterCapServerState = {}
-for i = 0, LEVEL_COUNT do
-    levelNum = get_merged_level_num(i)
+
+local maxRomhackCheck = LEVEL_COUNT
+local function master_cap_init_level(levelNum)
+    local romhack = CURR_ROMHACK
+    local saveLevelNum = levelNum
+    maxRomhackCheck = math.max(maxRomhackCheck, levelNum)
+    if levelNum >= LEVEL_COUNT then
+        romhack = get_active_mod().relativePath:gsub("[/\\]+$", ""):gsub(".*[/\\]", "")
+        modLevelCount[romhack] = (modLevelCount[romhack] or 0) + 1
+        saveLevelNum = modLevelCount[romhack]
+    end
+    
+    levelNum = get_merged_level_num(levelNum)
     gMasterCapServerState[levelNum] = {
+        romhack = romhack,
+        saveLevelNum = saveLevelNum,
         runActive = false,
         newRecord = false,
         capTimer = 0,
@@ -42,23 +63,21 @@ for i = 0, LEVEL_COUNT do
     }
     
     if network_is_server() then
-        local level = tostring(levelNum)
-        gGlobalSyncTable[recordPrefixCoins..level] = tonumber(mod_storage_load(recordPrefixCoins..level)) or 0
-        gGlobalSyncTable[recordPrefixTime..level] = tonumber(mod_storage_load(recordPrefixTime..level)) or 0
+        local level = tostring(saveLevelNum)
+        local coinSave = romhack .. recordPrefixCoins .. level
+        local timeSave = romhack .. recordPrefixTime .. level
+        gGlobalSyncTable[coinSave] = tonumber(mod_storage_load(coinSave)) or 0
+        gGlobalSyncTable[timeSave] = tonumber(mod_storage_load(timeSave)) or 0
     end
 end
 
-function master_cap_get_record(levelNum)
-    level = tostring(get_merged_level_num(levelNum))
-    return gGlobalSyncTable[recordPrefixCoins..level] or 0, gGlobalSyncTable[recordPrefixTime..level] or 0
+for i = 0, LEVEL_COUNT do
+    master_cap_init_level(i)
 end
 
-function master_cap_set_record(levelNum, coins, time)
-    level = tostring(get_merged_level_num(levelNum))
-    gGlobalSyncTable[recordPrefixCoins..level] = coins
-    gGlobalSyncTable[recordPrefixTime..level] = time
-    mod_storage_save(recordPrefixCoins..level, tostring(math.round(coins)))
-    mod_storage_save(recordPrefixTime..level, tostring(math.round(time)))
+function master_cap_data_exists(levelNum)
+    levelNum = get_merged_level_num(levelNum)
+    return gMasterCapServerState[levelNum] ~= nil
 end
 
 function master_cap_data_get_field(levelNum, field)
@@ -69,6 +88,23 @@ end
 function master_cap_data_set_field(levelNum, field, value)
     levelNum = get_merged_level_num(levelNum)
     gMasterCapServerState[levelNum][field] = value
+end
+
+function master_cap_get_record(levelNum)
+    local levelNum = get_merged_level_num(levelNum)
+    local coinSave = master_cap_data_get_field(levelNum, "romhack") .. recordPrefixCoins .. tostring(master_cap_data_get_field(levelNum, "saveLevelNum"))
+    local timeSave = master_cap_data_get_field(levelNum, "romhack") .. recordPrefixTime .. tostring(master_cap_data_get_field(levelNum, "saveLevelNum"))
+    return gGlobalSyncTable[coinSave] or 0, gGlobalSyncTable[timeSave] or 0
+end
+
+function master_cap_set_record(levelNum, coins, time)
+    local levelNum = get_merged_level_num(levelNum)
+    local coinSave = master_cap_data_get_field(levelNum, "romhack") .. recordPrefixCoins .. tostring(master_cap_data_get_field(levelNum, "saveLevelNum"))
+    local timeSave = master_cap_data_get_field(levelNum, "romhack") .. recordPrefixTime .. tostring(master_cap_data_get_field(levelNum, "saveLevelNum"))
+    gGlobalSyncTable[coinSave] = coins
+    gGlobalSyncTable[timeSave] = time
+    mod_storage_save(coinSave, tostring(math.round(coins)))
+    mod_storage_save(timeSave, tostring(math.round(time)))
 end
 
 ---@param m MarioState
@@ -541,20 +577,23 @@ local prevCoinsBest = 0
 local prevTimeBest = 0
 local prevLevelNum = 0
 local function on_sync()
-    if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS then
+    if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS then
         gLevelValues.disableActs = true
     end
 
     local m = gMarioStates[0]
     local levelNum = get_merged_level_num()
 
-    prevCoinsBest, prevTimeBest = master_cap_get_record(levelNum)
-
-    if hud_get_value(HUD_DISPLAY_STARS) >= ROMHACK_STARS and levelNum ~= -1 then
+    if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS and levelNum ~= -1 and master_cap_data_exists(levelNum) then
+        prevCoinsBest, prevTimeBest = master_cap_get_record(levelNum)
         if prevLevelNum ~= levelNum then
             prevLevelNum = levelNum
             if master_cap_data_get_field(levelNum, "runActive") then
                 set_mario_finished_master_cap(m)
+                return
+            end
+
+            if hud_get_value(HUD_DISPLAY_COINS) > 0 then
                 return
             end
         end
@@ -597,8 +636,7 @@ local prevRunState = 0
 
 local function master_cap_music_update()
     local m = gMarioStates[0]
-    local runActive = master_cap_data_get_field(nil, "runActive")
-    local masterCapTimer = master_cap_data_get_field(nil, "capTimer")
+    local runActive = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runActive")
     local runState = 0
     if runActive then
         runState = 1
@@ -608,6 +646,7 @@ local function master_cap_music_update()
     end
 
     if runState > 0 then
+        local masterCapTimer = master_cap_data_get_field(nil, "capTimer")
         local volume = is_game_paused() and 0.25 or 0.80
         local volShift = runState ~= 2 and 1 or math.clamp((masterCapMusicFreq - 0.7)/0.6, 0, 1)
         local volShiftInv = 1 - volShift
@@ -650,7 +689,7 @@ local function master_cap_update()
     master_cap_music_update()
     --if m.playerIndex ~= 0 then return end
     -- Locally Apply Master Cap
-    local runActive = master_cap_data_get_field(nil, "runActive")
+    local runActive = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runActive")
     if runActive then
         m.capTimer = master_cap_data_get_field(nil, "capTimer")
         m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
@@ -669,13 +708,11 @@ local function master_cap_update()
         end
     end
 
-    prevRunState = master_cap_data_get_field(nil, "runActive")
-
     if network_is_server() then
         -- Update All Levels' Runs
-        for i = 1, LEVEL_COUNT do
+        for i = 1, maxRomhackCheck do
             local levelNum = get_merged_level_num(i)
-            if master_cap_data_get_field(levelNum, "runActive") and not levelsProcessed[levelNum] then
+            if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runActive") and not levelsProcessed[levelNum] then
                 levelsProcessed[levelNum] = true
                 local capTimer = master_cap_data_get_field(levelNum, "capTimer")
                 if capTimer > 0 then
@@ -728,7 +765,7 @@ local function master_cap_update()
             end
         end
 
-        for i = 1, LEVEL_COUNT do
+        for i = 1, maxRomhackCheck do
             levelsProcessed[i] = false
         end
     else
@@ -785,7 +822,7 @@ local function master_cap_render()
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
-    local runActive = master_cap_data_get_field(nil, "runActive")
+    local runActive = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runActive")
     if runActive then
         djui_hud_set_font(FONT_HUD)
         local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
@@ -870,10 +907,10 @@ local function star_select_leaderboard()
         leaderboardView = false
         leaderboard = nil
         --log_to_console(tostring(hud_get_value(HUD_DISPLAY_STARS)), CONSOLE_MESSAGE_INFO)
-        --log_to_console(tostring(ROMHACK_STARS), CONSOLE_MESSAGE_INFO)
+        --log_to_console(tostring(CURR_ROMHACK_STARS), CONSOLE_MESSAGE_INFO)
         return
     end
-    if hud_get_value(HUD_DISPLAY_STARS) < ROMHACK_STARS then return end
+    if hud_get_value(HUD_DISPLAY_STARS) < CURR_ROMHACK_STARS then return end
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
@@ -920,7 +957,7 @@ local function pause_leaderboard()
     if not is_game_paused() or djui_hud_is_pause_menu_created() then--or gNetworkPlayers[0].currLevelNum == 0 then
         return
     end
-    if hud_get_value(HUD_DISPLAY_STARS) < ROMHACK_STARS then return end
+    if hud_get_value(HUD_DISPLAY_STARS) < CURR_ROMHACK_STARS then return end
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
@@ -963,3 +1000,12 @@ hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 --hook_event(HOOK_ON_HUD_RENDER, hud_render)
 hook_event(HOOK_ON_DEATH, on_death)
+
+-------------------
+-- API Functions --
+-------------------
+
+masterCapApi = {
+    master_cap_init_level = master_cap_init_level,
+    set_merge_level_num = set_merge_level_num,
+}

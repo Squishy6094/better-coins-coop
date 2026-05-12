@@ -1,23 +1,23 @@
 -- Load Libraries
 oTagLib = require("libs/oTagLib")
 
-ROMHACK = "sm64"
+CURR_ROMHACK = "sm64"
 
 local function get_romhack_name()
     for i in pairs(gActiveMods) do
         local mod = gActiveMods[i]
         if mod.incompatible ~= nil then
             if mod.incompatible:find("romhack") then
-                ROMHACK = mod.relativePath
+                CURR_ROMHACK = mod.relativePath
             end
         end
         if mod.category ~= nil then
             if mod.category:find("romhack") then
-                ROMHACK = mod.relativePath
+                CURR_ROMHACK = mod.relativePath
             end
         end
-        ROMHACK = ROMHACK:gsub("[/\\]+$", "")
-        ROMHACK = ROMHACK:gsub(".*[/\\]", "")
+        CURR_ROMHACK = CURR_ROMHACK:gsub("[/\\]+$", "")
+        CURR_ROMHACK = CURR_ROMHACK:gsub(".*[/\\]", "")
     end
 end
 
@@ -448,7 +448,7 @@ function get_max_possible_stars()
     return count
 end
 
-ROMHACK_STARS = get_max_possible_stars()
+CURR_ROMHACK_STARS = get_max_possible_stars()
 
 local function mario_update(m)
     if m.playerIndex ~= 0 then return end
