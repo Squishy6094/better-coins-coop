@@ -714,6 +714,12 @@ local function master_cap_update()
             local levelNum = get_merged_level_num(i)
             if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runActive") and not levelsProcessed[levelNum] then
                 levelsProcessed[levelNum] = true
+
+                local coins = master_cap_data_get_field(levelNum, "coins")
+                if coins >= 999 then
+                    master_cap_stop_course(levelNum)
+                end
+
                 local capTimer = master_cap_data_get_field(levelNum, "capTimer")
                 if capTimer > 0 then
                     if network_player_connected_count() <= 1 and (m.action & ACT_FLAG_INTANGIBLE ~= 0 or is_game_paused()) then
@@ -729,17 +735,13 @@ local function master_cap_update()
                         if stallNoPlayers > 30 then
                             master_cap_stop_course(levelNum)
                             local courseNum = get_level_course_num(levelNum)
-                            djui_popup_create_global(get_level_name(courseNum, levelNum, 1).."'s\nMaster Cap Challenge\nwas Ditched...", 3)
+                            local isRecord = master_cap_data_get_field(levelNum, "newRecord")
+                            djui_popup_create_global(get_level_name(courseNum, levelNum, 1).."'s\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(coins) .. " | Time: " .. timestamp(master_cap_data_get_field(levelNum, "coinTimer")), isRecord and 6 or 5)
                         end
                     else
                         master_cap_data_set_field(levelNum, "stallNoPlayers", 0)
                     end
                 else
-                    master_cap_stop_course(levelNum)
-                end
-
-                local coins = master_cap_data_get_field(levelNum, "coins")
-                if coins >= 999 then
                     master_cap_stop_course(levelNum)
                 end
 
