@@ -79,6 +79,7 @@ local function update()
         o = obj_get_next(o)
     end
 
+    --[[
     if m.controller.buttonPressed & (U_JPAD) ~= 0 then
         spawn_coin_spawner(nil, 1000, nil, m.pos.x, m.pos.y, m.pos.z)
     end
@@ -87,6 +88,7 @@ local function update()
         
         end)
     end
+    ]]
 
     if hud_get_value(HUD_DISPLAY_COINS) > (prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife) then
         m.numLives = m.numLives + 1
@@ -129,7 +131,7 @@ local function coin_counter()
     local screenHeight = djui_hud_get_screen_height()
 
     customCoinHudValue = math.min(math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.1)), m.numCoins)
-    hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) | HUD_DISPLAY_FLAGS_COIN_COUNT)
+    --hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) | HUD_DISPLAY_FLAGS_COIN_COUNT)
     hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
 
     if (m.marioObj) then
