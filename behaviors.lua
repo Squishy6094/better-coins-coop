@@ -91,7 +91,7 @@ local function bhv_yoshi_reward(o)
     if o.oAction == YOSHI_ACT_TALK then
         sYoshiShouldExplode = true
     elseif sYoshiShouldExplode then
-        spawn_coin_spawner(o, 100 * gLevelValues.numCoinsToLife)
+        spawn_coin_spawner(o, 100 * (gBetterCoinValues.numCoinsToLife or 50))
         spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
         obj_mark_for_deletion(o)
     end
@@ -559,7 +559,6 @@ end
 
 ---@param o Object
 local function bhv_coins_on_damage_loop(o)
-    djui_chat_message_create(tostring(o.oPrevHealth))
     if o.oPrevHealth > o.oHealth and (o.oCustomCoins > 0) then
         spawn_coin_spawner(o, 5, true, 0, o.hitboxHeight, 0)
         o.oCustomCoins = o.oCustomCoins - 5
@@ -603,7 +602,7 @@ local function bhv_big_goomba_loop(o)
     if o.oGoombaSize == 1 then
         o.oNumLootCoins = -1
         local m = nearest_mario_state_to_object(o)
-        if o.oAction == GOOMBA_ACT_ATTACKED_MARIO and m and m.flags & MARIO_METAL_CAP ~= 0 then
+        if o.oAction == GOOMBA_ACT_ATTACKED_MARIO and m and (m.flags & MARIO_METAL_CAP ~= 0 or m.action & ACT_FLAG_RIDING_SHELL ~= 0) then
             obj_set_knockback_action(o.oInteractStatus & INT_STATUS_ATTACK_MASK)
         end
     end

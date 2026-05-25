@@ -633,7 +633,7 @@ local function on_sync()
 end
 
 local prevRunState = 0
-
+local runCrouchTimer = 0
 local function master_cap_music_update()
     local m = gMarioStates[0]
     local runActive = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runActive")
@@ -660,7 +660,7 @@ local function master_cap_music_update()
             play_secondary_music(0, 0, 0, 50)
         end
         local freqTargetTime = 1 + (math.max(450 - masterCapTimer, 0)/450)*0.3
-        local freqTargetEnd = 1 --+ (e.masterCapCrouchTimer/90)*0.3
+        local freqTargetEnd = 1 + (runCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
 
         masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.02)
@@ -698,6 +698,7 @@ local function master_cap_update()
             m.freeze = 1
             m.area.camera.cutscene = 0
         end
+
         if m.action ~= ACT_MASTER_CAP_RESULTS then
             sPrevAct[m.playerIndex].prevActionAnimFrame = m.marioObj.header.gfx.animInfo.animFrame
             sPrevAct[m.playerIndex].prevActionAnimAccel = m.marioObj.header.gfx.animInfo.animAccel
@@ -705,6 +706,15 @@ local function master_cap_update()
             sPrevAct[m.playerIndex].prevActionTimer = m.actionTimer
             sPrevAct[m.playerIndex].prevActionState = m.actionState
             sPrevAct[m.playerIndex].prevActionArg = m.actionArg
+        end
+
+        if m.action == ACT_CROUCHING then
+            runCrouchTimer = runCrouchTimer + 1
+            if runCrouchTimer > 90 then
+                set_mario_finished_master_cap(m)
+            end
+        else
+            runCrouchTimer = math.max(runCrouchTimer - 3, 0)
         end
     end
 
@@ -779,35 +789,6 @@ local function master_cap_update()
         end
         master_cap_data_set_field(nil, "capTimer", capTimer)
     end
-
-
-
-        --set_mario_finished_master_cap(m)
-        
-        -- Hold timer on acts
-        --if m.action & ACT_FLAG_INTANGIBLE == 0 then
-        --    e.masterCapTimer = math.max(e.masterCapTimer - 1, 0)
-        --    e.masterCapTotalTimer = e.masterCapTotalTimer + 1
-        --end
-
-        -- Get best active mario stats
-        --[[
-
-
-        if m.action == ACT_CROUCHING then
-            e.masterCapCrouchTimer = e.masterCapCrouchTimer + 1
-            if e.masterCapCrouchTimer > 90 then
-                set_mario_finished_master_cap(m)
-            end
-        else
-            e.masterCapCrouchTimer = math.max(e.masterCapCrouchTimer - 3, 0)
-        end
-        ]]
-
-    -- Network sync shitt
-    --if m.playerIndex == 0 and get_global_timer()%10 == 0 then 
-    --    network_send(false, gMasterCapStates[0])
-    --end
 end
 
 local TEXT_MASTER_CAP = "Collect as many coins as possible!"
@@ -831,10 +812,9 @@ local function master_cap_render()
         local textScale = math.min(sWidth/(textW + 32), 1)
         --djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (32 + math.abs(math.sin(e.masterCapTotalTimer/30))*8)*textScale, textScale)
 
-        --[[
-        if e.masterCapCrouchTimer > 15 then
-            local untilCancelInterp = math.max(e.masterCapCrouchTimer + (m.action == ACT_CROUCHING and -1 or 3) - 15, 0)/75
-            local untilCancel = math.max(e.masterCapCrouchTimer - 15, 0)/75
+        if runCrouchTimer > 15 then
+            local untilCancelInterp = math.max(runCrouchTimer + (m.action == ACT_CROUCHING and -1 or 3) - 15, 0)/75
+            local untilCancel = math.max(runCrouchTimer - 15, 0)/75
             local cancelColor = 127 - 127*untilCancel
             djui_hud_set_color(255, cancelColor, cancelColor, 255)
             djui_hud_render_rect_interpolated(0, 0, sWidth*untilCancelInterp, 2, 0, 0, sWidth*untilCancel, 2)
@@ -844,7 +824,6 @@ local function master_cap_render()
             local yShake = math.random(-2, 2)*untilCancel
             djui_hud_print_text(TEXT_ENDING_RUN, sWidth*0.5 - djui_hud_measure_text(TEXT_ENDING_RUN)*0.5 + xShake, sHeight*0.5 - 8 + yShake, 1)
         end
-        ]]
     end
 
     if m.action == ACT_MASTER_CAP_RESULTS then

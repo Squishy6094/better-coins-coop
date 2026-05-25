@@ -211,7 +211,7 @@ local function courtyard_condition_loop(o)
         o.oAction = o.oAction + 1     
     else
         if o.oTimer > 60 then
-            spawn_coin_spawner(o, 241)
+            spawn_coin_spawner(o, 241 - gMarioStates[0].numCoins)
             gGlobalSyncTable.courtyardSecretSolved = true
             obj_mark_for_deletion(o)
         end
@@ -220,6 +220,8 @@ local function courtyard_condition_loop(o)
 end
 
 id_bhvCourtyardCondition = hook_behavior(nil, OBJ_LIST_SPAWNER, true, courtyard_condition_init, courtyard_condition_loop, "bhvCourtyardCondition")
+
+-- Master Cap Objects
 
 function bhv_master_cap_bubble_player_loop(o)
     if (o.heldByPlayerIndex >= MAX_PLAYERS) then return end
@@ -253,3 +255,100 @@ function bhv_master_cap_bubble_player_loop(o)
 end
 
 id_bhvMasterCapBubblePlayer = hook_behavior(nil, OBJ_LIST_SPAWNER, true, nil, bhv_master_cap_bubble_player_loop, "bhvMasterCapBubblePlayer")
+
+local function bhv_gold_demon_init(o)
+    --[[
+    --o.oGravity = 2.5
+    o.oFriction = 1.0
+    o.oBuoyancy = 0
+    o.oForwardVel = 10
+    o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_MOVE_XZ_USING_FVEL | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oMoveAnglePitch = -0x4000
+    o.oAction = 0
+    cur_obj_become_tangible()
+    play_sound_with_freq_scale(SOUND_GENERAL2_1UP_APPEAR, {x = o.oPosX, y = o.oPosY, z = o.oPosZ}, 0.5)
+    obj_set_billboard(o)
+    network_init_object(o, true, {
+        
+    })
+    
+    ]]
+end
+
+---@param o Object
+local function bhv_gold_demon_loop(o)
+    --[[
+    local m = gMarioStates[network_local_index_from_global(o.globalPlayerIndex)]
+    if m == nil then return end
+
+    local target = {x = m.pos.x, y = m.pos.y + 100, z = m.pos.z}
+    if o.oAction == 0 then
+        local angleToMarioH = atan2s(target.z - o.oPosZ, target.x - o.oPosX)
+        local distToMarioH = math.sqrt((target.z - o.oPosZ)^2 + (target.x - o.oPosX)^2)
+        local angleToMarioV = -(-0x4000 - atan2s(target.y - o.oPosY, distToMarioH))
+
+        o.oVelY = o.oVelY*0.9 + sins(angleToMarioV)*2
+        o.oVelX = o.oVelX*0.9 + sins(angleToMarioH)*2
+        o.oVelZ = o.oVelZ*0.9 + coss(angleToMarioH)*2
+
+        o.oForwardVel = math.sqrt(o.oVelX^2 + o.oVelZ^2)*(1 - math.abs(coss(angleToMarioV)))
+        o.oMoveAngleYaw = lerp_s16(atan2s(o.oVelZ, o.oVelX), angleToMarioH, 0.02)
+    end
+
+    obj_bounce_off_walls_edges_objects()
+    object_step_without_floor_orient()
+
+
+
+    local m = gMarioStates[network_local_index_from_global(o.oDemonOwner)]
+    local s = gStateExtras[network_local_index_from_global(o.oDemonOwner)]
+    local n = gNetworkPlayers[network_local_index_from_global(o.oDemonOwner)]
+    if n.currLevelNum ~= gNetworkPlayers[0].currLevelNum then
+        obj_unused_die()
+        playerDemonReference = nil
+    end
+    local distToPlayer = {
+        x = m.pos.x - o.oPosX,
+        y = (m.pos.y + 150) - o.oPosY,
+        z = m.pos.z - o.oPosZ
+    }
+    local angle = atan2s(mth.sqrt(sqr(distToPlayer.x) + sqr(distToPlayer.z)), distToPlayer.y)
+    if o.oFlameTimer > 1 and check_if_submerged(o) == 0 then
+            o.oFlameTimer = 0
+            spawn_sync_object(id_bhvGDFlame, E_MODEL_RED_FLAME, o.oPosX + mth.random(-25, 25), o.oPosY + mth.random(-5, 5), o.oPosZ + mth.random(-25, 25), nil)
+    else
+        o.oFlameTimer = o.oFlameTimer + 1
+    end
+    if o.oAction == 0 then
+        o.oAngleVelPitch = 0x1000;
+        o.oMoveAnglePitch = o.oMoveAnglePitch + o.oAngleVelPitch
+        o.oVelY = coss(o.oMoveAnglePitch) * 30.0 + 2.0
+        o.oForwardVel = -sins(o.oMoveAnglePitch) * 30.0
+        if dist_between_objects(o, m.marioObj) >= 1000 then
+            o.oAction = 1
+        end
+    elseif o.oAction == 1 then
+        obj_turn_toward_object(o, m.marioObj, 16, 0x1000)
+        o.oMoveAnglePitch = approach_s16_symmetric(o.oMoveAnglePitch, angle, 0x1000)
+
+        o.oVelY = sins(o.oMoveAnglePitch) * (14.0 + mth.clamp(dist_between_objects(o, m.marioObj) / 500, 0, 6)) - (2 * check_if_submerged(o)) - is_in_cutscene_modifier(m)
+        o.oForwardVel = coss(o.oMoveAnglePitch) * (14.0 + mth.clamp(dist_between_objects(o, m.marioObj) / 500, 0, 6)) - (8 * check_if_submerged(o)) - is_in_cutscene_modifier(m)
+
+        if m and obj_check_if_collided_with_object(o, m.marioObj) == 1 then
+            m.health = 0xFF
+            s.dead = true
+
+            obj_unused_die()
+            playerDemonReference = 0
+        end
+        
+        if m.health == 0xFF then
+            obj_unused_die()
+            playerDemonReference = 0
+        end
+
+    end
+    ]]
+end
+
+id_bhvMasterCapGoldDemon = hook_behavior(nil, OBJ_LIST_LEVEL, true, bhv_gold_demon_init, bhv_gold_demon_loop, "id_bhvMasterCapGoldDemon")
