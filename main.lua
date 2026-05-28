@@ -27,77 +27,25 @@ end
 
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
 
-local coinRange = 0
-local mouseX = 0
-local mouseY = 0
-local function obj_attempt_magnetize(m, o)
-    if o.oIntangibleTimer == 0 and not is_object_being_carried(o) and o.oDamageOrCoinValue > 0 then
-        -- Attract if coin is yours
-        local dist = obj_to_obj_dist(o, m.marioObj)
-        if (dist <= coinRange or o.oVelY < 0) then
-            local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
-            if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
-                carry_object_to_mario(m, o)
-            end
-        end
+gMousePosX = 0
+gMousePosY = 0
 
-        -- Check Galaxy Controls
-        if gGlobalSyncTable.mouseGrab == true then
-            djui_hud_set_resolution(RESOLUTION_N64)
-            local out = {x = 0, y = 0, z = 0}
-            djui_hud_world_pos_to_screen_pos({x = o.oPosX, y = o.oPosY, z = o.oPosZ}, out)
-            local mouseDist = math.sqrt((out.x - mouseX)^2 + (out.y - mouseY)^2)
-            if mouseDist < 10 then
-                local isWall = collision_find_surface_on_ray(gLakituState.pos.x, gLakituState.pos.y, gLakituState.pos.z, o.oPosX - gLakituState.pos.x, (o.oPosY + 50) - gLakituState.pos.y, o.oPosZ - gLakituState.pos.z, 128).surface ~= nil
-                if not isWall then
-                    carry_object_to_mario(m, o)
-                end
-            end
-        end
-    end
+
+gMarioCoinRange = {}
+for i = 0, MAX_PLAYERS - 1 do
+    gMarioCoinRange[i] = 0
 end
-
-local prevNumCoinsToLifeCount = 0
-local function update()
-    local m = gMarioStates[0]
-    if m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
-
-    coinRange = 400 + math.sqrt(m.vel.x^2 + m.vel.y^2 + m.vel.z^2)
+local function mario_update_coin_range(m)
+    gMarioCoinRange[m.playerIndex] = 400 + math.sqrt(m.vel.x^2 + m.vel.y^2 + m.vel.z^2)
     if m.flags & MARIO_METAL_CAP ~= 0 then
-        coinRange = coinRange * 3
+        gMarioCoinRange[m.playerIndex] = gMarioCoinRange[m.playerIndex] * 3
     end
     if m.action & (ACT_FLAG_FLYING | ACT_FLAG_SWIMMING | ACT_FLAG_RIDING_SHELL) ~= 0 then
-        coinRange = coinRange * 1.25
-    end
-
-    local o = obj_get_first(OBJ_LIST_LEVEL)
-    while o ~= nil do
-        if o.oInteractType == INTERACT_COIN then
-            obj_attempt_magnetize(m, o)
-        end
-
-        o = obj_get_next(o)
-    end
-
-    --[[
-    if m.controller.buttonPressed & (U_JPAD) ~= 0 then
-        spawn_coin_spawner(nil, 1000, nil, m.pos.x, m.pos.y, m.pos.z)
-    end
-    if m.controller.buttonPressed & (R_JPAD) ~= 0 then
-        spawn_non_sync_object(id_bhvMasterCapGoldDemon, E_MODEL_1UP, m.pos.x, m.pos.y, m.pos.z, function(o)
-        
-        end)
-    end
-    ]]
-
-    if hud_get_value(HUD_DISPLAY_COINS) > (prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife) then
-        m.numLives = m.numLives + 1
-        play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
-        prevNumCoinsToLifeCount = prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife
+        gMarioCoinRange[m.playerIndex] = gMarioCoinRange[m.playerIndex] * 1.25
     end
 end
 
-hook_event(HOOK_UPDATE, update)
+hook_event(HOOK_MARIO_UPDATE, mario_update_coin_range)
 
 -- Updates / Hooks --
 
@@ -124,15 +72,23 @@ local coinAnim = 0
 local coinSpeed = 0
 local secretAnim = 0
 local secretSpeed = 0
+local prevNumCoinsToLifeCount = 0
 local function coin_counter()
     local m = gMarioStates[0]
+    local l = gLakituState
     djui_hud_set_resolution(RESOLUTION_N64)
     local screenWidth = djui_hud_get_screen_width()
     local screenHeight = djui_hud_get_screen_height()
 
     customCoinHudValue = math.min(math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.1)), m.numCoins)
-    --hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) | HUD_DISPLAY_FLAGS_COIN_COUNT)
     hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
+
+    -- Hud 
+    if hud_get_value(HUD_DISPLAY_COINS) > (prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife) then
+        m.numLives = m.numLives + 1
+        play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
+        prevNumCoinsToLifeCount = prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife
+    end
 
     if (m.marioObj) then
         -- Red Coin Radar
@@ -140,7 +96,10 @@ local function coin_counter()
         local redCoin = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvRedCoin);
         if (redCoin) then
             local dist = math.sqrt((redCoin.oPosX - m.pos.x)^2 + (redCoin.oPosY - m.pos.y)^2 + (redCoin.oPosZ - m.pos.z)^2)
-            coinSpeed = math.lerp(coinSpeed, math.clamp((400*5 / dist), 0, 1), 0.1)
+            local visableCam = collision_find_surface_on_ray(l.pos.x, l.pos.y, l.pos.z, redCoin.oPosX - l.pos.x, redCoin.oPosY - l.pos.y, redCoin.oPosZ - l.pos.z, 1).surface == nil
+            local visableMario = collision_find_surface_on_ray(m.pos.x, m.pos.y, m.pos.z, redCoin.oPosX - m.pos.x, redCoin.oPosY - m.pos.y, redCoin.oPosZ - m.pos.z, 1).surface == nil
+            local targetCoinSpeed = math.clamp((400*5 / dist), 0, 0.75) + ((visableCam and visableMario) and 0.25 or 0)
+            coinSpeed = math.lerp(coinSpeed, targetCoinSpeed, 0.1)
         else
             coinSpeed = math.lerp(coinSpeed, 0, 0.1)
         end
@@ -154,7 +113,10 @@ local function coin_counter()
         local secret = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHiddenStarTrigger);
         if (secret) then
             local dist = math.sqrt((secret.oPosX - m.pos.x)^2 + (secret.oPosY - m.pos.y)^2 + (secret.oPosZ - m.pos.z)^2)
-            secretSpeed = math.lerp(secretSpeed, math.clamp((400*5 / dist), 0, 1), 0.1)
+            local visableCam = collision_find_surface_on_ray(l.pos.x, l.pos.y, l.pos.z, secret.oPosX - l.pos.x, secret.oPosY - l.pos.y, secret.oPosZ - l.pos.z, 1).surface == nil
+            local visableMario = collision_find_surface_on_ray(m.pos.x, m.pos.y, m.pos.z, secret.oPosX - m.pos.x, secret.oPosY - m.pos.y, secret.oPosZ - m.pos.z, 1).surface == nil
+            local targetSecretSpeed = math.clamp((400*5 / dist), 0, 0.75) + ((visableCam and visableMario) and 0.25 or 0)
+            secretSpeed = math.lerp(secretSpeed, math.clamp(targetSecretSpeed, 0, 0.75), 0.1)
         else
             secretSpeed = math.lerp(secretSpeed, 0, 0.1)
         end
@@ -171,10 +133,10 @@ local function coin_counter()
         local djuiHeight = djui_hud_get_screen_height()
         djui_hud_set_resolution(RESOLUTION_N64)
         local newMouseX = djui_hud_get_mouse_x() * (djui_hud_get_screen_width()/djuiWidth)
-        local nemMouseY = djui_hud_get_mouse_y() * (djui_hud_get_screen_height()/djuiHeight)
-        djui_hud_render_rect_interpolated(mouseX, mouseY, 16, 16, mouseX, mouseY, 16, 16)
-        mouseX = newMouseX
-        mouseY = nemMouseY
+        local newMouseY = djui_hud_get_mouse_y() * (djui_hud_get_screen_height()/djuiHeight)
+        djui_hud_render_rect_interpolated(gMousePosX, gMousePosY, 16, 16, gMousePosX, gMousePosY, 16, 16)
+        gMousePosX = newMouseX
+        gMousePosY = newMouseY
     end
 end
 
@@ -237,6 +199,8 @@ local function interact(m, o, int)
 
         if mario_master_cap_active(m) then
             master_cap_add_coin(nil, o.oDamageOrCoinValue)
+        else
+            m.capTimer = m.capTimer + 25*o.oDamageOrCoinValue
         end
         return
     end

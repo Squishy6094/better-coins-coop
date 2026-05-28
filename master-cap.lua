@@ -794,12 +794,9 @@ end
 local TEXT_MASTER_CAP = "Collect as many coins as possible!"
 local TEXT_RESULT_COINS = "Coins Collected:"
 local TEXT_RESULT_PB = "Personal Best: "
-local TEXT_RESULT_SB = "Server Best: "
 local TEXT_RESULT_TIME = "Time Spent:"
 local TEXT_RECORD = "HI SCORE"
 local TEXT_ENDING_RUN = "ENDING RUN EARLY..."
-local leaderboardTop = nil
-local leaderboard = nil
 local function master_cap_render()
     local m = gMarioStates[0]
     djui_hud_set_resolution(RESOLUTION_N64)
@@ -878,92 +875,6 @@ local function master_cap_render()
         end
     end
 end
-
---[[
-local leaderboardView = false
-local TEXT_LEADERBOARD = "Master Cap Challenge Leaderboard"
-local TEXT_LEADERBOARD_TOGGLE = "R Button - Toggle Leaderboard"
-local function star_select_leaderboard()
-    if obj_get_first_with_behavior_id(id_bhvActSelector) == nil then
-        leaderboardView = false
-        leaderboard = nil
-        --log_to_console(tostring(hud_get_value(HUD_DISPLAY_STARS)), CONSOLE_MESSAGE_INFO)
-        --log_to_console(tostring(CURR_ROMHACK_STARS), CONSOLE_MESSAGE_INFO)
-        return
-    end
-    if hud_get_value(HUD_DISPLAY_STARS) < CURR_ROMHACK_STARS then return end
-    djui_hud_set_resolution(RESOLUTION_N64)
-    local sWidth = djui_hud_get_screen_width() + 1
-    local sHeight = djui_hud_get_screen_height()
-    local m = gMarioStates[0]
-
-    if m.controller.buttonPressed & R_TRIG ~= 0 then
-        play_sound(SOUND_MENU_CLICK_CHANGE_VIEW, gGlobalSoundSource)
-        leaderboardView = not leaderboardView
-    end
-
-    if leaderboardView then
-        djui_hud_set_color(255, 255, 255, 255)
-        djui_hud_render_rect(0, 0, sWidth, sHeight)
-        djui_hud_set_color(0, 0, 0, 255)
-        djui_hud_set_font(FONT_NORMAL)
-        djui_hud_print_text(TEXT_LEADERBOARD, sWidth*0.5 - djui_hud_measure_text(TEXT_LEADERBOARD)*0.25 - 1, 10, 0.5)
-        if leaderboard == nil then -- Load and sort table when loaded
-            leaderboard = get_master_cap_leaderboard()
-        else
-            for i = 1, #leaderboard do
-                local name = leaderboard[i].name
-                local coins = leaderboard[i].displayCoins
-                local time = leaderboard[i].displayTime
-                local row = math.floor((i-1)/3)
-                local x = sWidth*(1/(math.min(#leaderboard - row*3, 3) + 1))*(((i - 1)%3) + 1)
-                local y = sHeight*0.5 - 24*(math.floor((#leaderboard)/3) + 1)*0.5 + 24*row
-                djui_hud_render_rect(x - 0.5, y + 2, 1, 19)
-                djui_hud_print_text(ordinal(i), x - djui_hud_measure_text(ordinal(i))*0.4 - 2, y, 0.4)
-                djui_hud_print_text(name, x + 2, y, 0.4)
-                y = y + 12
-                djui_hud_print_text(coins, x - djui_hud_measure_text(coins)*0.3 - 2, y, 0.3)
-                djui_hud_print_text(time, x + 2, y, 0.3)
-            end
-        end
-    end
-
-    djui_hud_set_color(0, 0, 0, 255)
-    djui_hud_set_font(FONT_NORMAL)
-    djui_hud_print_text(TEXT_LEADERBOARD_TOGGLE, sWidth - djui_hud_measure_text(TEXT_LEADERBOARD_TOGGLE)*0.3 - 5, sHeight - 14, 0.3)
-end
-
-
-local function pause_leaderboard()
-    if not is_game_paused() or djui_hud_is_pause_menu_created() then--or gNetworkPlayers[0].currLevelNum == 0 then
-        return
-    end
-    if hud_get_value(HUD_DISPLAY_STARS) < CURR_ROMHACK_STARS then return end
-    djui_hud_set_resolution(RESOLUTION_N64)
-    local sWidth = djui_hud_get_screen_width() + 1
-    local sHeight = djui_hud_get_screen_height()
-
-    djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_set_font(FONT_NORMAL)
-    djui_hud_print_text(TEXT_LEADERBOARD, sWidth*0.2 - djui_hud_measure_text(TEXT_LEADERBOARD)*0.125 - 1, 10, 0.25)
-    local leaderboard = get_master_cap_leaderboard()
-    for i = 1, #leaderboard do
-        local name = leaderboard[i].name
-        local coins = leaderboard[i].displayCoins
-        local time = leaderboard[i].displayTime
-        local row = math.floor((i-1)/3)
-        local x = 10
-        local y = sHeight*0.5 - 24*(math.floor((#leaderboard)/3) + 1)*0.5 + 24*row
-        djui_hud_print_text(ordinal(i) .. " " .. name .. " | " .. coins .. " - " .. time, x + 2, y, 0.4)
-        y = y + 12
-    end
-end
-
-local function hud_render()
-    --star_select_leaderboard()
-    --pause_leaderboard()
-end
-]]
 
 local function on_death()
     local m = gMarioStates[0]

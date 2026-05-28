@@ -21,6 +21,59 @@ local function hook_coins_behavior(id, override, init, loop)
     hook_behavior(id, get_object_list_from_behavior(get_behavior_from_id(id)), override, init, loop, (get_behavior_name_from_id(id):gsub("bhv", "bhvCoins", 1)))
 end
 
+-- Coin Magnitize Behaviors
+local function bhv_init_for_magnitize(o)
+    o.oIsCarried = 0
+end
+
+local function bhv_check_for_magnitize(o)
+    local m = nearest_mario_state_to_object(o)
+    if not m or m.marioObj.oIntangibleTimer ~= 0 or m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
+    --djui_chat_message_create(tostring(o.oIsCarried))
+    if not is_object_being_carried(o) and o.oIntangibleTimer == 0 then
+        -- Attract if coin is yours
+        local dist = obj_to_obj_dist(o, m.marioObj)
+        --djui_chat_message_create(tostring(dist))
+        if (dist <= gMarioCoinRange[m.playerIndex] or o.oVelY < 0) then
+            local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
+            if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
+                carry_object_to_mario(m, o)
+            end
+        end
+
+        -- Check Galaxy Controls
+        if gGlobalSyncTable.mouseGrab == true then
+            djui_hud_set_resolution(RESOLUTION_N64)
+            local out = {x = 0, y = 0, z = 0}
+            djui_hud_world_pos_to_screen_pos({x = o.oPosX, y = o.oPosY, z = o.oPosZ}, out)
+            local mouseDist = math.sqrt((out.x - gMousePosX)^2 + (out.y - gMousePosY)^2)
+            if mouseDist < 10 then
+                local isWall = collision_find_surface_on_ray(gLakituState.pos.x, gLakituState.pos.y, gLakituState.pos.z, o.oPosX - gLakituState.pos.x, (o.oPosY + 50) - gLakituState.pos.y, o.oPosZ - gLakituState.pos.z, 128).surface ~= nil
+                if not isWall then
+                    carry_object_to_mario(m, o)
+                end
+            end
+        end
+    end
+end
+
+local function hook_coin_magnitize_behavior(bhvID)
+    return hook_coins_behavior(bhvID, false, bhv_init_for_magnitize, bhv_check_for_magnitize)
+end
+
+hook_coin_magnitize_behavior(id_bhvOneCoin)
+hook_coin_magnitize_behavior(id_bhvYellowCoin)
+hook_coin_magnitize_behavior(id_bhvMovingYellowCoin)
+hook_coin_magnitize_behavior(id_bhvSingleCoinGetsSpawned)
+hook_coin_magnitize_behavior(id_bhvRedCoin)
+hook_coin_magnitize_behavior(id_bhvMrIBlueCoin)
+hook_coin_magnitize_behavior(id_bhvHiddenBlueCoin)
+hook_coin_magnitize_behavior(id_bhvMovingBlueCoin)
+hook_coin_magnitize_behavior(id_bhv1Up)
+hook_coin_magnitize_behavior(id_bhv1upSliding)
+hook_coin_magnitize_behavior(id_bhvThwomp)
+
+
 ---@param o Object
 local function bhv_moneybag_set_coins(o)
     -- in place of loot coins since the original func forces it to 0

@@ -72,6 +72,9 @@ local function bhv_coin_carry_loop(o)
     o.parentObj.oPosX = o.oPosX
     o.parentObj.oPosY = o.oPosY
     o.parentObj.oPosZ = o.oPosZ
+    o.parentObj.oHomeX = o.oPosX
+    o.parentObj.oHomeY = o.oPosY
+    o.parentObj.oHomeZ = o.oPosZ
     o.parentObj.oVelX = approach_f32(o.oVelX, 0, 1, 1)
     o.parentObj.oVelY = approach_f32(o.oVelY, -o.parentObj.oGravity, 1, 1)
     o.parentObj.oVelZ = approach_f32(o.oVelZ, 0, 1, 1)
