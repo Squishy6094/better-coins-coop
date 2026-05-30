@@ -176,7 +176,7 @@ local coinsSounds = {
     [3] = audio_stream_load("coin4.ogg"),
 }
 ]]
-local customCoin = false
+customCoinSound = false
 ---@param m MarioState
 local function interact(m, o, int)
     if m.playerIndex ~= 0 then return end
@@ -190,7 +190,7 @@ local function interact(m, o, int)
             coinSoundCombo = coinSoundCombo + 1
         end
         local freqScale = math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1))
-        customCoin = true
+        customCoinSound = true
         play_sound_with_freq_scale(SOUND_GENERAL_COIN, gGlobalSoundSource, freqScale)
         --audio_stream_set_frequency(currCoinSound, math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1)))
         --audio_stream_play(currCoinSound, true, 1.25)
@@ -243,10 +243,10 @@ local function count_possible_coins()
 end
 
 local function on_coin_sound(sound, pos)
-    if sound == SOUND_GENERAL_COIN and not customCoin then
+    if sound == SOUND_GENERAL_COIN and not customCoinSound then
         return NO_SOUND
     end
-    customCoin = false
+    customCoinSound = false
 end
 
 local function courtyard_secret()

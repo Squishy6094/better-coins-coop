@@ -67,7 +67,6 @@ hook_coin_magnitize_behavior(id_bhvMovingYellowCoin)
 hook_coin_magnitize_behavior(id_bhvSingleCoinGetsSpawned)
 hook_coin_magnitize_behavior(id_bhvRedCoin)
 hook_coin_magnitize_behavior(id_bhvMrIBlueCoin)
-hook_coin_magnitize_behavior(id_bhvHiddenBlueCoin)
 hook_coin_magnitize_behavior(id_bhvMovingBlueCoin)
 hook_coin_magnitize_behavior(id_bhv1Up)
 hook_coin_magnitize_behavior(id_bhv1upSliding)
@@ -720,3 +719,133 @@ end
 
 
 hook_coins_behavior(id_bhvKickableBoard, false, bhv_kickable_board_coins_init, bhv_kickable_board_coins_loop)
+
+---@param o Object
+local function bhv_ghost_coin_init(o)
+    --o.oInteractType = INTERACT_COIN
+    o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    obj_set_billboard(o)
+    o.hitboxRadius = 100
+    o.hitboxHeight = 64
+    o.oDamageOrCoinValue = 5
+    o.oIntangibleTimer = -1
+    o.oAnimState = -1
+    o.oHealth = 15
+
+    o.oHomeX = o.oPosX
+    o.oHomeY = o.oPosY
+    o.oHomeZ = o.oPosZ
+
+    obj_set_model_extended(o, E_MODEL_BOO)
+end
+
+_G.HIDDEN_BLUE_COIN_ACT_CAUGHT = 3
+
+---@param o Object
+local function bhv_ghost_coin_loop(o)
+    if o.oAction == HIDDEN_BLUE_COIN_ACT_INACTIVE then
+        -- Set action to HIDDEN_BLUE_COIN_ACT_WAITING after the blue coin switch is found.
+        o.oHiddenBlueCoinSwitch = cur_obj_nearest_object_with_behavior(get_behavior_from_id(id_bhvBlueCoinSwitch));
+
+        if (o.oHiddenBlueCoinSwitch ~= nil) then
+            o.oAction = o.oAction + 1;
+        end
+        cur_obj_enable_rendering();
+        cur_obj_become_tangible();
+    elseif o.oAction == HIDDEN_BLUE_COIN_ACT_WAITING then
+        -- Wait until the blue coin switch starts ticking to activate.
+        local blueCoinSwitch = o.oHiddenBlueCoinSwitch;
+
+        o.oPosX = math.lerp(o.oPosX, o.oHomeX, 0.1)
+        o.oPosY = math.lerp(o.oPosY, o.oHomeY, 0.1)
+        o.oPosZ = math.lerp(o.oPosZ, o.oHomeZ, 0.1)
+
+        if (blueCoinSwitch and blueCoinSwitch.oAction == BLUE_COIN_SWITCH_ACT_TICKING) then
+            o.oAction = o.oAction + 1;
+        end
+
+        -- Show blue coins if a Mario is standing on the blue coins switch
+        local preview = false
+        if (gLevelValues.previewBlueCoins) then
+            for i = 0, MAX_PLAYERS - 1 do
+                if (gMarioStates[i].marioObj and gMarioStates[i].marioObj.platform == blueCoinSwitch) then
+                    preview = true
+                    break;
+                end
+            end
+        end
+
+        o.oOpacity = math.clamp(o.oOpacity + (preview and 15 or -10), 0, 150)
+    elseif o.oAction == HIDDEN_BLUE_COIN_ACT_ACTIVE then
+        local m = nearest_mario_state_to_object(o)
+        if not m then return end
+        local blueCoinSwitch = o.oHiddenBlueCoinSwitch;
+
+        -- Delete the coin once collected
+        if not is_object_being_carried(o) then
+            if dist_between_objects(m.marioObj, o) < 400 then
+                carry_object_to_mario(m, o)
+                play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.9 + math.random()*0.3)
+            end
+        end
+
+        o.oOpacity = math.clamp(o.oOpacity + 15, 0, 255)
+
+        if blueCoinSwitch and blueCoinSwitch.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+            play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_SHORT, o.header.gfx.cameraToObject, 0.9 + math.random()*0.3)
+            o.oAction = o.oAction + 1
+        end
+
+        if blueCoinSwitch and blueCoinSwitch.oAction ~= BLUE_COIN_SWITCH_ACT_TICKING then
+            stop_object_carry(o)
+            o.oAction = HIDDEN_BLUE_COIN_ACT_WAITING
+        end
+
+        -- After 200 frames of waiting and 20 2-frame blinks (for 240 frames total),
+        -- delete the object.
+        --[[
+        if (cur_obj_wait_then_blink(200, 20)) then
+            if (gLevelValues.respawnBlueCoinsSwitch) then
+                o.oAction = HIDDEN_BLUE_COIN_ACT_INACTIVE;
+                cur_obj_unhide();
+            else
+                obj_mark_for_deletion(o);
+            end
+        end
+        ]]
+    elseif o.oAction == HIDDEN_BLUE_COIN_ACT_CAUGHT then
+        djui_chat_message_create(tostring(o.oHealth))
+        if o.oHealth <= 0 then
+            spawn_mist_particles()
+            spawn_coin_spawner(o, 5, true)
+            play_sound(SOUND_OBJ_DEFAULT_DEATH, o.header.gfx.cameraToObject)
+            
+            obj_mark_for_deletion(o)
+        else
+            o.oHealth = o.oHealth - 1
+        end
+    end
+
+    o.oIntangibleTimer = -1
+    o.oInteractStatus = 0;
+end
+
+hook_coins_behavior(id_bhvHiddenBlueCoin, true, bhv_ghost_coin_init, bhv_ghost_coin_loop)
+
+local function bhv_boo_coin_switch_delete(o)
+    if o.oAction == BLUE_COIN_SWITCH_ACT_TICKING then
+        local isActive = false
+        local oHiddenBlueCoin = obj_get_first_with_behavior_id(id_bhvHiddenBlueCoin)
+        while oHiddenBlueCoin ~= nil do
+            if not is_object_being_carried(oHiddenBlueCoin) then
+                isActive = true
+            end
+            oHiddenBlueCoin = obj_get_next_with_same_behavior_id(oHiddenBlueCoin)
+        end
+        if not isActive then
+            obj_mark_for_deletion(o)
+        end
+    end
+end
+
+hook_coins_behavior(id_bhvBlueCoinSwitch, false, nil, bhv_boo_coin_switch_delete)

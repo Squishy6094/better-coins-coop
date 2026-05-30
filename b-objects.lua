@@ -5,6 +5,16 @@ define_custom_obj_fields({
     oIsCarried = "u32",
 })
 
+--- @param m MarioState
+--- @param o Object
+--- @return boolean
+local function obj_can_interact_with_mario(m, o)
+    if not o or o.activeFlags == ACTIVE_FLAG_DEACTIVATED then return true end
+    if m.action & ACT_FLAG_INTANGIBLE ~= 0 then return false end
+    if o.oIntangibleTimer ~= 0 then return false end
+    if master_cap_box_active() and get_level_timer() < 90 then return false end
+    return true
+end
 
 --- @param o Object
 local function bhv_coin_carry_init(o)
@@ -18,6 +28,10 @@ local carrierMax = 30
 --- @param o Object
 local function bhv_coin_carry_loop(o)
     cur_obj_hide()
+    if o.parentObj.oIsCarried == 0 then
+        obj_mark_for_deletion(o)
+        return
+    end
     if o.globalPlayerIndex == MAX_PLAYERS then return end
     if o.parentObj.activeFlags == ACTIVE_FLAG_DEACTIVATED then
         network_send_object(o.parentObj, true)
@@ -40,10 +54,8 @@ local function bhv_coin_carry_loop(o)
     }
 
     -- Make objs circle mario when uninteractable
-
-    local masterCapStall = master_cap_box_active() and get_level_timer() < 90
-    if m.action & ACT_FLAG_INTANGIBLE ~= 0 or masterCapStall then
-        local total, curr = count_carrier_objects(o)
+    if not obj_can_interact_with_mario(m, o.parentObj) then
+        local total, curr = count_carrier_objects(m, o)
         local angle = 0x10000*((curr - 1)/total) + get_global_timer()*0x200
         targetPos.x = targetPos.x + sins(angle)*250
         targetPos.z = targetPos.z + coss(angle)*250
@@ -72,9 +84,9 @@ local function bhv_coin_carry_loop(o)
     o.parentObj.oPosX = o.oPosX
     o.parentObj.oPosY = o.oPosY
     o.parentObj.oPosZ = o.oPosZ
-    o.parentObj.oHomeX = o.oPosX
-    o.parentObj.oHomeY = o.oPosY
-    o.parentObj.oHomeZ = o.oPosZ
+    --o.parentObj.oHomeX = o.oPosX
+    --o.parentObj.oHomeY = o.oPosY
+    --o.parentObj.oHomeZ = o.oPosZ
     o.parentObj.oVelX = approach_f32(o.oVelX, 0, 1, 1)
     o.parentObj.oVelY = approach_f32(o.oVelY, -o.parentObj.oGravity, 1, 1)
     o.parentObj.oVelZ = approach_f32(o.oVelZ, 0, 1, 1)
@@ -85,6 +97,7 @@ local id_bhvCoinCarry = hook_behavior(nil, OBJ_LIST_LEVEL, true, bhv_coin_carry_
 --- @param m MarioState
 --- @param o Object
 function carry_object_to_mario(m, o)
+    if o.oIsCarried ~= 0 then return end
     local gIndex = network_global_index_from_local(m.playerIndex)
     local spawn_func = o.oSyncID ~= 0 and spawn_sync_object or spawn_non_sync_object
     o.oIsCarried = 1
@@ -95,18 +108,25 @@ function carry_object_to_mario(m, o)
     end)
 end
 
+function stop_object_carry(o)
+    if o.oIsCarried == 0 then return end
+    o.oIsCarried = 0
+end
+
 function is_object_being_carried(o)
     return o.oIsCarried ~= 0
 end
 
-function count_carrier_objects(oTarget)
+function count_carrier_objects(marioTarget, oTarget)
     local totalCount = 0
     local objCount = 0
     local oCarry = obj_get_first_with_behavior_id(id_bhvCoinCarry)
     while oCarry ~= nil do
-        totalCount = totalCount + 1
-        if oTarget == oCarry then
-            objCount = totalCount
+        if oCarry.globalPlayerIndex == network_global_index_from_local(marioTarget.playerIndex) and not obj_can_interact_with_mario(marioTarget, oCarry.parentObj) then
+            totalCount = totalCount + 1
+            if oTarget == oCarry then
+                objCount = totalCount
+            end
         end
 
         oCarry = obj_get_next_with_same_behavior_id(oCarry)
