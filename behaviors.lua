@@ -29,11 +29,9 @@ end
 local function bhv_check_for_magnitize(o)
     local m = nearest_mario_state_to_object(o)
     if not m or m.marioObj.oIntangibleTimer ~= 0 or m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
-    --djui_chat_message_create(tostring(o.oIsCarried))
     if not is_object_being_carried(o) and o.oIntangibleTimer == 0 then
         -- Attract if coin is yours
         local dist = obj_to_obj_dist(o, m.marioObj)
-        --djui_chat_message_create(tostring(dist))
         if (dist <= gMarioCoinRange[m.playerIndex] or o.oVelY < 0) then
             local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
             if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
@@ -814,7 +812,6 @@ local function bhv_ghost_coin_loop(o)
         end
         ]]
     elseif o.oAction == HIDDEN_BLUE_COIN_ACT_CAUGHT then
-        djui_chat_message_create(tostring(o.oHealth))
         if o.oHealth <= 0 then
             spawn_mist_particles()
             spawn_coin_spawner(o, 5, true)
