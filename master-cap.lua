@@ -586,18 +586,15 @@ local function on_sync()
 
     if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS and levelNum ~= -1 and master_cap_data_exists(levelNum) then
         prevCoinsBest, prevTimeBest = master_cap_get_record(levelNum)
-        if prevLevelNum ~= levelNum then
-            prevLevelNum = levelNum
-            if master_cap_data_get_field(levelNum, "runActive") then
+        if master_cap_data_get_field(levelNum, "runActive") then
+            if prevLevelNum ~= levelNum then
                 set_mario_finished_master_cap(m)
-                return
             end
-
-            if hud_get_value(HUD_DISPLAY_COINS) > 0 then
-                return
-            end
+            return
         end
+        if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
         if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
+        prevLevelNum = levelNum
 
         local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
         castFloorSpawn = {x = castFloorSpawn.x, y = math.max(castFloorSpawn.y, (m.waterLevel or -0x8000) - 200), z = castFloorSpawn.z}
@@ -678,13 +675,14 @@ local function master_cap_music_update()
             audio_stream_stop(MUSIC_MASTER_CAP_END)
             stop_secondary_music(50)
             masterCapMusicFreq = 0
+            prevRunState = runState
         end
     end
 end
 
 local levelsProcessed = {}
 local function master_cap_update()
-    local m = gMarioStates[0]
+    local m = gMarioStates[0] ---@type MarioState
     gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
     master_cap_music_update()
     --if m.playerIndex ~= 0 then return end
@@ -693,10 +691,12 @@ local function master_cap_update()
     if runActive then
         m.capTimer = master_cap_data_get_field(nil, "capTimer")
         m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
-        if m and m.area ~= nil and m.area.camera ~= nil and (m.area.camera.cutscene == CUTSCENE_STAR_SPAWN) or (m.area.camera.cutscene == CUTSCENE_RED_COIN_STAR_SPAWN) then
-            disable_time_stop_including_mario()
-            m.freeze = 1
-            m.area.camera.cutscene = 0
+        if m and m.area and m.area.camera then
+            if (m.area.camera.cutscene == CUTSCENE_STAR_SPAWN) or (m.area.camera.cutscene == CUTSCENE_RED_COIN_STAR_SPAWN) then
+                disable_time_stop_including_mario()
+                m.freeze = 1
+                m.area.camera.cutscene = 0
+            end
         end
 
         if m.action ~= ACT_MASTER_CAP_RESULTS then
@@ -746,7 +746,16 @@ local function master_cap_update()
                             master_cap_stop_course(levelNum)
                             local courseNum = get_level_course_num(levelNum)
                             local isRecord = master_cap_data_get_field(levelNum, "newRecord")
-                            djui_popup_create_global(get_level_name(courseNum, levelNum, 1).."'s\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(coins) .. " | Time: " .. timestamp(master_cap_data_get_field(levelNum, "coinTimer")), isRecord and 6 or 5)
+                            local noOneInLevel = true
+                            for index = 0, MAX_PLAYERS - 1 do
+                                if levelNum == get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
+                                    noOneInLevel = false
+                                end
+                            end
+                            if noOneInLevel then
+                                local levelName = get_level_name(courseNum, levelNum, 1)
+                                djui_popup_create_global(levelName..(levelName:sub(-1):lower() == "s" and "'" or "'s").."\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(coins) .. " | Time: " .. timestamp(master_cap_data_get_field(levelNum, "coinTimer")), isRecord and 6 or 5)
+                            end
                         end
                     else
                         master_cap_data_set_field(levelNum, "stallNoPlayers", 0)

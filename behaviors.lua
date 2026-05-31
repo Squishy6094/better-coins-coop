@@ -22,10 +22,12 @@ local function hook_coins_behavior(id, override, init, loop)
 end
 
 -- Coin Magnitize Behaviors
+---@param o Object
 local function bhv_init_for_magnitize(o)
     o.oIsCarried = 0
 end
 
+---@param o Object
 local function bhv_check_for_magnitize(o)
     local m = nearest_mario_state_to_object(o)
     if not m or m.marioObj.oIntangibleTimer ~= 0 or m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
@@ -52,6 +54,12 @@ local function bhv_check_for_magnitize(o)
                 end
             end
         end
+    end
+
+    -- Sneak in ceiling check
+    local ceilHeight = find_ceil_height(o.oPosX, o.oPosY, o.oPosZ)
+    if o.oVelY > 0 and o.oPosY + (o.hitboxHeight * o.header.gfx.scale.y) >= ceilHeight then
+        o.oVelY = 0
     end
 end
 
@@ -846,3 +854,10 @@ local function bhv_boo_coin_switch_delete(o)
 end
 
 hook_coins_behavior(id_bhvBlueCoinSwitch, false, nil, bhv_boo_coin_switch_delete)
+
+local function coin_star_no_ceiling_clip(o)
+    local ceilHeight = find_ceil_height(o.oPosX, o.oPosY, o.oPosZ)
+    o.oPosY = math.min(o.oPosY + o.hitboxHeight, ceilHeight) - o.hitboxHeight
+end
+
+hook_coins_behavior(id_bhvSpawnedStarNoLevelExit, false, nil, coin_star_no_ceiling_clip)

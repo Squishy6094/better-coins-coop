@@ -89,6 +89,7 @@ local function coin_counter()
         play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
         prevNumCoinsToLifeCount = prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife
     end
+    prevNumCoinsToLifeCount = math.min(prevNumCoinsToLifeCount, m.numCoins)
 
     if (m.marioObj) then
         -- Red Coin Radar
@@ -138,12 +139,6 @@ local function coin_counter()
         gMousePosX = newMouseX
         gMousePosY = newMouseY
     end
-end
-
-local function level_init()
-    prevNumCoinsToLifeCount = 0
-    gMarioStates[0].numCoins = 0
-    coinCounter = 0
 end
 
 local saveFile = get_current_save_file_num()
@@ -273,4 +268,3 @@ hook_event(HOOK_ON_INTERACT, interact)
 hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
 hook_event(HOOK_ON_SYNC_VALID, courtyard_secret)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
-hook_event(HOOK_ON_LEVEL_INIT, level_init)
