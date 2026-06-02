@@ -78,6 +78,23 @@ hook_coin_magnitize_behavior(id_bhv1Up)
 hook_coin_magnitize_behavior(id_bhv1upSliding)
 hook_coin_magnitize_behavior(id_bhvThwomp)
 
+local function bhv_merged_acts_delete(o)
+    if gLevelValues.disableActs == true then
+        obj_mark_for_deletion(o)
+    end
+end
+
+local function bhv_merged_acts_move(o, relX, relY, relZ)
+    if gLevelValues.disableActs == true then
+        o.oPosX = o.oPosX + relX
+        o.oPosY = o.oPosY + relY
+        o.oPosZ = o.oPosZ + relZ
+        o.oHomeX = o.oHomeX + relX
+        o.oHomeY = o.oHomeY + relY
+        o.oHomeZ = o.oHomeZ + relZ
+    end
+end
+
 
 ---@param o Object
 local function bhv_moneybag_set_coins(o)
@@ -637,7 +654,10 @@ local function bhv_coins_on_damage_at_mario_loop(o)
 end
 
 hook_coins_behavior(id_bhvKingBobomb, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
-hook_coins_behavior(id_bhvWhompKingBoss, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_at_mario_loop)
+hook_coins_behavior(id_bhvWhompKingBoss, false, function (o)
+    bhv_generic_boss_coins_init(o)
+    bhv_merged_acts_move(o, 1000, 0, 1000)
+end, bhv_coins_on_damage_at_mario_loop)
 hook_coins_behavior(id_bhvBalconyBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvGhostHuntBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvMerryGoRoundBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)

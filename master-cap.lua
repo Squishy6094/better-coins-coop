@@ -899,8 +899,13 @@ end
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
---hook_event(HOOK_ON_HUD_RENDER, hud_render)
 hook_event(HOOK_ON_DEATH, on_death)
+
+------------
+-- Levels --
+------------
+
+LEVEL_MASTER_CAP_STAGE = level_register("level_master_cap_stage_entry", COURSE_NONE, "Master Cap in Paradise", "master_cap_stage", 28000, 0x28, 0x28, 0x28)
 
 -------------------
 -- API Functions --

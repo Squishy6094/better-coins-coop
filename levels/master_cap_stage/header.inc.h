@@ -1,0 +1,12 @@
+extern const GeoLayout master_cap_stage_area_1_geo[];
+extern const GeoLayout master_cap_stage_area_1[];
+extern const Collision master_cap_stage_area_1_collision[];
+extern const MacroObject master_cap_stage_area_1_macro_objs[];
+extern Lights1 master_cap_stage_dl_Material_lights;
+extern Vtx master_cap_stage_dl_Level_mesh_layer_1_vtx_cull[8];
+extern Vtx master_cap_stage_dl_Level_mesh_layer_1_vtx_0[4];
+extern Gfx master_cap_stage_dl_Level_mesh_layer_1_tri_0[];
+extern Gfx mat_master_cap_stage_dl_Material[];
+extern Gfx mat_revert_master_cap_stage_dl_Material[];
+extern Gfx master_cap_stage_dl_Level_mesh_layer_1[];
+extern Gfx master_cap_stage_dl_material_revert_render_settings[];
