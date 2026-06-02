@@ -84,12 +84,14 @@ local function coin_counter()
     hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
 
     -- Hud 
-    if hud_get_value(HUD_DISPLAY_COINS) > (prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife) then
-        m.numLives = m.numLives + 1
-        play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
-        prevNumCoinsToLifeCount = prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife
+    if gBetterCoinValues.numCoinsToLife > 0 then
+        if hud_get_value(HUD_DISPLAY_COINS) > (prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife) then
+            m.numLives = m.numLives + 1
+            play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
+            prevNumCoinsToLifeCount = prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife
+        end
+        prevNumCoinsToLifeCount = math.min(prevNumCoinsToLifeCount, m.numCoins)
     end
-    prevNumCoinsToLifeCount = math.min(prevNumCoinsToLifeCount, m.numCoins)
 
     if (m.marioObj) then
         -- Red Coin Radar
