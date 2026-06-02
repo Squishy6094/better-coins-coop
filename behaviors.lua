@@ -79,13 +79,13 @@ hook_coin_magnitize_behavior(id_bhv1upSliding)
 hook_coin_magnitize_behavior(id_bhvThwomp)
 
 local function bhv_merged_acts_delete(o)
-    if gLevelValues.disableActs == true then
+    if gLevelValues.disableActs == 1 then
         obj_mark_for_deletion(o)
     end
 end
 
 local function bhv_merged_acts_move(o, relX, relY, relZ)
-    if gLevelValues.disableActs == true then
+    if gLevelValues.disableActs == 1 then
         o.oPosX = o.oPosX + relX
         o.oPosY = o.oPosY + relY
         o.oPosZ = o.oPosZ + relZ
@@ -543,6 +543,10 @@ local function bhv_snowmans_head_coins_init(o)
         "oAction",
         "oCustomCoins",
     })
+
+    if gLevelValues.disableActs == 1 then
+        o.oPosY = find_floor(o.oPosX, o.oPosY, o.oPosZ)
+    end
 end
 
 ---@param o Object
@@ -555,6 +559,7 @@ local function bhv_snowmans_head_coins_loop(o)
 end
 
 hook_coins_behavior(id_bhvSnowmansHead, false, bhv_snowmans_head_coins_init, bhv_snowmans_head_coins_loop)
+hook_coins_behavior(id_bhvBigSnowmanWhole, false, bhv_merged_acts_delete)
 
 ---@param o Object
 local function bhv_water_pillar_init(o)
@@ -656,7 +661,7 @@ end
 hook_coins_behavior(id_bhvKingBobomb, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvWhompKingBoss, false, function (o)
     bhv_generic_boss_coins_init(o)
-    bhv_merged_acts_move(o, 1000, 0, 1000)
+    bhv_merged_acts_move(o, 400, 0, 1200)
 end, bhv_coins_on_damage_at_mario_loop)
 hook_coins_behavior(id_bhvBalconyBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvGhostHuntBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
@@ -881,3 +886,29 @@ local function coin_star_no_ceiling_clip(o)
 end
 
 hook_coins_behavior(id_bhvSpawnedStarNoLevelExit, false, nil, coin_star_no_ceiling_clip)
+
+local towerRelX = -300
+local towerRelZ = -400
+local function bhv_offset_tower(o, o2bhvID)
+    bhv_merged_acts_move(o, towerRelX, 0, towerRelZ)
+    if o2bhvID then
+        local o2 = obj_get_nearest_object_with_behavior_id(o, o2bhvID)
+        if o2 then
+            bhv_merged_acts_move(o2, towerRelX, 0, towerRelZ)
+        end
+    end
+end
+
+local function update_collision(o)
+    load_object_collision_model()
+end
+
+hook_coins_behavior(id_bhvTower, false, function(o)
+    bhv_offset_tower(o, id_bhvStar)
+end)
+hook_coins_behavior(id_bhvTowerDoor, false, function(o)
+    bhv_offset_tower(o, id_bhv1Up)
+end, update_collision)
+hook_coins_behavior(id_bhvWfSolidTowerPlatform, false, bhv_offset_tower, update_collision)
+hook_coins_behavior(id_bhvWfSlidingTowerPlatform, false, bhv_offset_tower, update_collision)
+hook_coins_behavior(id_bhvWfElevatorTowerPlatform, false, bhv_offset_tower, update_collision)
