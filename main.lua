@@ -9,8 +9,6 @@
 
 gLevelValues.previewBlueCoins = 1
 gLevelValues.respawnBlueCoinsSwitch = 1
-gLevelValues.hudCapTimer = 1
-gLevelValues.hudRedCoinsRadar = 1
 
 gGlobalSyncTable.mouseGrab = false
 gGlobalSyncTable.courtyardSecretSolved = false
@@ -18,8 +16,6 @@ gGlobalSyncTable.courtyardSecretSolved = false
 -- Handle Level and Server Settings
 gBetterCoinValues = {}
 local function on_mods_loaded()
-    -- Force Radar Off since we have our own
-
     -- Handle coin lives ourselves
     gBetterCoinValues.numCoinsToLife = gLevelValues.numCoinsToLife
     gLevelValues.numCoinsToLife = 0
@@ -29,7 +25,6 @@ hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
 
 gMousePosX = 0
 gMousePosY = 0
-
 
 gMarioCoinRange = {}
 for i = 0, MAX_PLAYERS - 1 do
@@ -82,6 +77,7 @@ local function coin_counter()
 
     customCoinHudValue = math.min(math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.1)), m.numCoins)
     hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
+    gLevelValues.hudCapTimer = 1
 
     -- Hud 
     if gBetterCoinValues.numCoinsToLife > 0 then

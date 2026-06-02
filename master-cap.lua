@@ -684,6 +684,15 @@ local levelsProcessed = {}
 local function master_cap_update()
     local m = gMarioStates[0] ---@type MarioState
     gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
+
+    if m.controller.buttonPressed & D_JPAD ~= 0 then
+        if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS then
+            warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
+        else
+            djui_chat_message_create(tostring("nope"))
+        end
+    end
+
     master_cap_music_update()
     --if m.playerIndex ~= 0 then return end
     -- Locally Apply Master Cap

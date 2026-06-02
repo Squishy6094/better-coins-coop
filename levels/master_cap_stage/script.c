@@ -22,14 +22,14 @@ const LevelScript level_master_cap_stage_entry[] = {
 	LOAD_MIO0(0x7, _master_cap_stage_segment_7SegmentRomStart, _master_cap_stage_segment_7SegmentRomEnd), 
 	LOAD_MIO0(0xa, _water_skybox_mio0SegmentRomStart, _water_skybox_mio0SegmentRomEnd), 
 	ALLOC_LEVEL_POOL(),
-	MARIO(MODEL_MARIO, 0x00000001, bhvMario),
+	MARIO(MODEL_MARIO, 0x00000001, bhvMario), 
 	/* Fast64 begin persistent block [level commands] */
 	/* Fast64 end persistent block [level commands] */
 
 	AREA(1, master_cap_stage_area_1),
-		WARP_NODE(0x0A, LEVEL_BOB, 0x01, 0x0A, WARP_NO_CHECKPOINT),
-		WARP_NODE(0xF0, LEVEL_BOB, 0x01, 0x0A, WARP_NO_CHECKPOINT),
-		WARP_NODE(0xF1, LEVEL_BOB, 0x01, 0x0A, WARP_NO_CHECKPOINT),
+		WARP_NODE(0x0A, LEVEL_CASTLE_GROUNDS, 0x01, 0x0A, WARP_NO_CHECKPOINT),
+		WARP_NODE(0xF0, LEVEL_CASTLE_GROUNDS, 0x01, 0x0A, WARP_NO_CHECKPOINT),
+		WARP_NODE(0xF1, LEVEL_CASTLE_GROUNDS, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		MARIO_POS(0x01, 0, 0, 200, 0),
 		OBJECT(MODEL_NONE, 0, 200, 0, 0, 0, 0, 0x000A0000, bhvSpinAirborneWarp),
 		TERRAIN(master_cap_stage_area_1_collision),
