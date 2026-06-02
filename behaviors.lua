@@ -867,7 +867,7 @@ local function bhv_boo_coin_switch_delete(o)
         local isActive = false
         local oHiddenBlueCoin = obj_get_first_with_behavior_id(id_bhvHiddenBlueCoin)
         while oHiddenBlueCoin ~= nil do
-            if not is_object_being_carried(oHiddenBlueCoin) then
+            if oHiddenBlueCoin.oHiddenBlueCoinSwitch == o and not is_object_being_carried(oHiddenBlueCoin) then
                 isActive = true
             end
             oHiddenBlueCoin = obj_get_next_with_same_behavior_id(oHiddenBlueCoin)
