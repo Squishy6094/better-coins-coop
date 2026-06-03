@@ -1,33 +1,41 @@
-Lights1 master_cap_stage_dl_Material_lights = gdSPDefLights1(
+Lights1 master_cap_stage_dl_Base_Material_lights = gdSPDefLights1(
 	0x7F, 0x7F, 0x7F,
 	0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28);
 
 Vtx master_cap_stage_dl_Level_mesh_layer_1_vtx_cull[8] = {
-	{{{-500, 0, 500}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
-	{{{-500, 0, 500}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
-	{{{-500, 0, -500}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
-	{{{-500, 0, -500}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
-	{{{500, 0, 500}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
-	{{{500, 0, 500}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
-	{{{500, 0, -500}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
-	{{{500, 0, -500}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
+	{{{-500, 0, 200}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
+	{{{-500, 0, 200}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
+	{{{-500, 0, -2000}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
+	{{{-500, 0, -2000}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
+	{{{500, 0, 200}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
+	{{{500, 0, 200}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
+	{{{500, 0, -2000}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
+	{{{500, 0, -2000}, 0, {0, 0}, {0x00, 0x00, 0x00, 0x00}}},
 };
 
-Vtx master_cap_stage_dl_Level_mesh_layer_1_vtx_0[4] = {
-	{{{500, 0, -500}, 0, {624, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
-	{{{-500, 0, -500}, 0, {880, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
-	{{{-500, 0, 500}, 0, {880, 240}, {0x00, 0x7F, 0x00, 0xFF}}},
-	{{{500, 0, 500}, 0, {624, 240}, {0x00, 0x7F, 0x00, 0xFF}}},
+Vtx master_cap_stage_dl_Level_mesh_layer_1_vtx_0[10] = {
+	{{{300, 0, -1000}, 0, {624, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
+	{{{-300, 0, -1000}, 0, {880, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
+	{{{-300, 0, 200}, 0, {880, 240}, {0x00, 0x7F, 0x00, 0xFF}}},
+	{{{300, 0, 200}, 0, {624, 240}, {0x00, 0x7F, 0x00, 0xFF}}},
+	{{{-500, 0, -2000}, 0, {880, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
+	{{{-500, 0, -1000}, 0, {880, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
+	{{{-300, 0, -1000}, 0, {795, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
+	{{{300, 0, -1000}, 0, {709, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
+	{{{500, 0, -2000}, 0, {624, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
+	{{{500, 0, -1000}, 0, {624, 496}, {0x00, 0x7F, 0x00, 0xFF}}},
 };
 
 Gfx master_cap_stage_dl_Level_mesh_layer_1_tri_0[] = {
-	gsSPVertex(master_cap_stage_dl_Level_mesh_layer_1_vtx_0 + 0, 4, 0),
+	gsSPVertex(master_cap_stage_dl_Level_mesh_layer_1_vtx_0 + 0, 10, 0),
 	gsSP2Triangles(0, 1, 2, 0, 0, 2, 3, 0),
+	gsSP2Triangles(4, 5, 6, 0, 4, 6, 7, 0),
+	gsSP2Triangles(7, 8, 4, 0, 7, 9, 8, 0),
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_master_cap_stage_dl_Material[] = {
-	gsSPSetLights1(master_cap_stage_dl_Material_lights),
+Gfx mat_master_cap_stage_dl_Base_Material[] = {
+	gsSPSetLights1(master_cap_stage_dl_Base_Material_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
 	gsDPSetAlphaDither(G_AD_NOISE),
@@ -35,7 +43,7 @@ Gfx mat_master_cap_stage_dl_Material[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_revert_master_cap_stage_dl_Material[] = {
+Gfx mat_revert_master_cap_stage_dl_Base_Material[] = {
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsSPEndDisplayList(),
@@ -46,9 +54,9 @@ Gfx master_cap_stage_dl_Level_mesh_layer_1[] = {
 	gsSPVertex(master_cap_stage_dl_Level_mesh_layer_1_vtx_cull + 0, 8, 0),
 	gsSPSetGeometryMode(G_LIGHTING),
 	gsSPCullDisplayList(0, 7),
-	gsSPDisplayList(mat_master_cap_stage_dl_Material),
+	gsSPDisplayList(mat_master_cap_stage_dl_Base_Material),
 	gsSPDisplayList(master_cap_stage_dl_Level_mesh_layer_1_tri_0),
-	gsSPDisplayList(mat_revert_master_cap_stage_dl_Material),
+	gsSPDisplayList(mat_revert_master_cap_stage_dl_Base_Material),
 	gsSPEndDisplayList(),
 };
 

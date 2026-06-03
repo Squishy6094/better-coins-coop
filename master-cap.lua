@@ -1,3 +1,5 @@
+LEVEL_MASTER_CAP_STAGE = level_register("level_master_cap_stage_entry", COURSE_NONE, "Master Cap in Paradise", "master_cap_stage", 28000, 0x28, 0x28, 0x28)
+
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
 local MUSIC_MASTER_CAP_END = audio_stream_load("music-master-cap-end.ogg")
 
@@ -74,6 +76,7 @@ end
 for i = 0, LEVEL_COUNT do
     master_cap_init_level(i)
 end
+master_cap_init_level(LEVEL_MASTER_CAP_STAGE)
 
 function master_cap_data_exists(levelNum)
     levelNum = get_merged_level_num(levelNum)
@@ -571,8 +574,56 @@ end
 
 local E_MODEL_MASTER_CAP = smlua_model_util_get_id("master_box_geo")
 
+local masterCapSpawns = {
+    ["sm64"] = {
+        [LEVEL_BOB] = {x = -6700, y = 350, z = 4600},
+    }
+}
+
+if not masterCapSpawns[CURR_ROMHACK] then
+    masterCapSpawns[CURR_ROMHACK] = {}
+end
+
+local function master_cap_set_box_spawn(level, x, y, z)
+    masterCapSpawns[CURR_ROMHACK][level] = {x = x, y = y, z = z}
+end
+master_cap_set_box_spawn(LEVEL_MASTER_CAP_STAGE, 0, 350, -1500)
+
 local nearestObjPos = {x = 0, y = 0, z = 0}
 local capSpawnRadius = 400
+local function find_master_cap_spawn_position(m)
+    local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
+    castFloorSpawn = {x = castFloorSpawn.x, y = math.max(castFloorSpawn.y, (m.waterLevel or -0x8000) - 200), z = castFloorSpawn.z}
+    nearestObjPos.x = m.pos.x
+    nearestObjPos.y = 0x8000
+    nearestObjPos.z = m.pos.z
+    local prevDist = 0x8000
+    for i = 0, NUM_OBJ_LISTS - 1 do
+        if i ~= OBJ_LIST_PLAYER then
+            local o = obj_get_first(i)
+            while o ~= nil do
+                if obj_has_model_extended(o, E_MODEL_NONE) == 0 and (m.waterLevel == nil or o.oPosY > m.waterLevel) then
+                    local currDist = math.sqrt((castFloorSpawn.x - o.oPosX)^2 + (castFloorSpawn.y - o.oPosY)^2 + (nearestObjPos.z - o.oPosZ)^2)
+                    if (currDist < prevDist) then
+                        nearestObjPos.x = o.oPosX
+                        nearestObjPos.y = o.oPosY
+                        nearestObjPos.z = o.oPosZ
+                        prevDist = math.sqrt((castFloorSpawn.x - nearestObjPos.x)^2 + (castFloorSpawn.y - nearestObjPos.y)^2 + (castFloorSpawn.z - nearestObjPos.z)^2)
+                    end
+                end
+                o = obj_get_next(o)
+            end
+        end
+    end
+
+    nearestObjPos = (collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, nearestObjPos.x - m.pos.x, nearestObjPos.y - m.pos.y, nearestObjPos.z - m.pos.z, 128).hitPos)
+
+    local objX = math.clamp(math.lerp(castFloorSpawn.x, nearestObjPos.x, 0.5), castFloorSpawn.x - capSpawnRadius, castFloorSpawn.x + capSpawnRadius)
+    local objY = math.clamp(nearestObjPos.y, castFloorSpawn.y - 300, castFloorSpawn.y) + 300
+    local objZ = math.clamp(math.lerp(castFloorSpawn.z, nearestObjPos.z, 0.5), castFloorSpawn.z - capSpawnRadius, castFloorSpawn.z + capSpawnRadius)
+    return {x = objX, y = objY, z = objZ}
+end
+
 local prevCoinsBest = 0
 local prevTimeBest = 0
 local prevLevelNum = 0
@@ -596,36 +647,17 @@ local function on_sync()
         if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
         prevLevelNum = levelNum
 
-        local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
-        castFloorSpawn = {x = castFloorSpawn.x, y = math.max(castFloorSpawn.y, (m.waterLevel or -0x8000) - 200), z = castFloorSpawn.z}
-        nearestObjPos.x = m.pos.x
-        nearestObjPos.y = 0x8000
-        nearestObjPos.z = m.pos.z
-        local prevDist = 0x8000
-        for i = 0, NUM_OBJ_LISTS - 1 do
-            if i ~= OBJ_LIST_PLAYER then
-                local o = obj_get_first(i)
-                while o ~= nil do
-                    if obj_has_model_extended(o, E_MODEL_NONE) == 0 and (m.waterLevel == nil or o.oPosY > m.waterLevel) then
-                        local currDist = math.sqrt((castFloorSpawn.x - o.oPosX)^2 + (castFloorSpawn.y - o.oPosY)^2 + (nearestObjPos.z - o.oPosZ)^2)
-                        if (currDist < prevDist) then
-                            nearestObjPos.x = o.oPosX
-                            nearestObjPos.y = o.oPosY
-                            nearestObjPos.z = o.oPosZ
-                            prevDist = math.sqrt((castFloorSpawn.x - nearestObjPos.x)^2 + (castFloorSpawn.y - nearestObjPos.y)^2 + (castFloorSpawn.z - nearestObjPos.z)^2)
-                        end
-                    end
-                    o = obj_get_next(o)
-                end
-            end
+        if not masterCapSpawns[CURR_ROMHACK][levelNum] then
+            masterCapSpawns[CURR_ROMHACK][levelNum] = find_master_cap_spawn_position(m)
         end
 
-        nearestObjPos = (collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, nearestObjPos.x - m.pos.x, nearestObjPos.y - m.pos.y, nearestObjPos.z - m.pos.z, 128).hitPos)
-
-        local objX = math.clamp(math.lerp(castFloorSpawn.x, nearestObjPos.x, 0.5), castFloorSpawn.x - capSpawnRadius, castFloorSpawn.x + capSpawnRadius)
-        local objY = math.clamp(nearestObjPos.y, castFloorSpawn.y - 300, castFloorSpawn.y) + 300
-        local objZ = math.clamp(math.lerp(castFloorSpawn.z, nearestObjPos.z, 0.5), castFloorSpawn.z - capSpawnRadius, castFloorSpawn.z + capSpawnRadius)
-        spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, objX, objY, objZ, function (o) end)
+        spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, 
+            masterCapSpawns[CURR_ROMHACK][levelNum].x, 
+            masterCapSpawns[CURR_ROMHACK][levelNum].y, 
+            masterCapSpawns[CURR_ROMHACK][levelNum].z, function (o)
+                o.oFaceAngleYaw = math.s16(gLakituState.yaw + 0x4000)
+                o.oMoveAngleYaw = o.oFaceAngleYaw
+            end)
     end
 end
 
@@ -685,7 +717,7 @@ local function master_cap_update()
     local m = gMarioStates[0] ---@type MarioState
     gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
 
-    if m.controller.buttonPressed & D_JPAD ~= 0 then
+    if m.controller.buttonPressed & X_BUTTON ~= 0 then
         if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS then
             warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
         else
@@ -909,12 +941,6 @@ hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_DEATH, on_death)
-
-------------
--- Levels --
-------------
-
-LEVEL_MASTER_CAP_STAGE = level_register("level_master_cap_stage_entry", COURSE_NONE, "Master Cap in Paradise", "master_cap_stage", 28000, 0x28, 0x28, 0x28)
 
 -------------------
 -- API Functions --
