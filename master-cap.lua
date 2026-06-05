@@ -580,6 +580,7 @@ local masterCapSpawns = {
     }
 }
 
+    log_to_console("hack "..CURR_ROMHACK)
 if not masterCapSpawns[CURR_ROMHACK] then
     masterCapSpawns[CURR_ROMHACK] = {}
 end
@@ -628,6 +629,7 @@ local prevCoinsBest = 0
 local prevTimeBest = 0
 local prevLevelNum = 0
 local function on_sync()
+    if GAMEMODE_ACTIVE then return end
     if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS then
         gLevelValues.disableActs = true
     end

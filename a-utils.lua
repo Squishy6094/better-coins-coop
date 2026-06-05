@@ -2,23 +2,28 @@
 oTagLib = require("libs/oTagLib")
 
 CURR_ROMHACK = "sm64"
+GAMEMODE_ACTIVE = false
 
-local function get_romhack_name()
-    for i in pairs(gActiveMods) do
-        local mod = gActiveMods[i]
-        if mod.incompatible ~= nil then
-            if mod.incompatible:find("romhack") then
-                CURR_ROMHACK = mod.relativePath
-            end
+for i in pairs(gActiveMods) do
+    local mod = gActiveMods[i]
+    if mod.incompatible ~= nil then
+        if mod.incompatible:find("romhack") then
+            CURR_ROMHACK = mod.relativePath
         end
-        if mod.category ~= nil then
-            if mod.category:find("romhack") then
-                CURR_ROMHACK = mod.relativePath
-            end
+        if mod.incompatible:find("gamemode") then
+            GAMEMODE_ACTIVE = true
         end
-        CURR_ROMHACK = CURR_ROMHACK:gsub("[/\\]+$", "")
-        CURR_ROMHACK = CURR_ROMHACK:gsub(".*[/\\]", "")
     end
+    if mod.category ~= nil then
+        if mod.category:find("romhack") then
+            CURR_ROMHACK = mod.relativePath
+        end
+        if mod.category:find("gamemode") then
+            GAMEMODE_ACTIVE = true
+        end
+    end
+    CURR_ROMHACK = CURR_ROMHACK:gsub("[/\\]+$", "")
+    CURR_ROMHACK = CURR_ROMHACK:gsub(".*[/\\]", "")
 end
 
 
@@ -281,8 +286,6 @@ end
 --------------------------
 
 local function on_mods_loaded()
-
-get_romhack_name()
 
 local sLevelTable = {
     LEVEL_BBH,
