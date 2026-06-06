@@ -8,6 +8,26 @@ audio_stream_set_looping(MUSIC_MASTER_CAP, true)
 audio_stream_set_loop_points(MUSIC_MASTER_CAP_END, 000917230, 003175168)
 audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
 
+
+local function save_file_prefix(str)
+    return "saveFile"..tostring(get_current_save_file_num())..(save_file_get_using_backup_slot() and "B" or "")..str
+end
+
+local function update_save()
+    if not network_is_server() then return end
+    if save_file_get_flags() < mod_storage_load_number(save_file_prefix("progress"), 0) then
+        -- Assume if progress is lost, that the save had been deleted
+        log_to_console("Better Coins: Save Data Lost, Deleting Custom Save Flags!", CONSOLE_MESSAGE_WARNING)
+        mod_storage_remove(save_file_prefix("defeatFinalBowser"))
+        mod_storage_remove(save_file_prefix("unlockedMasterCap"))
+    end
+    mod_storage_save_integer(save_file_prefix("progress"), save_file_get_flags())
+
+    gGlobalSyncTable.defeatFinalBowser = mod_storage_load_bool(save_file_prefix("defeatFinalBowser"), false)
+    gGlobalSyncTable.unlockedMasterCap = mod_storage_load_bool(save_file_prefix("unlockedMasterCap"), false)
+end
+update_save()
+
 local levelMerge = {
     [LEVEL_BOWSER_1] = LEVEL_BITDW,
     [LEVEL_BOWSER_2] = LEVEL_BITFS,
@@ -35,10 +55,6 @@ local MASTER_CAP_BOX_SCALE = 3
 local recordPrefixCoins = "bestCoins"
 local recordPrefixTime = "bestTime"
 
-local PACKET_TYPE_MASTER_CAP_START = 1
-local PACKET_TYPE_MASTER_CAP_STOP = 2
-local PACKET_TYPE_MASTER_CAP_COIN = 3
-local PACKET_TYPE_MASTER_CAP_UPDATE = 4
 gMasterCapServerState = {}
 
 local maxRomhackCheck = LEVEL_COUNT
@@ -68,8 +84,8 @@ local function master_cap_init_level(levelNum)
         local level = tostring(saveLevelNum)
         local coinSave = romhack .. recordPrefixCoins .. level
         local timeSave = romhack .. recordPrefixTime .. level
-        gGlobalSyncTable[coinSave] = tonumber(mod_storage_load(coinSave)) or 0
-        gGlobalSyncTable[timeSave] = tonumber(mod_storage_load(timeSave)) or 0
+        gGlobalSyncTable[coinSave] = mod_storage_load_number(coinSave, 0)
+        gGlobalSyncTable[timeSave] = mod_storage_load_number(timeSave, 0)
     end
 end
 
@@ -127,7 +143,10 @@ function network_player_master_cap_count(currLevel)
     return count
 end
 
-
+local PACKET_TYPE_MASTER_CAP_START = 1
+local PACKET_TYPE_MASTER_CAP_STOP = 2
+local PACKET_TYPE_MASTER_CAP_COIN = 3
+local PACKET_TYPE_MASTER_CAP_UPDATE = 4
 function master_cap_start_course(levelNum, noSync)
     levelNum = get_merged_level_num(levelNum)
     masterCapMusicFreq = 1
@@ -715,9 +734,30 @@ local function master_cap_music_update()
 end
 
 local levelsProcessed = {}
+local prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
+local prevFileProgress = save_file_get_flags()
 local function master_cap_update()
     local m = gMarioStates[0] ---@type MarioState
     gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
+
+    -- Check for Defeating Final Bowser
+    if m.action == ACT_JUMBO_STAR_CUTSCENE then
+        gGlobalSyncTable.defeatFinalBowser = true
+        djui_chat_message_create("set bowser")
+    end
+    if network_is_server() then
+        -- Saves if someone has defeated bowser
+        if prevBowserBeat ~= gGlobalSyncTable.defeatFinalBowser then
+            prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
+            mod_storage_save_bool(save_file_prefix("defeatFinalBowser"), true)
+            djui_chat_message_create("save bowser")
+        end
+
+        -- Saves progress updating and saving
+        if not get_save_file_modified() and save_file_get_flags() > prevFileProgress then
+            update_save()
+        end
+    end
 
     if m.controller.buttonPressed & X_BUTTON ~= 0 then
         if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS then
@@ -725,6 +765,10 @@ local function master_cap_update()
         else
             djui_chat_message_create(tostring("nope"))
         end
+    end
+
+    if m.controller.buttonPressed & Y_BUTTON ~= 0 then
+        set_mario_action(m, ACT_JUMBO_STAR_CUTSCENE, 0)
     end
 
     master_cap_music_update()
