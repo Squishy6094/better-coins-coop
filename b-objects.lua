@@ -1,9 +1,4 @@
----@class Object
----@field oIsCarried integer
----@field oQueueCarry integer
-define_custom_obj_fields({
-    oIsCarried = "u32",
-})
+
 
 --- @param m MarioState
 --- @param o Object

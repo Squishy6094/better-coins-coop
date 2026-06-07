@@ -2,3 +2,4 @@
 libs/profiler.lua
 *.blend1
 *.lvl
+*.bin

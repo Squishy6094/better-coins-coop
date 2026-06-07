@@ -26,6 +26,24 @@ for i in pairs(gActiveMods) do
     CURR_ROMHACK = CURR_ROMHACK:gsub(".*[/\\]", "")
 end
 
+---@class Object
+---@field oIsCarried integer
+---@field oCustomCoins integer
+---@field oThwompGroundPounded integer
+---@field oThwompHitstun integer
+---@field oHitMario integer
+---@field oPrevHealth number
+---@field oBooCoinFace integer
+define_custom_obj_fields({
+    oIsCarried = "u32",
+    oCustomCoins = "u32",
+    oThwompGroundPounded = "u32",
+    oThwompHitstun = "u32",
+    oThwompPrevAngle = "u32",
+    oHitMario = "u32",
+    oPrevHealth = "f32",
+    oBooCoinFace = "u32",
+})
 
 --- @param obj Object
 --- Replacement for DROP_TO_FLOOR()

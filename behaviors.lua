@@ -1,17 +1,3 @@
----@class Object
----@field oCustomCoins integer
----@field oThwompGroundPounded integer
----@field oThwompHitstun integer
----@field oHitMario integer
----@field oPrevHealth number
-define_custom_obj_fields({
-    oCustomCoins = "u32",
-    oThwompGroundPounded = "u32",
-    oThwompHitstun = "u32",
-    oThwompPrevAngle = "u32",
-    oHitMario = "u32",
-    oPrevHealth = "f32",
-})
 
 ---@param id BehaviorId|number
 ---@param override boolean
@@ -751,6 +737,23 @@ end
 
 hook_coins_behavior(id_bhvKickableBoard, false, bhv_kickable_board_coins_init, bhv_kickable_board_coins_loop)
 
+-- Boo Coins --
+_G.HIDDEN_BLUE_COIN_ACT_CAUGHT = 3
+local E_MODEL_BOO_COIN = smlua_model_util_get_id("boo_coin_geo")
+
+function bhv_boo_coin_switch(node, matStackIndex)
+    local asSwitchNode = cast_graph_node(node)
+    local o = geo_get_current_object()
+    local toNode = 0
+    
+    if o.oAction ~= HIDDEN_BLUE_COIN_ACT_CAUGHT then
+        toNode = (1 + math.floor(o.oAnimState*0.5)%4 + 4*o.oBooCoinFace)
+    end
+
+    asSwitchNode.selectedCase = toNode
+    return 0
+end
+
 ---@param o Object
 local function bhv_ghost_coin_init(o)
     --o.oInteractType = INTERACT_COIN
@@ -760,17 +763,18 @@ local function bhv_ghost_coin_init(o)
     o.hitboxHeight = 64
     o.oDamageOrCoinValue = 5
     o.oIntangibleTimer = -1
-    o.oAnimState = -1
     o.oHealth = 15
 
     o.oHomeX = o.oPosX
     o.oHomeY = o.oPosY
     o.oHomeZ = o.oPosZ
 
-    obj_set_model_extended(o, E_MODEL_BOO)
-end
+    o.oIsCarried = 0
+    o.oBooCoinFace = math.random(0, 4)
 
-_G.HIDDEN_BLUE_COIN_ACT_CAUGHT = 3
+    obj_set_model_extended(o, E_MODEL_BOO_COIN)
+    obj_scale(o, 1.3)
+end
 
 ---@param o Object
 local function bhv_ghost_coin_loop(o)
@@ -858,6 +862,7 @@ local function bhv_ghost_coin_loop(o)
 
     o.oIntangibleTimer = -1
     o.oInteractStatus = 0;
+    o.oAnimState = o.oAnimState + 1
 end
 
 hook_coins_behavior(id_bhvHiddenBlueCoin, true, bhv_ghost_coin_init, bhv_ghost_coin_loop)

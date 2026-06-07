@@ -760,7 +760,7 @@ local function master_cap_update()
     end
 
     if m.controller.buttonPressed & X_BUTTON ~= 0 then
-        if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS then
+        if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS and gGlobalSyncTable.defeatFinalBowser then
             warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
         else
             djui_chat_message_create(tostring("nope"))
