@@ -2536,24 +2536,24 @@ Texture boo_coin_Boo_Coins_Dizzy3_pal_rgba16[] = {
 	
 };
 
-Vtx boo_coin_dl_mesh_layer_4_vtx_0[4] = {
+Vtx boo_coin_dl_mesh_layer_5_vtx_0[4] = {
 	{{{-50, -1, 0}, 0, {-16, 1008}, {0x00, 0x00, 0x7F, 0xFF}}},
 	{{{51, -1, 0}, 0, {976, 1008}, {0x00, 0x00, 0x7F, 0xFF}}},
 	{{{51, 100, 0}, 0, {976, 16}, {0x00, 0x00, 0x7F, 0xFF}}},
 	{{{-50, 100, 0}, 0, {-16, 16}, {0x00, 0x00, 0x7F, 0xFF}}},
 };
 
-Gfx boo_coin_dl_mesh_layer_4_tri_0[] = {
-	gsSPVertex(boo_coin_dl_mesh_layer_4_vtx_0 + 0, 4, 0),
+Gfx boo_coin_dl_mesh_layer_5_tri_0[] = {
+	gsSPVertex(boo_coin_dl_mesh_layer_5_vtx_0 + 0, 4, 0),
 	gsSP2Triangles(0, 1, 2, 0, 0, 2, 3, 0),
 	gsSPEndDisplayList(),
 };
 
 
 Gfx mat_boo_coin_Boo_Coins_Shy[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2569,7 +2569,7 @@ Gfx mat_boo_coin_Boo_Coins_Shy[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Shy[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2577,9 +2577,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Shy[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Joyous1[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2595,7 +2595,7 @@ Gfx mat_boo_coin_Boo_Coins_Joyous1[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Joyous1[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2603,9 +2603,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Joyous1[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Joyous2[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2621,7 +2621,7 @@ Gfx mat_boo_coin_Boo_Coins_Joyous2[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Joyous2[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2629,9 +2629,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Joyous2[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Joyous3[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2647,7 +2647,7 @@ Gfx mat_boo_coin_Boo_Coins_Joyous3[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Joyous3[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2655,9 +2655,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Joyous3[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Side[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, boo_coin_Boo_Coins_Side_ia8),
@@ -2669,16 +2669,16 @@ Gfx mat_boo_coin_Boo_Coins_Side[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Side[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsSPEndDisplayList(),
 };
 
 Gfx mat_boo_coin_Boo_Coins_Smug1[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, boo_coin_Boo_Coins_Smug1_ia8),
@@ -2690,16 +2690,16 @@ Gfx mat_boo_coin_Boo_Coins_Smug1[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Smug1[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsSPEndDisplayList(),
 };
 
 Gfx mat_boo_coin_Boo_Coins_Smug2[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, boo_coin_Boo_Coins_Smug2_ia8),
@@ -2711,16 +2711,16 @@ Gfx mat_boo_coin_Boo_Coins_Smug2[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Smug2[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsSPEndDisplayList(),
 };
 
 Gfx mat_boo_coin_Boo_Coins_Smug3[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, boo_coin_Boo_Coins_Smug3_ia8),
@@ -2732,16 +2732,16 @@ Gfx mat_boo_coin_Boo_Coins_Smug3[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Smug3[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsSPEndDisplayList(),
 };
 
 Gfx mat_boo_coin_Boo_Coins_Tongue1[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2757,7 +2757,7 @@ Gfx mat_boo_coin_Boo_Coins_Tongue1[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Tongue1[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2765,9 +2765,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Tongue1[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Tongue2[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2783,7 +2783,7 @@ Gfx mat_boo_coin_Boo_Coins_Tongue2[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Tongue2[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2791,9 +2791,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Tongue2[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Tongue3[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2809,7 +2809,7 @@ Gfx mat_boo_coin_Boo_Coins_Tongue3[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Tongue3[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2817,9 +2817,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Tongue3[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Blah1[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2835,7 +2835,7 @@ Gfx mat_boo_coin_Boo_Coins_Blah1[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Blah1[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2843,9 +2843,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Blah1[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Blah2[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2861,7 +2861,7 @@ Gfx mat_boo_coin_Boo_Coins_Blah2[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Blah2[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2869,9 +2869,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Blah2[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Blah3[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2887,7 +2887,7 @@ Gfx mat_boo_coin_Boo_Coins_Blah3[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Blah3[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2895,9 +2895,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Blah3[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Dizzy1[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2913,7 +2913,7 @@ Gfx mat_boo_coin_Boo_Coins_Dizzy1[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Dizzy1[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2921,9 +2921,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Dizzy1[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Dizzy2[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2939,7 +2939,7 @@ Gfx mat_boo_coin_Boo_Coins_Dizzy2[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Dizzy2[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
@@ -2947,9 +2947,9 @@ Gfx mat_revert_boo_coin_Boo_Coins_Dizzy2[] = {
 };
 
 Gfx mat_boo_coin_Boo_Coins_Dizzy3[] = {
-	gsSPClearGeometryMode(G_CULL_BACK),
+	gsSPClearGeometryMode(G_SHADE),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetCombineLERP(1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0, 1, 0, TEXEL0, 0, TEXEL0, 0, ENVIRONMENT, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
@@ -2965,16 +2965,16 @@ Gfx mat_boo_coin_Boo_Coins_Dizzy3[] = {
 };
 
 Gfx mat_revert_boo_coin_Boo_Coins_Dizzy3[] = {
-	gsSPSetGeometryMode(G_CULL_BACK),
+	gsSPSetGeometryMode(G_SHADE),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4[] = {
+Gfx boo_coin_dl_mesh_layer_5[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Shy),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Shy),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -2986,9 +2986,9 @@ Gfx boo_coin_dl_mesh_layer_4[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Joyous1_0[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Joyous1_0[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Joyous1),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Joyous1),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3000,9 +3000,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Joyous1_0[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Joyous2_1[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Joyous2_1[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Joyous2),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Joyous2),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3014,9 +3014,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Joyous2_1[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Joyous3_2[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Joyous3_2[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Joyous3),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Joyous3),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3028,9 +3028,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Joyous3_2[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Side_3[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Side_3[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Side),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Side),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3042,9 +3042,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Side_3[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Smug1_4[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Smug1_4[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Smug1),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Smug1),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3056,9 +3056,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Smug1_4[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Smug2_5[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Smug2_5[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Smug2),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Smug2),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3070,9 +3070,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Smug2_5[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Smug3_6[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Smug3_6[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Smug3),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Smug3),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3084,9 +3084,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Smug3_6[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Tongue1_7[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Tongue1_7[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Tongue1),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Tongue1),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3098,9 +3098,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Tongue1_7[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Tongue2_8[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Tongue2_8[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Tongue2),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Tongue2),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3112,9 +3112,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Tongue2_8[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Tongue3_9[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Tongue3_9[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Tongue3),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Tongue3),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3126,9 +3126,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Tongue3_9[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Blah1_10[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Blah1_10[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Blah1),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Blah1),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3140,9 +3140,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Blah1_10[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Blah2_11[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Blah2_11[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Blah2),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Blah2),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3154,9 +3154,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Blah2_11[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Blah3_12[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Blah3_12[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Blah3),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Blah3),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3168,9 +3168,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Blah3_12[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Dizzy1_13[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Dizzy1_13[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Dizzy1),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Dizzy1),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3182,9 +3182,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Dizzy1_13[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Dizzy2_14[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Dizzy2_14[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Dizzy2),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Dizzy2),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
@@ -3196,9 +3196,9 @@ Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Dizzy2_14[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx boo_coin_dl_mesh_layer_4_mat_override_Boo_Coins_Dizzy3_15[] = {
+Gfx boo_coin_dl_mesh_layer_5_mat_override_Boo_Coins_Dizzy3_15[] = {
 	gsSPDisplayList(mat_boo_coin_Boo_Coins_Dizzy3),
-	gsSPDisplayList(boo_coin_dl_mesh_layer_4_tri_0),
+	gsSPDisplayList(boo_coin_dl_mesh_layer_5_tri_0),
 	gsSPDisplayList(mat_revert_boo_coin_Boo_Coins_Dizzy3),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),

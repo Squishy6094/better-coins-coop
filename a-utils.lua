@@ -34,6 +34,7 @@ end
 ---@field oHitMario integer
 ---@field oPrevHealth number
 ---@field oBooCoinFace integer
+---@field oBooCoinAnimState integer
 define_custom_obj_fields({
     oIsCarried = "u32",
     oCustomCoins = "u32",
@@ -43,6 +44,7 @@ define_custom_obj_fields({
     oHitMario = "u32",
     oPrevHealth = "f32",
     oBooCoinFace = "u32",
+    oBooCoinAnimState = "u32",
 })
 
 --- @param obj Object

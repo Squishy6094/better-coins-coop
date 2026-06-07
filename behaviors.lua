@@ -747,11 +747,17 @@ function bhv_boo_coin_switch(node, matStackIndex)
     local toNode = 0
     
     if o.oAction ~= HIDDEN_BLUE_COIN_ACT_CAUGHT then
-        toNode = (1 + math.floor(o.oAnimState*0.5)%4 + 4*o.oBooCoinFace)
+        toNode = (1 + math.floor(o.oBooCoinAnimState*0.5)%4 + 4*o.oBooCoinFace)
     end
 
     asSwitchNode.selectedCase = toNode
-    return 0
+end
+
+function bhv_boo_coin_shadow_solidity(node, matStackIndex)
+    local asSwitchNode = cast_graph_node(node.next)
+    local o = geo_get_current_object()
+    
+    asSwitchNode.shadowSolidity = o.oOpacity*0.7
 end
 
 ---@param o Object
@@ -862,7 +868,7 @@ local function bhv_ghost_coin_loop(o)
 
     o.oIntangibleTimer = -1
     o.oInteractStatus = 0;
-    o.oAnimState = o.oAnimState + 1
+    o.oBooCoinAnimState = o.oBooCoinAnimState + 1
 end
 
 hook_coins_behavior(id_bhvHiddenBlueCoin, true, bhv_ghost_coin_init, bhv_ghost_coin_loop)
