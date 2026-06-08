@@ -743,14 +743,12 @@ local function master_cap_update()
     -- Check for Defeating Final Bowser
     if m.action == ACT_JUMBO_STAR_CUTSCENE then
         gGlobalSyncTable.defeatFinalBowser = true
-        djui_chat_message_create("set bowser")
     end
     if network_is_server() then
         -- Saves if someone has defeated bowser
         if prevBowserBeat ~= gGlobalSyncTable.defeatFinalBowser then
             prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
             mod_storage_save_bool(save_file_prefix("defeatFinalBowser"), true)
-            djui_chat_message_create("save bowser")
         end
 
         -- Saves progress updating and saving
@@ -760,16 +758,21 @@ local function master_cap_update()
     end
 
     if m.controller.buttonPressed & X_BUTTON ~= 0 then
+        warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
+        --[[
         if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS and gGlobalSyncTable.defeatFinalBowser then
             warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
         else
             djui_chat_message_create(tostring("nope"))
         end
+        ]]
     end
 
+    --[[
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
         set_mario_action(m, ACT_JUMBO_STAR_CUTSCENE, 0)
     end
+    ]]
 
     master_cap_music_update()
     --if m.playerIndex ~= 0 then return end

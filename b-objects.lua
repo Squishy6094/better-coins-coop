@@ -174,8 +174,9 @@ function spawn_coin_spawner(o, coins, forceYellow, rX, rY, rZ)
     rY = rY or 0
     rZ = rZ or 0
     if o then
-        local m = nearest_mario_state_to_object(o)
-        if not m or m.playerIndex ~= 0 then return end
+        if not sync_object_is_owned_locally(o.oSyncID) then return end
+        --local m = nearest_mario_state_to_object(o)
+        --if not m or m.playerIndex ~= 0 then return end
         rX = rX + o.oPosX
         rY = rY + o.oPosY
         rZ = rZ + o.oPosZ
