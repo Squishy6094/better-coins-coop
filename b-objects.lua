@@ -146,20 +146,20 @@ end
 
 --- @param o Object
 local function coin_spawner_loop(o)
+    --djui_chat_message_create(tostring(o.oCustomCoins))
     if o.oCustomCoins > 0 then
         local m = nearest_mario_state_to_object(o)
-        if m and m.playerIndex == 0 then
-            if o.oCustomCoins >= 5 and o.oAction == 0 and (math.random() > 0.25 or o.oCustomCoins == 5) then
-                o.oNumLootCoins = 5
-                cur_obj_spawn_loot_blue_coin();
-                o.oCustomCoins = o.oCustomCoins - 5
-                network_send_object(o, false)
-            else
-                o.oNumLootCoins = 1
-                obj_spawn_yellow_coins(o, 1);
-                o.oCustomCoins = o.oCustomCoins - 1
-                network_send_object(o, false)
-            end
+        local isNearest = (m and m.playerIndex == 0)
+        if o.oCustomCoins >= 5 and o.oAction == 0 and (math.random() > 0.25 or o.oCustomCoins == 5) then
+            o.oNumLootCoins = 5
+            cur_obj_spawn_loot_blue_coin();
+            o.oCustomCoins = o.oCustomCoins - 5
+            network_send_object(o, true)
+        else
+            o.oNumLootCoins = 1
+            obj_spawn_yellow_coins(o, 1);
+            o.oCustomCoins = o.oCustomCoins - 1
+            network_send_object(o, true)
         end
     else
         obj_mark_for_deletion(o)
