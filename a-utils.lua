@@ -488,6 +488,8 @@ end
 
 CURR_ROMHACK_STARS = get_max_possible_stars()
 
+log_to_console("Better Coins: Hack - "..CURR_ROMHACK.." | Stars - "..tostring(CURR_ROMHACK_STARS))
+
 local function mario_update(m)
     if m.playerIndex ~= 0 then return end
 

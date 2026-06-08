@@ -599,7 +599,7 @@ local masterCapSpawns = {
     }
 }
 
-    log_to_console("hack "..CURR_ROMHACK)
+    log_to_console("hack "..CURR_ROMHACK.." - "..tostring(CURR_ROMHACK_STARS))
 if not masterCapSpawns[CURR_ROMHACK] then
     masterCapSpawns[CURR_ROMHACK] = {}
 end
