@@ -57,6 +57,7 @@ local function bhv_coin_carry_loop(o)
         o.oForwardVel = math.min(o.oForwardVel, carrierMax)
         o.parentObj.oTimer = o.parentObj.oTimer - 1
         o.oAction = 1
+        velLerp = math.min(velLerp, 0.99)
     else
         if o.oAction == 1 then
             velLerp = 0
@@ -68,6 +69,13 @@ local function bhv_coin_carry_loop(o)
     o.oPosX = math.lerp(o.oPosX + o.parentObj.oVelX, targetPos.x, velLerp)
     o.oPosY = math.lerp(o.oPosY + o.parentObj.oVelY, targetPos.y, velLerp)
     o.oPosZ = math.lerp(o.oPosZ + o.parentObj.oVelZ, targetPos.z, velLerp)
+
+    --djui_chat_message_create(tostring(o.oSyncID).." - "..tostring(velLerp))
+    if velLerp == 1 and m.playerIndex ~= 0 then
+        if interact_coin(m, INTERACT_COIN, o.parentObj) == 0 then
+            obj_mark_for_deletion(o.parentObj)
+        end
+    end
 
     if o.oPosY < (m.waterLevel or -0x8000) then
         o.oForwardVel = math.min(o.oForwardVel + 0.5, carrierMax*0.5)
