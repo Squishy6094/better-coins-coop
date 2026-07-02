@@ -212,7 +212,7 @@ function master_cap_add_coin(levelNum, value, noSync)
     local prevCapTimer = master_cap_data_get_field(levelNum, "capTimer")
     local prevCoins = master_cap_data_get_field(levelNum, "coins")
 
-    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*25*(1/network_player_master_cap_count(levelNum)))
+    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*25*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5)))
     master_cap_data_set_field(levelNum, "coins", math.clamp(prevCoins + value, 0, 999))
 
     if network_is_server() then
@@ -430,7 +430,9 @@ hook_mario_action(ACT_MASTER_CAP_BUBBLED, {every_frame = act_master_cap_bubbled,
 
 function set_mario_finished_master_cap(m)
     if network_player_master_cap_count() == 0 then
-        set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
+        if m.action ~= ACT_MASTER_CAP_RESULTS then
+            set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
+        end
     else
         mario_set_master_cap_bubbled(m)
     end
@@ -757,6 +759,7 @@ local function master_cap_update()
         end
     end
 
+    --[[
     if m.controller.buttonPressed & X_BUTTON ~= 0 then
         warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
         --[[
@@ -765,8 +768,9 @@ local function master_cap_update()
         else
             djui_chat_message_create(tostring("nope"))
         end
-        ]]
+        
     end
+    ]]
 
     --[[
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
