@@ -130,7 +130,7 @@ end
 function mario_master_cap_active(m, levelNum)
     levelNum = get_merged_level_num(levelNum)
     if levelNum ~= get_merged_level_num(gNetworkPlayers[m.playerIndex].currLevelNum) then return false end
-    return master_cap_data_get_field(levelNum, "runActive") and (m.action ~= ACT_MASTER_CAP_BUBBLED and m.action ~= ACT_MASTER_CAP_RESULTS)
+    return master_cap_data_get_field(levelNum, "runActive") and gPlayerSyncTable[m.playerIndex].endRunActs
 end
 
 function network_player_master_cap_count(currLevel)
@@ -693,7 +693,7 @@ local function master_cap_music_update()
     if runActive then
         runState = 1
     end
-    if m.action == ACT_MASTER_CAP_RESULTS or m.action == ACT_MASTER_CAP_BUBBLED then
+    if gPlayerSyncTable[0].endRunActs then
         runState = 2
     end
 
@@ -741,6 +741,7 @@ local prevFileProgress = save_file_get_flags()
 local function master_cap_update()
     local m = gMarioStates[0] ---@type MarioState
     gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
+    gPlayerSyncTable[0].endRunActs = (m.action == ACT_MASTER_CAP_BUBBLED or m.action == ACT_MASTER_CAP_RESULTS)
 
     -- Check for Defeating Final Bowser
     if m.action == ACT_JUMBO_STAR_CUTSCENE then
@@ -985,7 +986,7 @@ local function on_death()
         set_mario_finished_master_cap(m)
         return false
     end
-    if m.action == ACT_MASTER_CAP_RESULTS or m.action == ACT_MASTER_CAP_BUBBLED then
+    if gPlayerSyncTable[0].endRunActs then
         return false
     end
 end
