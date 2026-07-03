@@ -458,6 +458,8 @@ local function bhv_master_cap_box_init(o)
     network_init_object(o, true, {
         "oExclamationBoxForce",
         "areaTimer",
+        "oAction",
+        "oSubAction",
     })
 end
 
@@ -499,7 +501,8 @@ local function bhv_master_cap_box_loop(o)
 
         local isNearest = (nearestM ~= nil and nearestM == gMarioStates[0])
         if (o.oExclamationBoxForce ~= 0 or isNearest) then
-            if (o.oExclamationBoxForce ~= 0 or (isNearest and cur_obj_was_attacked_or_ground_pounded() ~= 0)) then
+            local neicheActs = nearestM.action & ACT_FLAG_SWIMMING_OR_FLYING ~= 0 and dist_between_objects(nearestM.marioObj, o) < o.hitboxRadius*2
+            if (o.oExclamationBoxForce ~= 0 or (isNearest and (cur_obj_was_attacked_or_ground_pounded() ~= 0 or neicheActs))) then
                 if (o.oExclamationBoxForce == 0) then
                     o.oExclamationBoxForce = 1
                     network_send_object(o, true)
@@ -514,6 +517,7 @@ local function bhv_master_cap_box_loop(o)
                 cur_obj_play_sound_1(SOUND_OBJ_KING_BOBOMB_JUMP)
                 queue_rumble_data_object(o, 5, 80)
                 cur_obj_become_intangible()
+                network_send_object(o, true)
             end
         end
         load_object_collision_model()
@@ -581,6 +585,7 @@ local function bhv_master_cap_box_loop(o)
         cur_obj_hide()
         o.oAction = 4
         o.oSubAction = 2
+        network_send_object(o, true)
     end
 end
 
@@ -612,10 +617,13 @@ end
 master_cap_set_box_spawn(LEVEL_MASTER_CAP_STAGE, 0, 350, -1500)
 
 local nearestObjPos = {x = 0, y = 0, z = 0}
+local mFloor = {x = 0, y = 0, z = 0}
 local capSpawnRadius = 400
+---@param m MarioState
 local function find_master_cap_spawn_position(m)
-    local castFloorSpawn = collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, 0, -0x8000, 0, 128).hitPos
-    castFloorSpawn = {x = castFloorSpawn.x, y = math.max(castFloorSpawn.y, (m.waterLevel or -0x8000) - 200), z = castFloorSpawn.z}
+    mFloor.x = m.pos.x
+    mFloor.y = math.max(m.floorHeight, (m.waterLevel or -0x8000) - 200)
+    mFloor.z = m.pos.z
     nearestObjPos.x = m.pos.x
     nearestObjPos.y = 0x8000
     nearestObjPos.z = m.pos.z
@@ -625,12 +633,12 @@ local function find_master_cap_spawn_position(m)
             local o = obj_get_first(i)
             while o ~= nil do
                 if obj_has_model_extended(o, E_MODEL_NONE) == 0 and (m.waterLevel == nil or o.oPosY > m.waterLevel) then
-                    local currDist = math.sqrt((castFloorSpawn.x - o.oPosX)^2 + (castFloorSpawn.y - o.oPosY)^2 + (nearestObjPos.z - o.oPosZ)^2)
+                    local currDist = math.sqrt((mFloor.x - o.oPosX)^2 + (mFloor.y - o.oPosY)^2 + (nearestObjPos.z - o.oPosZ)^2)
                     if (currDist < prevDist) then
                         nearestObjPos.x = o.oPosX
                         nearestObjPos.y = o.oPosY
                         nearestObjPos.z = o.oPosZ
-                        prevDist = math.sqrt((castFloorSpawn.x - nearestObjPos.x)^2 + (castFloorSpawn.y - nearestObjPos.y)^2 + (castFloorSpawn.z - nearestObjPos.z)^2)
+                        prevDist = math.sqrt((mFloor.x - nearestObjPos.x)^2 + (mFloor.y - nearestObjPos.y)^2 + (mFloor.z - nearestObjPos.z)^2)
                     end
                 end
                 o = obj_get_next(o)
@@ -640,9 +648,13 @@ local function find_master_cap_spawn_position(m)
 
     nearestObjPos = (collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, nearestObjPos.x - m.pos.x, nearestObjPos.y - m.pos.y, nearestObjPos.z - m.pos.z, 128).hitPos)
 
-    local objX = math.clamp(math.lerp(castFloorSpawn.x, nearestObjPos.x, 0.5), castFloorSpawn.x - capSpawnRadius, castFloorSpawn.x + capSpawnRadius)
-    local objY = math.clamp(nearestObjPos.y, castFloorSpawn.y - 300, castFloorSpawn.y) + 300
-    local objZ = math.clamp(math.lerp(castFloorSpawn.z, nearestObjPos.z, 0.5), castFloorSpawn.z - capSpawnRadius, castFloorSpawn.z + capSpawnRadius)
+    local neicheActs = m.action & ACT_FLAG_SWIMMING_OR_FLYING ~= 0
+    djui_chat_message_create(tostring(m.faceAngle.y))
+    local neicheOffsetX = neicheActs and sins(m.faceAngle.y + 0x2000)*1000 or 0
+    local neicheOffsetY = neicheActs and coss(m.faceAngle.y + 0x2000)*1000 or 0
+    local objX = math.clamp(math.lerp(mFloor.x, nearestObjPos.x, 0.5), mFloor.x - capSpawnRadius, mFloor.x + capSpawnRadius) + neicheOffsetX
+    local objY = math.clamp(neicheActs and m.pos.y - 250 or mFloor.y, m.pos.y - 500, m.pos.y + 500)
+    local objZ = math.clamp(math.lerp(mFloor.z, nearestObjPos.z, 0.5), mFloor.z - capSpawnRadius, mFloor.z + capSpawnRadius) + neicheOffsetY
     return {x = objX, y = objY, z = objZ}
 end
 
@@ -678,8 +690,13 @@ local function on_sync()
             masterCapSpawns[CURR_ROMHACK][levelNum].x, 
             masterCapSpawns[CURR_ROMHACK][levelNum].y, 
             masterCapSpawns[CURR_ROMHACK][levelNum].z, function (o)
-                o.oFaceAngleYaw = math.s16(gLakituState.yaw + 0x4000)
+                o.oFaceAnglePitch = 0
+                o.oFaceAngleYaw = math.round(math.s16(gLakituState.yaw + 0x4000)/0x4000)*0x4000
+                o.oFaceAngleRoll = 0
+
+                o.oMoveAnglePitch = o.oFaceAnglePitch
                 o.oMoveAngleYaw = o.oFaceAngleYaw
+                o.oMoveAngleRoll = o.oFaceAngleRoll
             end)
     end
 end
@@ -744,7 +761,7 @@ local function master_cap_update()
     gPlayerSyncTable[0].endRunActs = (m.action == ACT_MASTER_CAP_BUBBLED or m.action == ACT_MASTER_CAP_RESULTS)
 
     -- Check for Defeating Final Bowser
-    if m.action == ACT_JUMBO_STAR_CUTSCENE then
+    if m.action == ACT_JUMBO_STAR_CUTSCENE or gNetworkPlayers[0].currLevelNum == LEVEL_ENDING then
         gGlobalSyncTable.defeatFinalBowser = true
     end
     if network_is_server() then

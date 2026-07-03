@@ -894,7 +894,7 @@ local function bhv_boo_coin_switch_delete(o)
     end
 
     local distanceToLocalPlayer = gMarioStates[0].marioObj and dist_between_objects(o, gMarioStates[0].marioObj) or 10000;
-    if (distanceToLocalPlayer < 1000.0 and o.oAction ~= BLUE_COIN_SWITCH_ACT_TICKING) then
+    if (distanceToLocalPlayer < 500.0 and o.oAction ~= BLUE_COIN_SWITCH_ACT_TICKING) then
         play_secondary_music(SEQ_MUSICBOX, 0, 255, 1000);
         o.oBooCoinSwitchMusic = 1;
     elseif (o.oBooCoinSwitchMusic == 1) then
