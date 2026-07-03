@@ -45,6 +45,7 @@ define_custom_obj_fields({
     oPrevHealth = "f32",
     oBooCoinFace = "u32",
     oBooCoinAnimState = "u32",
+    oBooCoinSwitchMusic = "u32",
 })
 
 --- @param obj Object

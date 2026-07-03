@@ -873,8 +873,13 @@ end
 
 hook_coins_behavior(id_bhvHiddenBlueCoin, true, bhv_ghost_coin_init, bhv_ghost_coin_loop)
 
+local SEQ_MUSICBOX = smlua_audio_utils_allocate_sequence()
+smlua_audio_utils_replace_sequence(SEQ_MUSICBOX, 0x14, 1, "musicbox")
+
 local function bhv_boo_coin_switch_delete(o)
+
     if o.oAction == BLUE_COIN_SWITCH_ACT_TICKING then
+        -- Boo Coin Switch Deletes
         local isActive = false
         local oHiddenBlueCoin = obj_get_first_with_behavior_id(id_bhvHiddenBlueCoin)
         while oHiddenBlueCoin ~= nil do
@@ -886,6 +891,15 @@ local function bhv_boo_coin_switch_delete(o)
         if not isActive then
             obj_mark_for_deletion(o)
         end
+    end
+
+    local distanceToLocalPlayer = gMarioStates[0].marioObj and dist_between_objects(o, gMarioStates[0].marioObj) or 10000;
+    if (distanceToLocalPlayer < 1000.0 and o.oAction ~= BLUE_COIN_SWITCH_ACT_TICKING) then
+        play_secondary_music(SEQ_MUSICBOX, 0, 255, 1000);
+        o.oBooCoinSwitchMusic = 1;
+    elseif (o.oBooCoinSwitchMusic == 1) then
+        o.oBooCoinSwitchMusic = 0;
+        stop_secondary_music(50);
     end
 end
 

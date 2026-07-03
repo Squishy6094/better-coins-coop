@@ -130,7 +130,7 @@ end
 function mario_master_cap_active(m, levelNum)
     levelNum = get_merged_level_num(levelNum)
     if levelNum ~= get_merged_level_num(gNetworkPlayers[m.playerIndex].currLevelNum) then return false end
-    return master_cap_data_get_field(levelNum, "runActive") and gPlayerSyncTable[m.playerIndex].endRunActs
+    return master_cap_data_get_field(levelNum, "runActive") and not gPlayerSyncTable[m.playerIndex].endRunActs
 end
 
 function network_player_master_cap_count(currLevel)
@@ -833,7 +833,7 @@ local function master_cap_update()
                         capTimer = capTimer - 1
                     end
                     if network_player_master_cap_count(levelNum) == 0 then
-                        local stallNoPlayers = master_cap_data_get_field(levelNum, "stallNoPlayers")
+                        local stallNoPlayers = master_cap_data_get_field(levelNum, "stallNoPlayers") or 0
                         stallNoPlayers = stallNoPlayers + 1
                         master_cap_data_set_field(levelNum, "stallNoPlayers", stallNoPlayers)
 
