@@ -62,12 +62,32 @@ local sSecretTextures = {
     get_texture_info("sparkles_seg4_texture_04029C90"),
 }
 
+local sBooCoinTextures = {
+    [0] = get_texture_info("Boo-Coins-Side"),
+    get_texture_info("Boo-Coins-Joyous1"),
+    get_texture_info("Boo-Coins-Joyous2"),
+    get_texture_info("Boo-Coins-Joyous3"),
+}
+
 local customCoinHudValue = 0
 local coinAnim = 0
 local coinSpeed = 0
-local secretAnim = 0
-local secretSpeed = 0
 local prevNumCoinsToLifeCount = 0
+
+---@param o Object Mario Object
+---@param bhvId BehaviorId|integer
+---@return integer?
+local function obj_get_radar_dist_nearest_object_with_behavior_id(o, bhvId)
+    local oTarget = obj_get_nearest_object_with_behavior_id(o, bhvId);
+    if (oTarget) then
+        local visableMario = collision_find_surface_on_ray(o.oPosX, (o.oPosY + o.hitboxHeight*0.5), o.oPosZ, oTarget.oPosX - o.oPosX, (oTarget.oPosY + oTarget.hitboxHeight*0.5) - (o.oPosY + o.hitboxHeight*0.5), oTarget.oPosZ - o.oPosZ, 1).surface == nil
+        local dist = math.sqrt((oTarget.oPosX - o.oPosX)^2 + (oTarget.oPosY - o.oPosY)^2 + (oTarget.oPosZ - o.oPosZ)^2)*(visableMario and 1 or 2)
+        return dist
+    end
+end
+
+local prevTex = nil
+local transOpacity = 1
 local function coin_counter()
     local m = gMarioStates[0]
     local l = gLakituState
@@ -78,6 +98,9 @@ local function coin_counter()
     customCoinHudValue = math.min(math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.1)), m.numCoins)
     hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
     gLevelValues.hudCapTimer = 1
+
+    gLevelValues.hudRedCoinsRadar = 0
+    gLevelValues.hudSecretsRadar = 0
 
     -- Hud 
     if gBetterCoinValues.numCoinsToLife > 0 then
@@ -90,8 +113,50 @@ local function coin_counter()
     end
 
     if (m.marioObj) then
+        local currTex = nil
+        local currDist = nil
+        local dist = obj_get_radar_dist_nearest_object_with_behavior_id(m.marioObj, id_bhvRedCoin);
+        if not currDist or (dist and currDist > dist) then
+            currTex = sRedCoinTextures
+            currDist = dist
+        end
+
+        local dist = obj_get_radar_dist_nearest_object_with_behavior_id(m.marioObj, id_bhvHiddenStarTrigger);
+        if not currDist or (dist and currDist > dist) then
+            currTex = sSecretTextures
+            currDist = dist
+        end
+
+        local dist = obj_get_radar_dist_nearest_object_with_behavior_id(m.marioObj, id_bhvBlueCoinSwitch);
+        if not currDist or (dist and currDist > dist) then
+            currTex = sBooCoinTextures
+            currDist = dist
+        end
+
+        if currDist and prevTex then
+            local targetCoinSpeed = math.clamp((500*5 / currDist), 0, 1)
+            coinSpeed = math.lerp(coinSpeed, targetCoinSpeed, 0.1)
+            coinAnim = (coinAnim + coinSpeed*0.5) % (#prevTex + 1)
+            local colorRed = (prevTex == sRedCoinTextures) and 0 or 255
+            djui_hud_set_color(255, colorRed, colorRed, 255*coinSpeed*transOpacity)
+            djui_chat_message_create(tostring(math.floor(coinAnim)))
+            djui_hud_render_texture(prevTex[math.floor(coinAnim)], screenWidth*0.25, 15, 0.5, 0.5)
+        else
+            coinSpeed = math.lerp(coinSpeed, 0, 0.1)
+        end
+
+        if prevTex ~= currTex then
+            djui_chat_message_create("nott same")
+            transOpacity = math.clamp(transOpacity - 0.1, 0, 1)
+            if transOpacity == 0 then
+                prevTex = currTex
+            end
+        else
+            transOpacity = math.clamp(transOpacity + 0.1, 0, 1)
+        end
+
+        --[[
         -- Red Coin Radar
-        gLevelValues.hudRedCoinsRadar = 0
         local redCoin = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvRedCoin);
         if (redCoin) then
             local dist = math.sqrt((redCoin.oPosX - m.pos.x)^2 + (redCoin.oPosY - m.pos.y)^2 + (redCoin.oPosZ - m.pos.z)^2)
@@ -108,7 +173,6 @@ local function coin_counter()
         djui_hud_render_texture(sRedCoinTextures[math.floor(coinAnim)], screenWidth*0.25 + 18, 15, 0.5, 0.5)
 
         -- Secret Radar
-        gLevelValues.hudSecretsRadar = 0
         local secret = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHiddenStarTrigger);
         if (secret) then
             local dist = math.sqrt((secret.oPosX - m.pos.x)^2 + (secret.oPosY - m.pos.y)^2 + (secret.oPosZ - m.pos.z)^2)
@@ -123,6 +187,7 @@ local function coin_counter()
         secretAnim = (secretAnim + secretSpeed*0.5) % #sSecretTextures
         djui_hud_set_color(255, 255, 255, 255*secretSpeed)
         djui_hud_render_texture(sSecretTextures[math.floor(secretAnim)], screenWidth*0.25, 15, 0.5, 0.5)
+        ]]
     end
 
     -- Mouse
