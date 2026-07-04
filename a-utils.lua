@@ -37,6 +37,7 @@ end
 ---@field oBooCoinAnimState integer
 define_custom_obj_fields({
     oIsCarried = "u32",
+    --oIsCarried = { type = "u32", global = true }, -- used in API
     oCustomCoins = "u32",
     oThwompGroundPounded = "u32",
     oThwompHitstun = "u32",

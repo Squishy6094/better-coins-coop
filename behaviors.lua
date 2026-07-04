@@ -9,12 +9,12 @@ end
 
 -- Coin Magnitize Behaviors
 ---@param o Object
-local function bhv_init_for_magnitize(o)
+function bhv_init_for_magnitize(o)
     o.oIsCarried = 0
 end
 
 ---@param o Object
-local function bhv_check_for_magnitize(o)
+function bhv_check_for_magnitize(o)
     local m = nearest_mario_state_to_object(o)
     if not m or m.marioObj.oIntangibleTimer ~= 0 or m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
     if not is_object_being_carried(o) and o.oIntangibleTimer == 0 then
@@ -62,7 +62,6 @@ hook_coin_magnitize_behavior(id_bhvMrIBlueCoin)
 hook_coin_magnitize_behavior(id_bhvMovingBlueCoin)
 hook_coin_magnitize_behavior(id_bhv1Up)
 hook_coin_magnitize_behavior(id_bhv1upSliding)
-hook_coin_magnitize_behavior(id_bhvThwomp)
 
 local function bhv_merged_acts_delete(o)
     if gLevelValues.disableActs == 1 then
