@@ -649,7 +649,6 @@ local function find_master_cap_spawn_position(m)
     nearestObjPos = (collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, nearestObjPos.x - m.pos.x, nearestObjPos.y - m.pos.y, nearestObjPos.z - m.pos.z, 128).hitPos)
 
     local neicheActs = m.action & ACT_FLAG_SWIMMING_OR_FLYING ~= 0
-    --djui_chat_message_create(tostring(m.faceAngle.y))
     local neicheOffsetX = neicheActs and sins(m.faceAngle.y + 0x2000)*1000 or 0
     local neicheOffsetY = neicheActs and coss(m.faceAngle.y + 0x2000)*1000 or 0
     local objX = math.clamp(math.lerp(mFloor.x, nearestObjPos.x, 0.5), mFloor.x - capSpawnRadius, mFloor.x + capSpawnRadius) + neicheOffsetX
@@ -783,8 +782,6 @@ local function master_cap_update()
         --[[
         if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS and gGlobalSyncTable.defeatFinalBowser then
             warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
-        else
-            djui_chat_message_create(tostring("nope"))
         end
         
     end
