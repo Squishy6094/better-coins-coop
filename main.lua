@@ -139,14 +139,12 @@ local function coin_counter()
             coinAnim = (coinAnim + coinSpeed*0.5) % (#prevTex + 1)
             local colorRed = (prevTex == sRedCoinTextures) and 0 or 255
             djui_hud_set_color(255, colorRed, colorRed, 255*coinSpeed*transOpacity)
-            djui_chat_message_create(tostring(math.floor(coinAnim)))
             djui_hud_render_texture(prevTex[math.floor(coinAnim)], screenWidth*0.25, 15, 0.5, 0.5)
         else
             coinSpeed = math.lerp(coinSpeed, 0, 0.1)
         end
 
         if prevTex ~= currTex then
-            djui_chat_message_create("nott same")
             transOpacity = math.clamp(transOpacity - 0.1, 0, 1)
             if transOpacity == 0 then
                 prevTex = currTex
@@ -297,7 +295,6 @@ local function count_possible_coins()
             o = obj_get_next(o)
         end
     end
-    --djui_chat_message_create(tostring(areaCoinCount))
 end
 
 local function on_coin_sound(sound, pos)
