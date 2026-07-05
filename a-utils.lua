@@ -358,9 +358,6 @@ local function check_exclamation_box(bhvParams)
 
     for id, content in pairs(contents) do
         if content.id == bparam2 - 1 and gStarBehaviors[content.behavior] then
-            --djui_chat_message_create("content.id "..content.id)
-            --djui_chat_message_create("bparam2 "..bparam2 - 1)
-            --djui_chat_message_create("STAR ID "..content.firstByte)
             return true
         end
     end
@@ -484,7 +481,6 @@ function get_max_possible_stars()
         count = count + get_all_possible_level_stars(sLevelTable[i])
     end
 
-    --djui_chat_message_create(tostring(count))
     return count
 end
 
@@ -499,7 +495,6 @@ local function mario_update(m)
         sGaslightStars[gNetworkPlayers[0].currLevelNum] = true
     end
 
-    --djui_chat_message_create("all "..get_max_possible_stars())
 end
 
 --hook_event(HOOK_MARIO_UPDATE, mario_update)

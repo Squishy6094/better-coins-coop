@@ -70,7 +70,6 @@ local function bhv_coin_carry_loop(o)
     o.oPosY = math.lerp(o.oPosY + o.parentObj.oVelY, targetPos.y, velLerp)
     o.oPosZ = math.lerp(o.oPosZ + o.parentObj.oVelZ, targetPos.z, velLerp)
 
-    --djui_chat_message_create(tostring(o.oSyncID).." - "..tostring(velLerp))
     if velLerp == 1 and m.playerIndex ~= 0 then
         if interact_coin(m, INTERACT_COIN, o.parentObj) == 0 then
             obj_mark_for_deletion(o.parentObj)
@@ -146,7 +145,6 @@ end
 
 --- @param o Object
 local function coin_spawner_loop(o)
-    --djui_chat_message_create(tostring(o.oCustomCoins))
     if o.oCustomCoins > 0 then
         local m = nearest_mario_state_to_object(o)
         local isNearest = (m and m.playerIndex == 0)

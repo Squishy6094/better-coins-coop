@@ -165,7 +165,6 @@ local function bhv_recovery_heart_set_coins(o)
     network_init_object(o, false, {
         "oCustomCoins",
     })
-    --djui_chat_message_create(num_to_hex(o.oBehParams))
 end
 
 ---@param o Object
