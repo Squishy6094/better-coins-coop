@@ -956,7 +956,6 @@ end
 local function master_door_before_warp(destLevel, destArea, destWarpNode, arg)
     local m = gMarioStates[0] ---@type MarioState
     if destLevel ~= LEVEL_MASTER_CAP_STAGE and m.usedObj and obj_get_model_id_extended(m.usedObj) == E_MODEL_MASTER_DOOR then
-        djui_chat_message_create("ding")
         warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
         return {destLevel = LEVEL_MASTER_CAP_STAGE, destArea = 1, destWarpNode = 0}
     end

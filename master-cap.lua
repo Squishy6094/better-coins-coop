@@ -40,11 +40,11 @@ local modLevelCount = {
     [CURR_ROMHACK] = LEVEL_COUNT
 }
 
-local function set_merge_level_num(ogLevelNum, levelNum)
+function master_cap_set_merged_level_num(ogLevelNum, levelNum)
     levelMerge[ogLevelNum] = levelNum
 end
 
-local function get_merged_level_num(levelNum)
+function master_cap_get_merged_level_num(levelNum)
     levelNum = levelNum or gNetworkPlayers[0].currLevelNum
     return levelMerge[levelNum] or levelNum
 end
@@ -57,7 +57,7 @@ local recordPrefixTime = "bestTime"
 gMasterCapServerState = {}
 
 local maxRomhackCheck = LEVEL_COUNT
-local function master_cap_init_level(levelNum)
+function master_cap_init_level(levelNum)
     local romhack = CURR_ROMHACK
     local saveLevelNum = levelNum
     maxRomhackCheck = math.max(maxRomhackCheck, levelNum)
@@ -67,7 +67,7 @@ local function master_cap_init_level(levelNum)
         saveLevelNum = modLevelCount[romhack]
     end
     
-    levelNum = get_merged_level_num(levelNum)
+    levelNum = master_cap_get_merged_level_num(levelNum)
     gMasterCapServerState[levelNum] = {
         romhack = romhack,
         saveLevelNum = saveLevelNum,
@@ -94,29 +94,29 @@ end
 master_cap_init_level(LEVEL_MASTER_CAP_STAGE)
 
 function master_cap_data_exists(levelNum)
-    levelNum = get_merged_level_num(levelNum)
+    levelNum = master_cap_get_merged_level_num(levelNum)
     return gMasterCapServerState[levelNum] ~= nil
 end
 
 function master_cap_data_get_field(levelNum, field)
-    levelNum = get_merged_level_num(levelNum)
+    levelNum = master_cap_get_merged_level_num(levelNum)
     return gMasterCapServerState[levelNum][field]
 end
 
 function master_cap_data_set_field(levelNum, field, value)
-    levelNum = get_merged_level_num(levelNum)
+    levelNum = master_cap_get_merged_level_num(levelNum)
     gMasterCapServerState[levelNum][field] = value
 end
 
 function master_cap_get_record(levelNum)
-    local levelNum = get_merged_level_num(levelNum)
+    local levelNum = master_cap_get_merged_level_num(levelNum)
     local coinSave = master_cap_data_get_field(levelNum, "romhack") .. recordPrefixCoins .. tostring(master_cap_data_get_field(levelNum, "saveLevelNum"))
     local timeSave = master_cap_data_get_field(levelNum, "romhack") .. recordPrefixTime .. tostring(master_cap_data_get_field(levelNum, "saveLevelNum"))
     return gGlobalSyncTable[coinSave] or 0, gGlobalSyncTable[timeSave] or 0
 end
 
 function master_cap_set_record(levelNum, coins, time)
-    local levelNum = get_merged_level_num(levelNum)
+    local levelNum = master_cap_get_merged_level_num(levelNum)
     local coinSave = master_cap_data_get_field(levelNum, "romhack") .. recordPrefixCoins .. tostring(master_cap_data_get_field(levelNum, "saveLevelNum"))
     local timeSave = master_cap_data_get_field(levelNum, "romhack") .. recordPrefixTime .. tostring(master_cap_data_get_field(levelNum, "saveLevelNum"))
     gGlobalSyncTable[coinSave] = coins
@@ -127,8 +127,8 @@ end
 
 ---@param m MarioState
 function mario_master_cap_active(m, levelNum)
-    levelNum = get_merged_level_num(levelNum)
-    if levelNum ~= get_merged_level_num(gNetworkPlayers[m.playerIndex].currLevelNum) then return false end
+    levelNum = master_cap_get_merged_level_num(levelNum)
+    if levelNum ~= master_cap_get_merged_level_num(gNetworkPlayers[m.playerIndex].currLevelNum) then return false end
     return master_cap_data_get_field(levelNum, "runActive") and not gPlayerSyncTable[m.playerIndex].endRunActs
 end
 
@@ -147,7 +147,7 @@ local PACKET_TYPE_MASTER_CAP_STOP = 2
 local PACKET_TYPE_MASTER_CAP_COIN = 3
 local PACKET_TYPE_MASTER_CAP_UPDATE = 4
 function master_cap_start_course(levelNum, noSync)
-    levelNum = get_merged_level_num(levelNum)
+    levelNum = master_cap_get_merged_level_num(levelNum)
     masterCapMusicFreq = 1
 
     master_cap_data_set_field(levelNum, "runActive", true)
@@ -166,7 +166,7 @@ function master_cap_start_course(levelNum, noSync)
 end
 
 function master_cap_stop_course(levelNum, newRecord, coinTimer, noSync)
-    levelNum = get_merged_level_num(levelNum)
+    levelNum = master_cap_get_merged_level_num(levelNum)
 
     master_cap_data_set_field(levelNum, "capTimer", math.floor(gLevelValues.wingCapDuration*0.5))
     master_cap_data_set_field(levelNum, "runActive", false)
@@ -191,7 +191,7 @@ function master_cap_stop_course(levelNum, newRecord, coinTimer, noSync)
         end
     end
 
-    if levelNum == get_merged_level_num() then
+    if levelNum == master_cap_get_merged_level_num() then
         set_mario_finished_master_cap(gMarioStates[0])
     end
 
@@ -206,7 +206,7 @@ function master_cap_stop_course(levelNum, newRecord, coinTimer, noSync)
 end
 
 function master_cap_add_coin(levelNum, value, noSync)
-    levelNum = get_merged_level_num(levelNum)
+    levelNum = master_cap_get_merged_level_num(levelNum)
     
     local prevCapTimer = master_cap_data_get_field(levelNum, "capTimer")
     local prevCoins = master_cap_data_get_field(levelNum, "coins")
@@ -599,22 +599,6 @@ end
 
 local E_MODEL_MASTER_CAP = smlua_model_util_get_id("master_box_geo")
 
-local masterCapSpawns = {
-    ["sm64"] = {
-        [LEVEL_BOB] = {x = -6700, y = 350, z = 4600},
-    }
-}
-
-    log_to_console("hack "..CURR_ROMHACK.." - "..tostring(CURR_ROMHACK_STARS))
-if not masterCapSpawns[CURR_ROMHACK] then
-    masterCapSpawns[CURR_ROMHACK] = {}
-end
-
-local function master_cap_set_box_spawn(level, x, y, z)
-    masterCapSpawns[CURR_ROMHACK][level] = {x = x, y = y, z = z}
-end
-master_cap_set_box_spawn(LEVEL_MASTER_CAP_STAGE, 0, 350, -1500)
-
 local nearestObjPos = {x = 0, y = 0, z = 0}
 local mFloor = {x = 0, y = 0, z = 0}
 local capSpawnRadius = 400
@@ -656,19 +640,136 @@ local function find_master_cap_spawn_position(m)
     return {x = objX, y = objY, z = objZ}
 end
 
+local function master_cap_get_box_spawn(level)
+    if not romhackData[CURR_ROMHACK].masterCapSpawns[level] then
+        if gNetworkPlayers[0].currLevelNum == level then
+            romhackData[CURR_ROMHACK].masterCapSpawns[level] = find_master_cap_spawn_position(gMarioStates[0])
+        end
+    end
+    return romhackData[CURR_ROMHACK].masterCapSpawns[level]
+end
+
+local function master_cap_set_box_spawn(level, x, y, z)
+    romhackData[CURR_ROMHACK].masterCapSpawns[level] = {x = x, y = y, z = z}
+end
+
+master_cap_set_box_spawn(LEVEL_MASTER_CAP_STAGE, 0, 350, -1500)
+
+local evilFloorTypes = {
+    [SURFACE_BURNING] = true,
+    [SURFACE_DEEP_MOVING_QUICKSAND] = true,
+    [SURFACE_DEEP_QUICKSAND] = true,
+    [SURFACE_INSTANT_MOVING_QUICKSAND] = true,
+    [SURFACE_INSTANT_QUICKSAND] = true,
+}
+
+local function find_master_door_spawn_position()
+    local spawnPos = nil
+    math.randomseed(hash(CURR_ROMHACK))
+    local spawnIteration = 0
+    local spawnObj = obj_get_first_with_behavior_id(id_bhvSpinAirborneWarp)
+    if not spawnObj then
+        spawnObj = obj_get_first_with_behavior_id(id_bhvAirborneWarp)
+    end
+    while spawnPos == nil do
+        spawnIteration = spawnIteration + 1
+        local rayFloor = collision_find_surface_on_ray(math.random(-0x4000, 0x4000), 0x4000, math.random(-0x4000, 0x4000), 0, -0x8000, 0, 1)
+        if rayFloor and rayFloor.surface and not evilFloorTypes[rayFloor.surface.type] and math.ceil(rayFloor.surface.normal.y*50) == 50 and rayFloor.hitPos.y > find_water_level(rayFloor.hitPos.x, rayFloor.hitPos.z) then
+            local surfaceX = (rayFloor.surface.vertex1.x + rayFloor.surface.vertex2.x + rayFloor.surface.vertex3.x)/3
+            local surfaceY = (rayFloor.surface.vertex1.y + rayFloor.surface.vertex2.y + rayFloor.surface.vertex3.y)/3
+            local surfaceZ = (rayFloor.surface.vertex1.z + rayFloor.surface.vertex2.z + rayFloor.surface.vertex3.z)/3
+            local surfaceDist = math.sqrt((surfaceX - spawnObj.oPosX)^2 + (surfaceZ - spawnObj.oPosZ)^2)
+
+            local smallestEdge = nil
+            for i = 0, 2 do
+                local currNum = (i%3) + 1
+                local nextNum = ((i+1)%3) + 1
+                local currPos = rayFloor.surface["vertex"..tostring(currNum)]
+                local nextPos = rayFloor.surface["vertex"..tostring(nextNum)]
+                local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.z - nextPos.z)^2)
+                if not smallestEdge or smallestEdge > edgeDist then
+                    smallestEdge = edgeDist
+                end
+            end
+
+            if smallestEdge > 1000 then
+                -- Be in eye-shot of mario without being too close
+                local marioPos = {
+                    x = spawnObj.oPosX + sins(spawnObj.oMoveAngleYaw)*100*math.floor(spawnIteration/50),
+                    y = spawnObj.oPosY + 50*math.floor(spawnIteration/50),
+                    z = spawnObj.oPosZ + coss(spawnObj.oMoveAngleYaw)*100*math.floor(spawnIteration/50),
+                }
+                local rayMario = collision_find_surface_on_ray(marioPos.x, marioPos.y, marioPos.z, surfaceX - marioPos.x, (surfaceY + 200) - marioPos.y, surfaceZ - marioPos.z, 64)
+                if (not rayMario.surface and surfaceDist > 1000 and surfaceDist < 10000) then --or (spawnIteration > 500 and surfaceDist < 10000) then
+                    -- Avoid spawning close to trees
+                    local nTree, nTreeDist = nearest_object_with_behavior_id_to_pos(surfaceX, surfaceY, surfaceZ, id_bhvTree)
+                    if not nTree or nTreeDist > 300 or spawnIteration > 250 then
+                        spawnPos = {
+                            x = surfaceX,
+                            y = surfaceY,
+                            z = surfaceZ,
+                        }
+                    end
+                end
+            end
+        end 
+    end
+
+    return spawnPos
+end
+
+function master_cap_get_door_spawn(level)
+    if not romhackData[CURR_ROMHACK].masterDoorSpawns[level] then
+        if gNetworkPlayers[0].currLevelNum == level then
+            romhackData[CURR_ROMHACK].masterDoorSpawns[level] = find_master_door_spawn_position()
+        end
+    end
+    return romhackData[CURR_ROMHACK].masterDoorSpawns[level]
+end
+
+function master_cap_set_door_spawn(level, x, y, z)
+    romhackData[CURR_ROMHACK].masterDoorSpawns[level] = {x = x, y = y, z = z}
+end
+
 local prevCoinsBest = 0
 local prevTimeBest = 0
 local prevLevelNum = 0
 local function on_sync()
     if GAMEMODE_ACTIVE then return end
-    if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS then
+    if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() then
         gLevelValues.disableActs = true
     end
 
     local m = gMarioStates[0]
-    local levelNum = get_merged_level_num()
+    local levelNum = master_cap_get_merged_level_num()
+    local realLevelNum = gNetworkPlayers[0].currLevelNum
 
-    if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS and levelNum ~= -1 and master_cap_data_exists(levelNum) then
+    local doorSpawnsExist = false
+    for _, _ in pairs(romhackData[CURR_ROMHACK].masterDoorSpawns) do
+        doorSpawnsExist = true
+        break
+    end
+    if not doorSpawnsExist or romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum] then
+        local masterDoorSpawnPos = master_cap_get_door_spawn(realLevelNum)
+
+        spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawnPos.x, masterDoorSpawnPos.y, masterDoorSpawnPos.z, function(o)
+            local doorWallAngle = atan2s(masterDoorSpawnPos.z - m.pos.z, masterDoorSpawnPos.x - m.pos.x)
+            local doorWallDist = nil
+            for i = 0, 7 do
+                local ray = collision_find_surface_on_ray(masterDoorSpawnPos.x, masterDoorSpawnPos.y + 200, masterDoorSpawnPos.z, sins(i*0x2000)*1000, 0, coss(i*0x2000)*1000, 1)
+                if ray.surface then
+                    rayDist = math.sqrt((ray.hitPos.x - masterDoorSpawnPos.x)^2 + (ray.hitPos.z - masterDoorSpawnPos.z)^2)
+                    if not doorWallDist or doorWallDist > rayDist then
+                        doorWallAngle = i*0x2000
+                        doorWallDist = rayDist
+                    end
+                end
+            end
+            o.oMoveAngleYaw = doorWallAngle + 0x8000
+        end)
+    end
+
+    if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() and levelNum ~= -1 and master_cap_data_exists(levelNum) then
         prevCoinsBest, prevTimeBest = master_cap_get_record(levelNum)
         if master_cap_data_get_field(levelNum, "runActive") then
             if prevLevelNum ~= levelNum then
@@ -680,14 +781,12 @@ local function on_sync()
         if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
         prevLevelNum = levelNum
 
-        if not masterCapSpawns[CURR_ROMHACK][levelNum] then
-            masterCapSpawns[CURR_ROMHACK][levelNum] = find_master_cap_spawn_position(m)
-        end
+        masterCapSpawnPos = master_cap_get_box_spawn(levelNum)
 
         spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, 
-            masterCapSpawns[CURR_ROMHACK][levelNum].x, 
-            masterCapSpawns[CURR_ROMHACK][levelNum].y, 
-            masterCapSpawns[CURR_ROMHACK][levelNum].z, function (o)
+            masterCapSpawnPos.x, 
+            masterCapSpawnPos.y, 
+            masterCapSpawnPos.z, function (o)
                 o.oFaceAnglePitch = 0
                 o.oFaceAngleYaw = math.round(math.s16(gLakituState.yaw + 0x4000)/0x4000)*0x4000
                 o.oFaceAngleRoll = 0
@@ -779,7 +878,7 @@ local function master_cap_update()
     if m.controller.buttonPressed & X_BUTTON ~= 0 then
         warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
         --[[
-        if hud_get_value(HUD_DISPLAY_STARS) >= CURR_ROMHACK_STARS and gGlobalSyncTable.defeatFinalBowser then
+        if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() and gGlobalSyncTable.defeatFinalBowser then
             warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
         end
         
@@ -829,7 +928,7 @@ local function master_cap_update()
     if network_is_server() then
         -- Update All Levels' Runs
         for i = 1, maxRomhackCheck do
-            local levelNum = get_merged_level_num(i)
+            local levelNum = master_cap_get_merged_level_num(i)
             if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runActive") and not levelsProcessed[levelNum] then
                 levelsProcessed[levelNum] = true
 
@@ -856,7 +955,7 @@ local function master_cap_update()
                             local isRecord = master_cap_data_get_field(levelNum, "newRecord")
                             local noOneInLevel = true
                             for index = 0, MAX_PLAYERS - 1 do
-                                if levelNum == get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
+                                if levelNum == master_cap_get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
                                     noOneInLevel = false
                                 end
                             end
@@ -1012,8 +1111,3 @@ hook_event(HOOK_ON_DEATH, on_death)
 -------------------
 -- API Functions --
 -------------------
-
-masterCapApi = {
-    master_cap_init_level = master_cap_init_level,
-    set_merge_level_num = set_merge_level_num,
-}

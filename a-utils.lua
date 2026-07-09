@@ -24,6 +24,28 @@ for i in pairs(gActiveMods) do
     end
     CURR_ROMHACK = CURR_ROMHACK:gsub("[/\\]+$", "")
     CURR_ROMHACK = CURR_ROMHACK:gsub(".*[/\\]", "")
+    CURR_ROMHACK = CURR_ROMHACK:gsub(" ", "-")
+    CURR_ROMHACK = string.lower(CURR_ROMHACK)
+end
+
+romhackData = {
+    ["sm64"] = {
+        starCount = 120,
+        masterCapSpawns = {
+            [LEVEL_BOB] = {x = -6700, y = 350, z = 4600},
+        },
+        masterDoorSpawns = {
+            [LEVEL_CASTLE_GROUNDS] = {x = -5600, y = 260, z = 1990}
+        },
+    }
+}
+
+if not romhackData[CURR_ROMHACK] then
+    romhackData[CURR_ROMHACK] = {
+        starCount = -1,
+        masterCapSpawns = {},
+        masterDoorSpawns = {},
+    }
 end
 
 ---@class Object
@@ -127,6 +149,23 @@ function nearest_mario_state_to_pos(x, y, z)
     return nearest;
 end
 
+function nearest_object_with_behavior_id_to_pos(x, y, z, bhvId)
+    if not x or not y or not z or not bhvId then return end
+    local nearest = nil;
+    local nearestDist = 0;
+    local o = obj_get_first_with_behavior_id(bhvId)
+    while o do
+        local dist = math.sqrt((o.oPosX - x)^2 + (o.oPosY - y)^2 + (o.oPosZ - z)^2);
+        if (nearest == nil or dist < nearestDist) then
+            nearest = o;
+            nearestDist = dist;
+        end
+        o = obj_get_next_with_same_behavior_id(o)
+    end
+
+    return nearest, nearestDist
+end
+
 function timestamp(frames)
     if type(frames) ~= "number" then return "x:xx:x" end
     local seconds = math.round(frames) / 30
@@ -152,6 +191,14 @@ function ordinal(n)
     elseif lastDigit == 3 then return s .. "rd"
     else return s .. "th"
     end
+end
+
+function hash(word)
+    local result = 5381
+    for i = 1, #word do
+        result = (result << 5) + result + word:byte(i)
+    end
+    return result
 end
 
 function nearest_antibubble_mario_state_to_object(obj)
@@ -475,7 +522,7 @@ local function get_all_possible_level_stars(level)
     return stars
 end
 
-function get_max_possible_stars()
+local function get_max_possible_stars()
     local count = 0
     for i = 1, #sLevelTable - 1 do
         count = count + get_all_possible_level_stars(sLevelTable[i])
@@ -484,9 +531,15 @@ function get_max_possible_stars()
     return count
 end
 
-CURR_ROMHACK_STARS = get_max_possible_stars()
+if romhackData[CURR_ROMHACK].starCount == -1 then
+    romhackData[CURR_ROMHACK].starCount = get_max_possible_stars()
+end
 
-log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(CURR_ROMHACK_STARS))
+function get_romhack_star_count()
+    return romhackData[CURR_ROMHACK].starCount
+end
+
+log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()))
 
 local function mario_update(m)
     if m.playerIndex ~= 0 then return end
