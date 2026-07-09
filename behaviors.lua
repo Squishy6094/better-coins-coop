@@ -935,3 +935,32 @@ end, update_collision)
 hook_coins_behavior(id_bhvWfSolidTowerPlatform, false, bhv_offset_tower, update_collision)
 hook_coins_behavior(id_bhvWfSlidingTowerPlatform, false, bhv_offset_tower, update_collision)
 hook_coins_behavior(id_bhvWfElevatorTowerPlatform, false, bhv_offset_tower, update_collision)
+
+
+-- Handle Master Cap Door
+E_MODEL_MASTER_DOOR = smlua_model_util_get_id("master_door_geo")
+
+local setDoorTrans = false
+local function master_door_on_screen_trans(type)
+    local m = gMarioStates[0] ---@type MarioState
+    if m.action == ACT_PULLING_DOOR or m.action == ACT_PUSHING_DOOR and m.usedObj and obj_get_model_id_extended(m.usedObj) == E_MODEL_MASTER_DOOR then
+        if setDoorTrans then
+            setDoorTrans = false
+            play_transition(WARP_TRANSITION_FADE_INTO_CIRCLE, 0x14, 0xFF, 0xFF, 0xFF)
+            return false
+        end
+    end
+    setDoorTrans = true
+end
+
+local function master_door_before_warp(destLevel, destArea, destWarpNode, arg)
+    local m = gMarioStates[0] ---@type MarioState
+    if destLevel ~= LEVEL_MASTER_CAP_STAGE and m.usedObj and obj_get_model_id_extended(m.usedObj) == E_MODEL_MASTER_DOOR then
+        djui_chat_message_create("ding")
+        warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
+        return {destLevel = LEVEL_MASTER_CAP_STAGE, destArea = 1, destWarpNode = 0}
+    end
+end
+
+hook_event(HOOK_ON_SCREEN_TRANSITION, master_door_on_screen_trans)
+hook_event(HOOK_BEFORE_WARP, master_door_before_warp)

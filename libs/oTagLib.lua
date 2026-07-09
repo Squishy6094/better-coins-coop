@@ -81,9 +81,9 @@ local function nametags_render()
         if (i != 0 && gNametagsSettings.showHealth) {
             djui_hud_set_color(255, 255, 255, alpha);
             f32 healthScale = 90 * scale;
-            f32 prevHealthScale = 90 * e->prevScale;
-            hud_render_power_meter_interpolated(m->health,
-                e->prevPos[0] - (prevHealthScale * 0.5f), e->prevPos[1] - 72 * scale, prevHealthScale, prevHealthScale,
+            f32 prevHealthScale = 90 * e.prevScale;
+            hud_render_power_meter_interpolated(m.health,
+                e.prevPos[0] - (prevHealthScale * 0.5f), e.prevPos[1] - 72 * scale, prevHealthScale, prevHealthScale,
                         out[0] - (    healthScale * 0.5f),        out[1] - 72 * scale,     healthScale,     healthScale
             );
         }

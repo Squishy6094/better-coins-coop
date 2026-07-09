@@ -1,4 +1,4 @@
-LEVEL_MASTER_CAP_STAGE = level_register("level_master_cap_stage_entry", COURSE_NONE, "Master Cap in Paradise", "master_cap_stage", 28000, 0x28, 0x28, 0x28)
+LEVEL_MASTER_CAP_STAGE = level_register("level_master_cap_stage_entry", COURSE_MAX, "Master Cap in Paradise", "master_cap_stage", 28000, 0x28, 0x28, 0x28)
 
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
 local MUSIC_MASTER_CAP_END = audio_stream_load("music-master-cap-end.ogg")
@@ -7,7 +7,6 @@ audio_stream_set_loop_points(MUSIC_MASTER_CAP, 000917230, 003175168)
 audio_stream_set_looping(MUSIC_MASTER_CAP, true)
 audio_stream_set_loop_points(MUSIC_MASTER_CAP_END, 000917230, 003175168)
 audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
-
 
 local function save_file_prefix(str)
     return "saveFile"..tostring(get_current_save_file_num())..(save_file_get_using_backup_slot() and "B" or "")..str
@@ -401,13 +400,13 @@ local function act_master_cap_bubbled(m)
 
     -- make invisible on -1 lives
     --[[
-    if (m->playerIndex == 0) {
-        if (m->numLives <= -1) {
-            m->marioObj->header.gfx.node.flags |= GRAPH_RENDER_INVISIBLE;
+    if (m.playerIndex == 0) {
+        if (m.numLives <= -1) {
+            m.marioObj.header.gfx.node.flags |= GRAPH_RENDER_INVISIBLE;
             level_trigger_warp(m, WARP_OP_DEATH);
             return set_mario_action(m, ACT_SOFT_BONK, 0);
         } else {
-            m->marioObj->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
+            m.marioObj.header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
         }
     }
     ]]
@@ -416,7 +415,7 @@ local function act_master_cap_bubbled(m)
 
     -- pop bubble
     --[[
-    if (m->playerIndex == 0 && distanceToPlayer < 120 && is_player_active(targetMarioState) && m->numLives != -1 && gLocalBubbleCounter == 0) {
+    if (m.playerIndex == 0 && distanceToPlayer < 120 && is_player_active(targetMarioState) && m.numLives != -1 && gLocalBubbleCounter == 0) {
         mario_pop_bubble(m);
         return TRUE;
     }
@@ -788,7 +787,7 @@ local function master_cap_update()
     ]]
 
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
-        spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_WOODEN_SIGNPOST, m.pos.x, m.pos.y, m.pos.z + 300, function(o)
+        spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, m.pos.x, m.pos.y, m.pos.z + 300, function(o)
             
         end)
     end
