@@ -35,7 +35,9 @@ romhackData = {
             [LEVEL_BOB] = {x = -6700, y = 350, z = 4600},
         },
         masterDoorSpawns = {
-            [LEVEL_CASTLE_GROUNDS] = {x = -5600, y = 260, z = 1990}
+            [LEVEL_CASTLE_GROUNDS] = {
+                [1] = {x = -5600, y = 260, z = 1990}
+            },
         },
     }
 }

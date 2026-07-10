@@ -737,21 +737,25 @@ local function find_master_door_spawn_position()
         end
     end
 
-    log_to_console(tostring("Better Coins: Master Door Spawned at ("..math.round(spawnPos.x)..", "..math.round(spawnPos.y)..", "..math.round(spawnPos.z)..") on iteration "..tostring(spawnIteration)..", Took "..tostring(get_time() - spawnStart).." Seconds."))
+    log_to_console(tostring("Better Coins: Master Door Spawned at ("..math.round(spawnPos.x)..", "..math.round(spawnPos.y)..", "..math.round(spawnPos.z)..") in [Level "..gNetworkPlayers[0].currLevelNum.." / Area "..gNetworkPlayers[0].currAreaIndex.."] on iteration "..tostring(spawnIteration)..", Took "..tostring(get_time() - spawnStart).." Seconds."))
     return spawnPos
 end
 
-function master_cap_get_door_spawn(level)
+function master_cap_get_door_spawn(level, area)
     if not romhackData[CURR_ROMHACK].masterDoorSpawns[level] then
-        if gNetworkPlayers[0].currLevelNum == level then
-            romhackData[CURR_ROMHACK].masterDoorSpawns[level] = find_master_door_spawn_position()
-        end
+        romhackData[CURR_ROMHACK].masterDoorSpawns[level] = {}
     end
-    return romhackData[CURR_ROMHACK].masterDoorSpawns[level]
+    if not romhackData[CURR_ROMHACK].masterDoorSpawns[level][area] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
+        romhackData[CURR_ROMHACK].masterDoorSpawns[level][area] = find_master_door_spawn_position()
+    end
+    return romhackData[CURR_ROMHACK].masterDoorSpawns[level][area]
 end
 
-function master_cap_set_door_spawn(level, x, y, z)
-    romhackData[CURR_ROMHACK].masterDoorSpawns[level] = {x = x, y = y, z = z}
+function master_cap_set_door_spawn(level, area, x, y, z)
+    if not romhackData[CURR_ROMHACK].masterDoorSpawns[level] then
+        romhackData[CURR_ROMHACK].masterDoorSpawns[level] = {}
+    end
+    romhackData[CURR_ROMHACK].masterDoorSpawns[level][area] = {x = x, y = y, z = z}
 end
 
 local prevCoinsBest = 0
@@ -766,14 +770,15 @@ local function on_sync()
     local m = gMarioStates[0]
     local levelNum = master_cap_get_merged_level_num()
     local realLevelNum = gNetworkPlayers[0].currLevelNum
+    local areaNum = gNetworkPlayers[0].currAreaIndex
 
     local doorSpawnsExist = false
     for _, _ in pairs(romhackData[CURR_ROMHACK].masterDoorSpawns) do
         doorSpawnsExist = true
         break
     end
-    if not doorSpawnsExist or romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum] then
-        local masterDoorSpawnPos = master_cap_get_door_spawn(realLevelNum)
+    if not doorSpawnsExist or (romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum] and romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum][areaNum]) then
+        local masterDoorSpawnPos = master_cap_get_door_spawn(realLevelNum, areaNum)
 
         spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawnPos.x, masterDoorSpawnPos.y, masterDoorSpawnPos.z, function(o)
             local doorWallAngle = atan2s(masterDoorSpawnPos.z - m.pos.z, masterDoorSpawnPos.x - m.pos.x)
@@ -909,7 +914,7 @@ local function master_cap_update()
     ]]
 
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
-        local masterDoorSpawnPos = master_cap_get_door_spawn(gNetworkPlayers[0].currLevelNum)
+        local masterDoorSpawnPos = master_cap_get_door_spawn(gNetworkPlayers[0].currLevelNum, gNetworkPlayers[0].currAreaIndex)
 
         spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawnPos.x, masterDoorSpawnPos.y, masterDoorSpawnPos.z, function(o)
             local doorWallAngle = atan2s(masterDoorSpawnPos.z - m.pos.z, masterDoorSpawnPos.x - m.pos.x)
