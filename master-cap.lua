@@ -661,20 +661,34 @@ local evilFloorTypes = {
     [SURFACE_DEEP_QUICKSAND] = true,
     [SURFACE_INSTANT_MOVING_QUICKSAND] = true,
     [SURFACE_INSTANT_QUICKSAND] = true,
+    [SURFACE_DEATH_PLANE] = true,
 }
 
 local function find_master_door_spawn_position()
     local spawnPos = nil
     math.randomseed(hash(CURR_ROMHACK))
-    local spawnIteration = 0
     local spawnObj = obj_get_first_with_behavior_id(id_bhvSpinAirborneWarp)
     if not spawnObj then
         spawnObj = obj_get_first_with_behavior_id(id_bhvAirborneWarp)
     end
+    if not spawnObj then
+        spawnObj = obj_get_first_with_behavior_id(id_bhvDoorWarp)
+    end
+    if not spawnObj then
+        spawnObj = obj_get_first_with_behavior_id(id_bhvWarpPipe)
+    end
+    local minX = spawnObj.oPosX - 0x1000
+    local maxX = spawnObj.oPosX + 0x1000
+    local minZ = spawnObj.oPosZ - 0x1000
+    local maxZ = spawnObj.oPosZ + 0x1000
+    local spawnStart = get_time()
+    local spawnIteration = 0
     while spawnPos == nil do
+        local spawnStep = 0
         spawnIteration = spawnIteration + 1
-        local rayFloor = collision_find_surface_on_ray(math.random(-0x4000, 0x4000), 0x4000, math.random(-0x4000, 0x4000), 0, -0x8000, 0, 1)
-        if rayFloor and rayFloor.surface and not evilFloorTypes[rayFloor.surface.type] and math.ceil(rayFloor.surface.normal.y*50) == 50 and rayFloor.hitPos.y > find_water_level(rayFloor.hitPos.x, rayFloor.hitPos.z) then
+        local rayFloor = collision_find_surface_on_ray(math.random(minX, maxX), 0x4000, math.random(minZ, maxZ), 0, -0x8000, 0, 1)
+        if rayFloor.surface and not evilFloorTypes[rayFloor.surface.type] and math.ceil(rayFloor.surface.normal.y*50) == 50 and rayFloor.hitPos.y > find_water_level(rayFloor.hitPos.x, rayFloor.hitPos.z) then
+            spawnStep = spawnStep + 1
             local surfaceX = (rayFloor.surface.vertex1.x + rayFloor.surface.vertex2.x + rayFloor.surface.vertex3.x)/3
             local surfaceY = (rayFloor.surface.vertex1.y + rayFloor.surface.vertex2.y + rayFloor.surface.vertex3.y)/3
             local surfaceZ = (rayFloor.surface.vertex1.z + rayFloor.surface.vertex2.z + rayFloor.surface.vertex3.z)/3
@@ -692,18 +706,21 @@ local function find_master_door_spawn_position()
                 end
             end
 
-            if smallestEdge > 1000 then
+            if smallestEdge > math.max(1500 - math.floor(spawnIteration/250)*100, 100) then --- math.floor(spawnIteration/100)*100 then
+                spawnStep = spawnStep + 1
                 -- Be in eye-shot of mario without being too close
                 local marioPos = {
-                    x = spawnObj.oPosX + sins(spawnObj.oMoveAngleYaw)*100*math.floor(spawnIteration/50),
-                    y = spawnObj.oPosY + 50*math.floor(spawnIteration/50),
-                    z = spawnObj.oPosZ + coss(spawnObj.oMoveAngleYaw)*100*math.floor(spawnIteration/50),
+                    x = spawnObj.oPosX + sins(spawnObj.oMoveAngleYaw)*10*math.floor(spawnIteration/50),
+                    y = spawnObj.oPosY, --+ 50*math.floor(spawnIteration/50),
+                    z = spawnObj.oPosZ + coss(spawnObj.oMoveAngleYaw)*10*math.floor(spawnIteration/50),
                 }
                 local rayMario = collision_find_surface_on_ray(marioPos.x, marioPos.y, marioPos.z, surfaceX - marioPos.x, (surfaceY + 200) - marioPos.y, surfaceZ - marioPos.z, 64)
-                if (not rayMario.surface and surfaceDist > 1000 and surfaceDist < 10000) then --or (spawnIteration > 500 and surfaceDist < 10000) then
+                if (not rayMario.surface and surfaceDist > 1000) then --or (spawnIteration > 500 and surfaceDist < 10000) then
+                    spawnStep = spawnStep + 1
                     -- Avoid spawning close to trees
                     local nTree, nTreeDist = nearest_object_with_behavior_id_to_pos(surfaceX, surfaceY, surfaceZ, id_bhvTree)
-                    if not nTree or nTreeDist > 300 or spawnIteration > 250 then
+                    if not nTree or nTreeDist > 300 then
+                        spawnStep = spawnStep + 1
                         spawnPos = {
                             x = surfaceX,
                             y = surfaceY,
@@ -713,8 +730,14 @@ local function find_master_door_spawn_position()
                 end
             end
         end 
+
+        if get_time() - spawnStart > 10 then
+            log_to_console(tostring("Better Coins: Master Door took 10 Seconds after "..tostring(spawnIteration).." iterations, got stuck on Step "..tostring(spawnStep)..", giving up."), CONSOLE_MESSAGE_ERROR)
+            return {x = 0, y = 0, z = 0}
+        end
     end
 
+    log_to_console(tostring("Better Coins: Master Door Spawned on iteration "..tostring(spawnIteration)..", Took "..tostring(get_time() - spawnStart).." Seconds."))
     return spawnPos
 end
 
@@ -886,8 +909,22 @@ local function master_cap_update()
     ]]
 
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
-        spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, m.pos.x, m.pos.y, m.pos.z + 300, function(o)
-            
+        local masterDoorSpawnPos = master_cap_get_door_spawn(gNetworkPlayers[0].currLevelNum)
+
+        spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawnPos.x, masterDoorSpawnPos.y, masterDoorSpawnPos.z, function(o)
+            local doorWallAngle = atan2s(masterDoorSpawnPos.z - m.pos.z, masterDoorSpawnPos.x - m.pos.x)
+            local doorWallDist = nil
+            for i = 0, 7 do
+                local ray = collision_find_surface_on_ray(masterDoorSpawnPos.x, masterDoorSpawnPos.y + 200, masterDoorSpawnPos.z, sins(i*0x2000)*1000, 0, coss(i*0x2000)*1000, 1)
+                if ray.surface then
+                    rayDist = math.sqrt((ray.hitPos.x - masterDoorSpawnPos.x)^2 + (ray.hitPos.z - masterDoorSpawnPos.z)^2)
+                    if not doorWallDist or doorWallDist > rayDist then
+                        doorWallAngle = i*0x2000
+                        doorWallDist = rayDist
+                    end
+                end
+            end
+            o.oMoveAngleYaw = doorWallAngle + 0x8000
         end)
     end
 
