@@ -7,4 +7,8 @@ _G.betterCoins = {
     master_cap_init_level = master_cap_init_level,
     master_cap_set_merged_level_num = master_cap_set_merged_level_num,
     master_cap_get_merged_level_num = master_cap_get_merged_level_num,
+    master_cap_get_box_spawn = master_cap_get_box_spawn,
+    master_cap_set_box_spawn = master_cap_set_box_spawn,
+    master_cap_get_door_spawn = master_cap_get_door_spawn,
+    master_cap_set_door_spawn = master_cap_set_door_spawn,
 }

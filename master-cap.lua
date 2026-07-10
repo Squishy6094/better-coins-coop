@@ -640,7 +640,7 @@ local function find_master_cap_spawn_position(m)
     return {x = objX, y = objY, z = objZ}
 end
 
-local function master_cap_get_box_spawn(level)
+function master_cap_get_box_spawn(level)
     if not romhackData[CURR_ROMHACK].masterCapSpawns[level] then
         if gNetworkPlayers[0].currLevelNum == level then
             romhackData[CURR_ROMHACK].masterCapSpawns[level] = find_master_cap_spawn_position(gMarioStates[0])
@@ -649,7 +649,7 @@ local function master_cap_get_box_spawn(level)
     return romhackData[CURR_ROMHACK].masterCapSpawns[level]
 end
 
-local function master_cap_set_box_spawn(level, x, y, z)
+function master_cap_set_box_spawn(level, x, y, z)
     romhackData[CURR_ROMHACK].masterCapSpawns[level] = {x = x, y = y, z = z}
 end
 
@@ -665,22 +665,15 @@ local evilFloorTypes = {
 }
 
 local function find_master_door_spawn_position()
+    local m = gMarioStates[0] ---@type MarioState
     local spawnPos = nil
     math.randomseed(hash(CURR_ROMHACK))
-    local spawnObj = obj_get_first_with_behavior_id(id_bhvSpinAirborneWarp)
-    if not spawnObj then
-        spawnObj = obj_get_first_with_behavior_id(id_bhvAirborneWarp)
-    end
-    if not spawnObj then
-        spawnObj = obj_get_first_with_behavior_id(id_bhvDoorWarp)
-    end
-    if not spawnObj then
-        spawnObj = obj_get_first_with_behavior_id(id_bhvWarpPipe)
-    end
-    local minX = spawnObj.oPosX - 0x1000
-    local maxX = spawnObj.oPosX + 0x1000
-    local minZ = spawnObj.oPosZ - 0x1000
-    local maxZ = spawnObj.oPosZ + 0x1000
+    local startPos = m.spawnInfo.startPos
+    local startYaw = m.spawnInfo.startAngle.y
+    local minX = startPos.x - 0x1000
+    local maxX = startPos.x + 0x1000
+    local minZ = startPos.z - 0x1000
+    local maxZ = startPos.z + 0x1000
     local spawnStart = get_time()
     local spawnIteration = 0
     while spawnPos == nil do
@@ -692,7 +685,7 @@ local function find_master_door_spawn_position()
             local surfaceX = (rayFloor.surface.vertex1.x + rayFloor.surface.vertex2.x + rayFloor.surface.vertex3.x)/3
             local surfaceY = (rayFloor.surface.vertex1.y + rayFloor.surface.vertex2.y + rayFloor.surface.vertex3.y)/3
             local surfaceZ = (rayFloor.surface.vertex1.z + rayFloor.surface.vertex2.z + rayFloor.surface.vertex3.z)/3
-            local surfaceDist = math.sqrt((surfaceX - spawnObj.oPosX)^2 + (surfaceZ - spawnObj.oPosZ)^2)
+            local surfaceDist = math.sqrt((surfaceX - startPos.x)^2 + (surfaceZ - startPos.z)^2)
 
             local smallestEdge = nil
             for i = 0, 2 do
@@ -710,9 +703,9 @@ local function find_master_door_spawn_position()
                 spawnStep = spawnStep + 1
                 -- Be in eye-shot of mario without being too close
                 local marioPos = {
-                    x = spawnObj.oPosX + sins(spawnObj.oMoveAngleYaw)*10*math.floor(spawnIteration/50),
-                    y = spawnObj.oPosY, --+ 50*math.floor(spawnIteration/50),
-                    z = spawnObj.oPosZ + coss(spawnObj.oMoveAngleYaw)*10*math.floor(spawnIteration/50),
+                    x = startPos.x + sins(startYaw)*10*math.floor(spawnIteration/50),
+                    y = startPos.y, --+ 50*math.floor(spawnIteration/50),
+                    z = startPos.z + coss(startYaw)*10*math.floor(spawnIteration/50),
                 }
                 local rayMario = collision_find_surface_on_ray(marioPos.x, marioPos.y, marioPos.z, surfaceX - marioPos.x, (surfaceY + 200) - marioPos.y, surfaceZ - marioPos.z, 64)
                 if (not rayMario.surface and surfaceDist > 1000) then --or (spawnIteration > 500 and surfaceDist < 10000) then
@@ -721,10 +714,25 @@ local function find_master_door_spawn_position()
                     local nTree, nTreeDist = nearest_object_with_behavior_id_to_pos(surfaceX, surfaceY, surfaceZ, id_bhvTree)
                     if not nTree or nTreeDist > 300 then
                         spawnStep = spawnStep + 1
+
+                        -- Colc Angle
+                        local doorWallAngle = atan2s(surfaceZ - startPos.z, surfaceX - startPos.x)
+                        local doorWallDist = nil
+                        for i = 0, 7 do
+                            local ray = collision_find_surface_on_ray(surfaceX, surfaceY + 200, surfaceZ, sins(i*0x2000)*1000, 0, coss(i*0x2000)*1000, 1)
+                            if ray.surface then
+                                rayDist = math.sqrt((ray.hitPos.x - surfaceX)^2 + (ray.hitPos.z - surfaceZ)^2)
+                                if not doorWallDist or doorWallDist > rayDist then
+                                    doorWallAngle = i*0x2000
+                                    doorWallDist = rayDist
+                                end
+                            end
+                        end
                         spawnPos = {
                             x = surfaceX,
                             y = surfaceY,
                             z = surfaceZ,
+                            yaw = doorWallAngle + 0x8000,
                         }
                     end
                 end
@@ -733,7 +741,7 @@ local function find_master_door_spawn_position()
 
         if get_time() - spawnStart > 10 then
             log_to_console(tostring("Better Coins: Master Door took 10 Seconds after "..tostring(spawnIteration).." iterations, got stuck on Step "..tostring(spawnStep)..", giving up."), CONSOLE_MESSAGE_ERROR)
-            return {x = 0, y = 0, z = 0}
+            return {x = 0, y = 0, z = 0, yaw = 0}
         end
     end
 
@@ -751,11 +759,11 @@ function master_cap_get_door_spawn(level, area)
     return romhackData[CURR_ROMHACK].masterDoorSpawns[level][area]
 end
 
-function master_cap_set_door_spawn(level, area, x, y, z)
+function master_cap_set_door_spawn(level, area, x, y, z, yaw)
     if not romhackData[CURR_ROMHACK].masterDoorSpawns[level] then
         romhackData[CURR_ROMHACK].masterDoorSpawns[level] = {}
     end
-    romhackData[CURR_ROMHACK].masterDoorSpawns[level][area] = {x = x, y = y, z = z}
+    romhackData[CURR_ROMHACK].masterDoorSpawns[level][area] = {x = x, y = y, z = z, yaw = yaw}
 end
 
 local prevCoinsBest = 0
@@ -781,19 +789,7 @@ local function on_sync()
         local masterDoorSpawnPos = master_cap_get_door_spawn(realLevelNum, areaNum)
 
         spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawnPos.x, masterDoorSpawnPos.y, masterDoorSpawnPos.z, function(o)
-            local doorWallAngle = atan2s(masterDoorSpawnPos.z - m.pos.z, masterDoorSpawnPos.x - m.pos.x)
-            local doorWallDist = nil
-            for i = 0, 7 do
-                local ray = collision_find_surface_on_ray(masterDoorSpawnPos.x, masterDoorSpawnPos.y + 200, masterDoorSpawnPos.z, sins(i*0x2000)*1000, 0, coss(i*0x2000)*1000, 1)
-                if ray.surface then
-                    rayDist = math.sqrt((ray.hitPos.x - masterDoorSpawnPos.x)^2 + (ray.hitPos.z - masterDoorSpawnPos.z)^2)
-                    if not doorWallDist or doorWallDist > rayDist then
-                        doorWallAngle = i*0x2000
-                        doorWallDist = rayDist
-                    end
-                end
-            end
-            o.oMoveAngleYaw = doorWallAngle + 0x8000
+            o.oMoveAngleYaw = masterDoorSpawnPos.yaw or 0
         end)
     end
 
