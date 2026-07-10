@@ -737,7 +737,7 @@ local function find_master_door_spawn_position()
         end
     end
 
-    log_to_console(tostring("Better Coins: Master Door Spawned on iteration "..tostring(spawnIteration)..", Took "..tostring(get_time() - spawnStart).." Seconds."))
+    log_to_console(tostring("Better Coins: Master Door Spawned at ("..math.round(spawnPos.x)..", "..math.round(spawnPos.y)..", "..math.round(spawnPos.z)..") on iteration "..tostring(spawnIteration)..", Took "..tostring(get_time() - spawnStart).." Seconds."))
     return spawnPos
 end
 
