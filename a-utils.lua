@@ -32,14 +32,30 @@ romhackData = {
     ["sm64"] = {
         starCount = 120,
         masterCapSpawns = {
-            [LEVEL_BOB] = {x = -6700, y = 350, z = 4600},
+            [LEVEL_BOB] = {
+                [1] = {x = -6700, y = 350, z = 4600, yaw = 0},
+            },
         },
         masterDoorSpawns = {
             [LEVEL_CASTLE_GROUNDS] = {
                 [1] = {x = -5600, y = 260, z = 1990, yaw = 0x4000}
             },
         },
-    }
+    },
+    ["sm74"] = {
+        starCount = 151,
+        masterCapSpawns = {
+            [LEVEL_BOB] = {
+                --[1] = {x = -6700, y = 350, z = 4600},
+            },
+        },
+        masterDoorSpawns = {
+            [LEVEL_CASTLE_COURTYARD] = {
+                [1] = {x = 3708, y = -714, z = -1200, yaw = -0x2000},
+                [2] = {x = -3708, y = -765, z = -1200, yaw = 0x2000},
+            },
+        },
+    },
 }
 
 if not romhackData[CURR_ROMHACK] then

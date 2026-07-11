@@ -943,7 +943,7 @@ E_MODEL_MASTER_DOOR = smlua_model_util_get_id("master_door_geo")
 local setDoorTrans = false
 local function master_door_on_screen_trans(type)
     local m = gMarioStates[0] ---@type MarioState
-    if m.action == ACT_PULLING_DOOR or m.action == ACT_PUSHING_DOOR and m.usedObj and obj_get_model_id_extended(m.usedObj) == E_MODEL_MASTER_DOOR then
+    if (m.action == ACT_PULLING_DOOR or m.action == ACT_PUSHING_DOOR) and m.usedObj and obj_get_model_id_extended(m.usedObj) == E_MODEL_MASTER_DOOR then
         if setDoorTrans then
             setDoorTrans = false
             play_transition(WARP_TRANSITION_FADE_INTO_CIRCLE, 0x14, 0xFF, 0xFF, 0xFF)

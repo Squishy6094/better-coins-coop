@@ -71,7 +71,7 @@ function master_cap_init_level(levelNum)
     gMasterCapServerState[levelNum] = {
         romhack = romhack,
         saveLevelNum = saveLevelNum,
-        runActive = false,
+        runState = 0,
         newRecord = false,
         capTimer = 0,
         totalTimer = 0,
@@ -129,7 +129,7 @@ end
 function mario_master_cap_active(m, levelNum)
     levelNum = master_cap_get_merged_level_num(levelNum)
     if levelNum ~= master_cap_get_merged_level_num(gNetworkPlayers[m.playerIndex].currLevelNum) then return false end
-    return master_cap_data_get_field(levelNum, "runActive") and not gPlayerSyncTable[m.playerIndex].endRunActs
+    return master_cap_data_get_field(levelNum, "runState") == 1 and not gPlayerSyncTable[m.playerIndex].endRunActs
 end
 
 function network_player_master_cap_count(currLevel)
@@ -150,7 +150,7 @@ function master_cap_start_course(levelNum, noSync)
     levelNum = master_cap_get_merged_level_num(levelNum)
     masterCapMusicFreq = 1
 
-    master_cap_data_set_field(levelNum, "runActive", true)
+    master_cap_data_set_field(levelNum, "runState", 1)
     master_cap_data_set_field(levelNum, "newRecord", false)
     master_cap_data_set_field(levelNum, "capTimer", math.floor(gLevelValues.wingCapDuration*0.5))
     master_cap_data_set_field(levelNum, "totalTimer", 0)
@@ -169,7 +169,7 @@ function master_cap_stop_course(levelNum, newRecord, coinTimer, noSync)
     levelNum = master_cap_get_merged_level_num(levelNum)
 
     master_cap_data_set_field(levelNum, "capTimer", math.floor(gLevelValues.wingCapDuration*0.5))
-    master_cap_data_set_field(levelNum, "runActive", false)
+    master_cap_data_set_field(levelNum, "runState", 2)
     if newRecord then
         master_cap_data_set_field(levelNum, "newRecord", true)
     end
@@ -336,7 +336,7 @@ local function act_master_cap_bubbled(m)
 
     -- Show results if run has ended
     if (m.playerIndex == 0) then
-        if not master_cap_data_get_field(nil, "runActive") then
+        if master_cap_data_get_field(nil, "runState") ~= 1 then
             return set_mario_finished_master_cap(m)
         end
     end
@@ -519,7 +519,9 @@ local function bhv_master_cap_box_loop(o)
                 network_send_object(o, true)
             end
         end
-        load_object_collision_model()
+        if nearestM.action & ACT_FLAG_SWIMMING_OR_FLYING == 0 then
+            load_object_collision_model()
+        end
 
         if cur_obj_check_if_at_animation_end() ~= 0 then
             cur_obj_play_sound_1(SOUND_OBJ_BOWSER_SPINNING)
@@ -599,62 +601,6 @@ end
 
 local E_MODEL_MASTER_CAP = smlua_model_util_get_id("master_box_geo")
 
-local nearestObjPos = {x = 0, y = 0, z = 0}
-local mFloor = {x = 0, y = 0, z = 0}
-local capSpawnRadius = 400
----@param m MarioState
-local function find_master_cap_spawn_position(m)
-    mFloor.x = m.pos.x
-    mFloor.y = math.max(m.floorHeight, (m.waterLevel or -0x8000) - 200)
-    mFloor.z = m.pos.z
-    nearestObjPos.x = m.pos.x
-    nearestObjPos.y = 0x8000
-    nearestObjPos.z = m.pos.z
-    local prevDist = 0x8000
-    for i = 0, NUM_OBJ_LISTS - 1 do
-        if i ~= OBJ_LIST_PLAYER then
-            local o = obj_get_first(i)
-            while o ~= nil do
-                if obj_has_model_extended(o, E_MODEL_NONE) == 0 and (m.waterLevel == nil or o.oPosY > m.waterLevel) then
-                    local currDist = math.sqrt((mFloor.x - o.oPosX)^2 + (mFloor.y - o.oPosY)^2 + (nearestObjPos.z - o.oPosZ)^2)
-                    if (currDist < prevDist) then
-                        nearestObjPos.x = o.oPosX
-                        nearestObjPos.y = o.oPosY
-                        nearestObjPos.z = o.oPosZ
-                        prevDist = math.sqrt((mFloor.x - nearestObjPos.x)^2 + (mFloor.y - nearestObjPos.y)^2 + (mFloor.z - nearestObjPos.z)^2)
-                    end
-                end
-                o = obj_get_next(o)
-            end
-        end
-    end
-
-    nearestObjPos = (collision_find_surface_on_ray(m.pos.x, m.pos.y + 160, m.pos.z, nearestObjPos.x - m.pos.x, nearestObjPos.y - m.pos.y, nearestObjPos.z - m.pos.z, 128).hitPos)
-
-    local neicheActs = m.action & ACT_FLAG_SWIMMING_OR_FLYING ~= 0
-    local neicheOffsetX = neicheActs and sins(m.faceAngle.y + 0x2000)*1000 or 0
-    local neicheOffsetY = neicheActs and coss(m.faceAngle.y + 0x2000)*1000 or 0
-    local objX = math.clamp(math.lerp(mFloor.x, nearestObjPos.x, 0.5), mFloor.x - capSpawnRadius, mFloor.x + capSpawnRadius) + neicheOffsetX
-    local objY = math.clamp(neicheActs and m.pos.y - 250 or mFloor.y, m.pos.y - 500, m.pos.y + 500)
-    local objZ = math.clamp(math.lerp(mFloor.z, nearestObjPos.z, 0.5), mFloor.z - capSpawnRadius, mFloor.z + capSpawnRadius) + neicheOffsetY
-    return {x = objX, y = objY, z = objZ}
-end
-
-function master_cap_get_box_spawn(level)
-    if not romhackData[CURR_ROMHACK].masterCapSpawns[level] then
-        if gNetworkPlayers[0].currLevelNum == level then
-            romhackData[CURR_ROMHACK].masterCapSpawns[level] = find_master_cap_spawn_position(gMarioStates[0])
-        end
-    end
-    return romhackData[CURR_ROMHACK].masterCapSpawns[level]
-end
-
-function master_cap_set_box_spawn(level, x, y, z)
-    romhackData[CURR_ROMHACK].masterCapSpawns[level] = {x = x, y = y, z = z}
-end
-
-master_cap_set_box_spawn(LEVEL_MASTER_CAP_STAGE, 0, 350, -1500)
-
 local evilFloorTypes = {
     [SURFACE_BURNING] = true,
     [SURFACE_DEEP_MOVING_QUICKSAND] = true,
@@ -663,6 +609,118 @@ local evilFloorTypes = {
     [SURFACE_INSTANT_QUICKSAND] = true,
     [SURFACE_DEATH_PLANE] = true,
 }
+
+local capSpawnRadius = 400
+local function find_master_cap_spawn_position()
+    local m = gMarioStates[0] ---@type MarioState
+    local spawnPos = nil
+    math.randomseed(hash(CURR_ROMHACK))
+    local startPos = m.spawnInfo.startPos
+    local startYaw = m.spawnInfo.startAngle.y
+    local startFloorHeight, startFloor = find_floor(startPos.x, startPos.y, startPos.z)
+    local minX = startPos.x - 1000
+    local maxX = startPos.x + 1000
+    local minZ = startPos.z - 1000
+    local maxZ = startPos.z + 1000
+    local spawnStart = get_time()
+    local spawnIteration = 0
+    while spawnPos == nil do
+        local spawnStep = 0
+        spawnIteration = spawnIteration + 1
+        local findFloorX = math.random(minX, maxX)
+        local findFloorZ = math.random(minZ, maxZ)
+        local findFloorHeight, findFloor = find_floor(findFloorX, 0x4000, findFloorZ)
+        if findFloor and findFloor ~= startFloor and not evilFloorTypes[findFloor.type] and math.ceil(findFloor.normal.y*50) == 50 and findFloorHeight > find_water_level(findFloorX, findFloorZ) then
+            spawnStep = spawnStep + 1
+            local surfaceX = (findFloor.vertex1.x + findFloor.vertex2.x + findFloor.vertex3.x)/3
+            local surfaceY = (findFloor.vertex1.y + findFloor.vertex2.y + findFloor.vertex3.y)/3
+            local surfaceZ = (findFloor.vertex1.z + findFloor.vertex2.z + findFloor.vertex3.z)/3
+            local surfaceDist = math.sqrt((surfaceX - startPos.x)^2 + (surfaceZ - startPos.z)^2)
+
+            local smallestEdge = nil
+            for i = 0, 2 do
+                local currNum = (i%3) + 1
+                local nextNum = ((i+1)%3) + 1
+                local currPos = findFloor["vertex"..tostring(currNum)]
+                local nextPos = findFloor["vertex"..tostring(nextNum)]
+                local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.z - nextPos.z)^2)
+                if not smallestEdge or smallestEdge > edgeDist then
+                    smallestEdge = edgeDist
+                end
+            end
+
+            if smallestEdge > math.max(1500 - math.floor(spawnIteration/250)*100, 100) then --- math.floor(spawnIteration/100)*100 then
+                spawnStep = spawnStep + 1
+                -- Be in eye-shot of mario without being too close
+                local marioPos = {
+                    x = startPos.x + sins(startYaw)*10*math.floor(spawnIteration/50),
+                    y = startFloorHeight + 160,
+                    z = startPos.z + coss(startYaw)*10*math.floor(spawnIteration/50),
+                }
+                local rayMario = collision_find_surface_on_ray(marioPos.x, marioPos.y, marioPos.z, surfaceX - marioPos.x, (surfaceY + 200) - marioPos.y, surfaceZ - marioPos.z, 64)
+                if (not rayMario.surface --[[and surfaceDist > 500]]) then --or (spawnIteration > 500 and surfaceDist < 10000) then
+                    spawnStep = spawnStep + 1
+                    -- Avoid spawning close to trees
+                    local nTree, nTreeDist = nearest_object_with_behavior_id_to_pos(surfaceX, surfaceY, surfaceZ, id_bhvTree)
+                    if true then --not nTree or nTreeDist > 300 then
+                        spawnStep = spawnStep + 1
+
+                        -- Colc Angle
+                        local doorWallAngle = atan2s(surfaceZ - startPos.z, surfaceX - startPos.x)
+                        local doorWallDist = nil
+                        for i = 0, 7 do
+                            local ray = collision_find_surface_on_ray(surfaceX, surfaceY + 200, surfaceZ, sins(i*0x2000)*1000, 0, coss(i*0x2000)*1000, 1)
+                            if ray.surface then
+                                rayDist = math.sqrt((ray.hitPos.x - surfaceX)^2 + (ray.hitPos.z - surfaceZ)^2)
+                                if not doorWallDist or doorWallDist > rayDist then
+                                    doorWallAngle = i*0x2000
+                                    doorWallDist = rayDist
+                                end
+                            end
+                        end
+                        spawnPos = {
+                            x = surfaceX,
+                            y = surfaceY + 400,
+                            z = surfaceZ,
+                            yaw = doorWallAngle + 0x8000,
+                        }
+                    end
+                end
+            end
+        end 
+
+        if m.action & ACT_FLAG_SWIMMING_OR_FLYING ~= 0 then
+            return {x = 0, y = 0, z = 0, yaw = 0}
+        end
+
+        if get_time() - spawnStart > 10 then
+            log_to_console(tostring("Better Coins: Master Cap took 10 Seconds after "..tostring(spawnIteration).." iterations, got stuck on Step "..tostring(spawnStep)..", giving up."), CONSOLE_MESSAGE_ERROR)
+            return {x = 0, y = 0, z = 0, yaw = 0}
+        end
+    end
+
+    log_to_console(tostring("Better Coins: Master Cap Spawned at ("..math.round(spawnPos.x)..", "..math.round(spawnPos.y)..", "..math.round(spawnPos.z)..") in [Level "..gNetworkPlayers[0].currLevelNum.." / Area "..gNetworkPlayers[0].currAreaIndex.."] on iteration "..tostring(spawnIteration)..", Took "..tostring(get_time() - spawnStart).." Seconds."))
+    return spawnPos
+end
+
+function master_cap_get_box_spawn(level, area)
+    if not romhackData[CURR_ROMHACK].masterCapSpawns[level] then
+        romhackData[CURR_ROMHACK].masterCapSpawns[level] = {}
+    end
+    if not romhackData[CURR_ROMHACK].masterCapSpawns[level][area] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
+        romhackData[CURR_ROMHACK].masterCapSpawns[level][area] = find_master_cap_spawn_position()
+    end
+    return romhackData[CURR_ROMHACK].masterCapSpawns[level][area]
+end
+
+function master_cap_set_box_spawn(level, area, x, y, z, yaw)
+    if not romhackData[CURR_ROMHACK].masterCapSpawns[level] then
+        romhackData[CURR_ROMHACK].masterCapSpawns[level] = {}
+    end
+    romhackData[CURR_ROMHACK].masterCapSpawns[level][area] = {x = x, y = y, z = z, yaw = yaw}
+end
+
+master_cap_set_box_spawn(LEVEL_MASTER_CAP_STAGE, 1, 0, 350, -1500, 0)
 
 local function find_master_door_spawn_position()
     local m = gMarioStates[0] ---@type MarioState
@@ -704,10 +762,10 @@ local function find_master_door_spawn_position()
                 -- Be in eye-shot of mario without being too close
                 local marioPos = {
                     x = startPos.x + sins(startYaw)*10*math.floor(spawnIteration/50),
-                    y = startPos.y, --+ 50*math.floor(spawnIteration/50),
+                    y = find_floor(startPos.x, startPos.y, startPos.z) + 160, --+ 50*math.floor(spawnIteration/50),
                     z = startPos.z + coss(startYaw)*10*math.floor(spawnIteration/50),
                 }
-                local rayMario = collision_find_surface_on_ray(marioPos.x, marioPos.y, marioPos.z, surfaceX - marioPos.x, (surfaceY + 200) - marioPos.y, surfaceZ - marioPos.z, 64)
+                local rayMario = collision_find_surface_on_ray(marioPos.x, marioPos.y + 160, marioPos.z, surfaceX - marioPos.x, (surfaceY + 200) - marioPos.y, surfaceZ - marioPos.z, 64)
                 if (not rayMario.surface and surfaceDist > 1000) then --or (spawnIteration > 500 and surfaceDist < 10000) then
                     spawnStep = spawnStep + 1
                     -- Avoid spawning close to trees
@@ -768,57 +826,56 @@ end
 
 local prevCoinsBest = 0
 local prevTimeBest = 0
-local prevLevelNum = 0
 local function on_sync()
     if GAMEMODE_ACTIVE then return end
     if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() then
         gLevelValues.disableActs = true
     end
 
-    local m = gMarioStates[0]
     local levelNum = master_cap_get_merged_level_num()
     local realLevelNum = gNetworkPlayers[0].currLevelNum
     local areaNum = gNetworkPlayers[0].currAreaIndex
 
-    local doorSpawnsExist = false
-    for _, _ in pairs(romhackData[CURR_ROMHACK].masterDoorSpawns) do
-        doorSpawnsExist = true
-        break
-    end
-    if not doorSpawnsExist or (romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum] and romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum][areaNum]) then
-        local masterDoorSpawnPos = master_cap_get_door_spawn(realLevelNum, areaNum)
-
-        spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawnPos.x, masterDoorSpawnPos.y, masterDoorSpawnPos.z, function(o)
-            o.oMoveAngleYaw = masterDoorSpawnPos.yaw or 0
-        end)
-    end
-
-    if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() and levelNum ~= -1 and master_cap_data_exists(levelNum) then
-        prevCoinsBest, prevTimeBest = master_cap_get_record(levelNum)
-        if master_cap_data_get_field(levelNum, "runActive") then
-            if prevLevelNum ~= levelNum then
-                set_mario_finished_master_cap(m)
-            end
-            return
+    if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() then
+        local doorSpawnsExist = false
+        for _, _ in pairs(romhackData[CURR_ROMHACK].masterDoorSpawns) do
+            doorSpawnsExist = true
+            break
         end
-        if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
-        if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
-        prevLevelNum = levelNum
 
-        masterCapSpawnPos = master_cap_get_box_spawn(levelNum)
-
-        spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, 
-            masterCapSpawnPos.x, 
-            masterCapSpawnPos.y, 
-            masterCapSpawnPos.z, function (o)
+        -- Spawn Door
+        if not doorSpawnsExist or (romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum] and romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum][areaNum]) then
+            local masterDoorSpawn = master_cap_get_door_spawn(realLevelNum, areaNum)
+            spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
                 o.oFaceAnglePitch = 0
-                o.oFaceAngleYaw = math.round(math.s16(gLakituState.yaw + 0x4000)/0x4000)*0x4000
+                o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
                 o.oFaceAngleRoll = 0
 
                 o.oMoveAnglePitch = o.oFaceAnglePitch
                 o.oMoveAngleYaw = o.oFaceAngleYaw
                 o.oMoveAngleRoll = o.oFaceAngleRoll
             end)
+        end
+        
+        -- Spawn Cap
+        if levelNum ~= -1 or (romhackData[CURR_ROMHACK].masterCapSpawns[realLevelNum] and romhackData[CURR_ROMHACK].masterCapSpawns[realLevelNum][areaNum]) then
+            --if master_cap_data_exists(levelNum) then return end
+            if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
+            if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
+
+            local masterCapSpawn = master_cap_get_box_spawn(realLevelNum, areaNum)
+            if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runState") == 0 then
+                spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)
+                    o.oFaceAnglePitch = 0
+                    o.oFaceAngleYaw = masterCapSpawn.yaw or 0
+                    o.oFaceAngleRoll = 0
+
+                    o.oMoveAnglePitch = o.oFaceAnglePitch
+                    o.oMoveAngleYaw = o.oFaceAngleYaw
+                    o.oMoveAngleRoll = o.oFaceAngleRoll
+                end)
+            end
+        end
     end
 end
 
@@ -826,11 +883,7 @@ local prevRunState = 0
 local runCrouchTimer = 0
 local function master_cap_music_update()
     local m = gMarioStates[0]
-    local runActive = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runActive")
-    local runState = 0
-    if runActive then
-        runState = 1
-    end
+    local runState = master_cap_data_get_field(nil, "runState")
     if gPlayerSyncTable[0].endRunActs then
         runState = 2
     end
@@ -877,6 +930,7 @@ local levelsProcessed = {}
 local prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
 local prevFileProgress = save_file_get_flags()
 local function master_cap_update()
+    if GAMEMODE_ACTIVE then return end
     local m = gMarioStates[0] ---@type MarioState
     gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
     gPlayerSyncTable[0].endRunActs = (m.action == ACT_MASTER_CAP_BUBBLED or m.action == ACT_MASTER_CAP_RESULTS)
@@ -932,8 +986,8 @@ local function master_cap_update()
     master_cap_music_update()
     --if m.playerIndex ~= 0 then return end
     -- Locally Apply Master Cap
-    local runActive = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runActive")
-    if runActive then
+    local runState = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runState") == 1
+    if runState then
         m.capTimer = master_cap_data_get_field(nil, "capTimer")
         m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
         if m and m.area and m.area.camera then
@@ -967,7 +1021,19 @@ local function master_cap_update()
         -- Update All Levels' Runs
         for i = 1, maxRomhackCheck do
             local levelNum = master_cap_get_merged_level_num(i)
-            if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runActive") and not levelsProcessed[levelNum] then
+            if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runState") == 2 then
+                djui_chat_message_create("waitforreset")
+                local noOneInLevel = true
+                for index = 0, MAX_PLAYERS - 1 do
+                    if gNetworkPlayers[index].connected and levelNum == master_cap_get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
+                        noOneInLevel = false
+                    end
+                end
+                if noOneInLevel then
+                    master_cap_data_set_field(levelNum, "runState", 0)
+                end
+            end
+            if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runState") == 1 and not levelsProcessed[levelNum] then
                 levelsProcessed[levelNum] = true
 
                 local coins = master_cap_data_get_field(levelNum, "coins")
@@ -993,13 +1059,14 @@ local function master_cap_update()
                             local isRecord = master_cap_data_get_field(levelNum, "newRecord")
                             local noOneInLevel = true
                             for index = 0, MAX_PLAYERS - 1 do
-                                if levelNum == master_cap_get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
+                                if gNetworkPlayers[index].connected and levelNum == master_cap_get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
                                     noOneInLevel = false
                                 end
                             end
                             if noOneInLevel then
                                 local levelName = get_level_name(courseNum, levelNum, 1)
                                 djui_popup_create_global(levelName..(levelName:sub(-1):lower() == "s" and "'" or "'s").."\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(coins) .. " | Time: " .. timestamp(master_cap_data_get_field(levelNum, "coinTimer")), isRecord and 6 or 5)
+                                master_cap_data_set_field(levelNum, "runState", 0)
                             end
                         end
                     else
@@ -1056,8 +1123,8 @@ local function master_cap_render()
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
-    local runActive = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runActive")
-    if runActive then
+    local runState = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runState") == 1
+    if runState then
         djui_hud_set_font(FONT_HUD)
         local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
         local textScale = math.min(sWidth/(textW + 32), 1)
@@ -1132,7 +1199,7 @@ end
 
 local function on_death()
     local m = gMarioStates[0]
-    if master_cap_data_get_field(nil, "runActive") then
+    if master_cap_data_get_field(nil, "runState") == 1 then
         set_mario_finished_master_cap(m)
         return false
     end
