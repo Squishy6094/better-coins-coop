@@ -1,3 +1,9 @@
+
+---@param status boolean? Forces Master Cap On/Off (use nil to return to default functionality)
+local function master_cap_allow_spawn(status)
+    gGlobalSyncTable.allowMasterCapApi = status
+end
+
 _G.betterCoins = {
     bhv_init_for_magnitize = bhv_init_for_magnitize,
     bhv_check_for_magnitize = bhv_check_for_magnitize,
@@ -11,4 +17,5 @@ _G.betterCoins = {
     master_cap_set_box_spawn = master_cap_set_box_spawn,
     master_cap_get_door_spawn = master_cap_get_door_spawn,
     master_cap_set_door_spawn = master_cap_set_door_spawn,
+    master_cap_allow_spawn = master_cap_allow_spawn,
 }

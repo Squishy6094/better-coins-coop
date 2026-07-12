@@ -12,6 +12,8 @@ gLevelValues.respawnBlueCoinsSwitch = 1
 
 gGlobalSyncTable.mouseGrab = false
 gGlobalSyncTable.courtyardSecretSolved = false
+gGlobalSyncTable.allowMasterCap = true
+gGlobalSyncTable.allowMasterCapApi = nil
 
 -- Handle Level and Server Settings
 gBetterCoinValues = {}
@@ -329,3 +331,45 @@ hook_event(HOOK_ON_INTERACT, interact)
 hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
 hook_event(HOOK_ON_SYNC_VALID, courtyard_secret)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
+
+local commands = {
+    ["master-cap"] = {
+        desc = "Toggle if Master Cap is allowed to appear.",
+        function()
+        end,
+    },
+
+}
+
+local function chat_command(msg)
+    local moderator = network_is_server() or network_is_moderator()
+    local msgSplit = string_split(msg)
+
+    if msgSplit[1] == "master-cap" then
+        if moderator then
+            if gGlobalSyncTable.allowMasterCapApi ~= nil then
+                djui_chat_message_create("This option is being forced by the API.")
+            else
+                gGlobalSyncTable.allowMasterCap = not gGlobalSyncTable.allowMasterCap
+                djui_chat_message_create("Master Cap has been turned ".. (gGlobalSyncTable.allowMasterCap and "On" or "Off")..".")
+            end
+        else
+            djui_chat_message_create("This command is host only.")
+        end
+        return true
+    end
+
+    local askedForHelp = false
+    if msgSplit[1] == "?" or msgSplit[1] == "help" then
+        askedForHelp = true
+    end
+
+    if not askedForHelp then
+        djui_chat_message_create("Invalid Command (/better-coins help)")
+    end
+    djui_chat_message_create("")
+
+    return askedForHelp
+end
+
+hook_chat_command("better-coins", "- Toggle options for Better Coins\nUse \\#00ff00\\/better-coins help\\#ffffff\\ for command info!", chat_command)

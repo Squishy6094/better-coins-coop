@@ -8,6 +8,16 @@ audio_stream_set_looping(MUSIC_MASTER_CAP, true)
 audio_stream_set_loop_points(MUSIC_MASTER_CAP_END, 000917230, 003175168)
 audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
 
+gGlobalSyncTable.allowMasterCap = true
+gGlobalSyncTable.allowMasterCapApi = nil
+function master_cap_allowed()
+    if gGlobalSyncTable.allowMasterCapApi ~= nil then
+        return gGlobalSyncTable.allowMasterCapApi
+    else
+        return gGlobalSyncTable.allowMasterCap and not GAMEMODE_ACTIVE
+    end
+end
+
 local function save_file_prefix(str)
     return "saveFile"..tostring(get_current_save_file_num())..(save_file_get_using_backup_slot() and "B" or "")..str
 end
@@ -588,6 +598,10 @@ local function bhv_master_cap_box_loop(o)
         o.oSubAction = 2
         network_send_object(o, true)
     end
+
+    if not master_cap_allowed() then
+        obj_mark_for_deletion(o)
+    end
 end
 
 id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, bhv_master_cap_box_init, bhv_master_cap_box_loop, "bhvMasterCapBox")
@@ -827,7 +841,7 @@ end
 local prevCoinsBest = 0
 local prevTimeBest = 0
 local function on_sync()
-    if GAMEMODE_ACTIVE then return end
+    if not master_cap_allowed() then return end
     if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() then
         gLevelValues.disableActs = true
     end
@@ -930,10 +944,12 @@ local levelsProcessed = {}
 local prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
 local prevFileProgress = save_file_get_flags()
 local function master_cap_update()
-    if GAMEMODE_ACTIVE then return end
+    if not master_cap_allowed() then return end
     local m = gMarioStates[0] ---@type MarioState
     gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
     gPlayerSyncTable[0].endRunActs = (m.action == ACT_MASTER_CAP_BUBBLED or m.action == ACT_MASTER_CAP_RESULTS)
+
+    prevCoinsBest, prevTimeBest = master_cap_get_record()
 
     -- Check for Defeating Final Bowser
     if m.action == ACT_JUMBO_STAR_CUTSCENE or gNetworkPlayers[0].currLevelNum == LEVEL_ENDING then
@@ -1022,7 +1038,6 @@ local function master_cap_update()
         for i = 1, maxRomhackCheck do
             local levelNum = master_cap_get_merged_level_num(i)
             if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runState") == 2 then
-                djui_chat_message_create("waitforreset")
                 local noOneInLevel = true
                 for index = 0, MAX_PLAYERS - 1 do
                     if gNetworkPlayers[index].connected and levelNum == master_cap_get_merged_level_num(gNetworkPlayers[index].currLevelNum) then

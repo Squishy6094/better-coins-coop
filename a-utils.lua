@@ -219,6 +219,19 @@ function hash(word)
     return result
 end
 
+---@param string string
+--- Splits a string into a table by spaces
+function string_split(string, splitAt)
+    if splitAt == nil then
+        splitAt = " "
+    end
+    local result = {}
+    for match in string:gmatch(string.format("[^%s]+", splitAt)) do
+        table.insert(result, match)
+    end
+    return result
+end
+
 function nearest_antibubble_mario_state_to_object(obj)
     if (not obj) then return nil end
     local nearest = nil;
