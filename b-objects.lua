@@ -299,17 +299,23 @@ local function bhv_scarecrow_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.oHealth = 1
     o.oGravity = 5
+    o.oBuoyancy = 1.3
     o.oHomeX = o.oPosX
     o.oHomeY = o.oPosY
     o.oHomeZ = o.oPosZ
+
+    local objHitbox = get_temp_object_hitbox()
+    objHitbox.hurtboxRadius = 80
+    objHitbox.hurtboxHeight = 180
+    objHitbox.radius = 80
+    objHitbox.height = 180
+    objHitbox.health = 1
+    obj_set_hitbox(o, objHitbox)
 end
 
 
 ---@param o Object
 local function bhv_scarecrow_loop(o)
-    local objHitbox = get_temp_object_hitbox()
-    objHitbox.hurtboxRadius = 50
-    objHitbox.hurtboxHeight = 180
 
     local step = object_step_without_floor_orient()
 
@@ -330,6 +336,8 @@ local function bhv_scarecrow_loop(o)
     elseif o.oAction == 2 then -- Bounce Away from Mario
         o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
         if floorHeight + 30 >= o.oPosY then
+            o.header.gfx.animInfo.animFrame = 0
+            smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)
             if o.oHealth == 0 then
                 o.oAction = 3
                 return
@@ -341,11 +349,11 @@ local function bhv_scarecrow_loop(o)
             if floor and floor.normal.y < 0.9 then
                 o.oMoveAngleYaw = atan2s(floor.normal.z, floor.normal.x)
             else
-                o.oMoveAngleYaw = math.round(atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x)/0x4000)*0x4000 + (bounceRng and 0x2000 or -0x2000)
+                o.oMoveAngleYaw = math.round(atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x)/0x2000)*0x2000 + (bounceRng and 0x2000 or -0x2000)
             end
             djui_chat_message_create("land")
         end
-        --o.oForwardVel = 30
+        o.oForwardVel = find_water_level(o.oPosX, o.oPosZ) - 30 < o.oPosY and 30 or 15
 
         if o.oHealth > 0 and obj_check_hitbox_overlap(o, m.marioObj) and determine_interaction(m,o) ~= 0 then
             o.oHealth = 0
@@ -359,14 +367,6 @@ local function bhv_scarecrow_loop(o)
                 end)
             end
         end
-
-        --if o.oVelY > 0 then
-        smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)
-        --else
-        --    smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE_END)
-        --end
-        --o.header.gfx.animInfo.animAccel = 0x10000 * 2
-
 
         if dist > 4000 then
             o.oAction = 1
