@@ -313,11 +313,10 @@ local function bhv_scarecrow_init(o)
     obj_set_hitbox(o, objHitbox)
 end
 
-
 ---@param o Object
 local function bhv_scarecrow_loop(o)
 
-    local step = object_step_without_floor_orient()
+    local step = object_step()
 
     local floorHeight, floor = find_floor(o.oPosX + o.oVelX, o.oPosY + 50, o.oPosZ + o.oVelZ)
     local m = nearest_mario_state_to_object(o)
@@ -335,9 +334,10 @@ local function bhv_scarecrow_loop(o)
         end
     elseif o.oAction == 2 then -- Bounce Away from Mario
         o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
-        if floorHeight + 30 >= o.oPosY then
-            o.header.gfx.animInfo.animFrame = 0
+        if step & OBJ_COL_FLAG_GROUNDED ~= 0 then
+            o.oForwardVel = find_water_level(o.oPosX, o.oPosZ) - 30 < o.oPosY and 30 or 15
             smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)
+            o.header.gfx.animInfo.animFrame = 0
             if o.oHealth == 0 then
                 o.oAction = 3
                 return
@@ -345,17 +345,22 @@ local function bhv_scarecrow_loop(o)
             o.oVelY = 50
             local bounceRng = math.random(1, 2) == 1
             play_sound(bounceRng and SOUND_GENERAL_BOING1 or SOUND_GENERAL_BOING2, o.header.gfx.cameraToObject)
-            djui_chat_message_create(tostring(floor.normal.y))
             if floor and floor.normal.y < 0.9 then
                 o.oMoveAngleYaw = atan2s(floor.normal.z, floor.normal.x)
             else
-                o.oMoveAngleYaw = math.round(atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x)/0x2000)*0x2000 + (bounceRng and 0x2000 or -0x2000)
+                o.oMoveAngleYaw = math.round(atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x)/0x4000)*0x4000 + (bounceRng and 0x2000 or -0x2000)
+                for i = 0, 7 do
+                    local targetAngle = o.oMoveAngleYaw + 0x2000*i
+                    local floorHeight, floor = find_floor(o.oPosX + sins(targetAngle)*600, o.oPosY + 500, o.oPosZ + coss(targetAngle)*600)
+                    if floor and floor.normal.y > 0.9 and math.abs(floorHeight - o.oPosY) < 300 then
+                        o.oMoveAngleYaw = targetAngle
+                        break
+                    end
+                end
             end
-            djui_chat_message_create("land")
         end
-        o.oForwardVel = find_water_level(o.oPosX, o.oPosZ) - 30 < o.oPosY and 30 or 15
 
-        if o.oHealth > 0 and obj_check_hitbox_overlap(o, m.marioObj) and determine_interaction(m,o) ~= 0 then
+        if o.oHealth > 0 and obj_check_hitbox_overlap(o, m.marioObj) and determine_interaction(m, o) ~= 0 then
             o.oHealth = 0
             play_sound(SOUND_ACTION_UNSTUCK_FROM_GROUND, o.header.gfx.cameraToObject)
             --spawn_coin_spawner(o, 25, false, 0, 200, 0)
@@ -373,6 +378,13 @@ local function bhv_scarecrow_loop(o)
         end
     elseif o.oAction == 3 then -- Fall over when hit
         smlua_anim_util_set_animation(o, ANIM_SCARECROW_FALL_BACKWARDS)
+        if cur_obj_check_if_at_animation_end() == 0 then
+            o.oTimer = 0
+        end
+        if o.oTimer > 15 then
+            obj_mark_for_deletion(o)
+            spawn_mist_particles()
+        end
     end
     if not m then
         o.oAction = 1
@@ -389,10 +401,9 @@ end
 
 local function bhv_scarecrow_head_loop(o)
     local step = object_step_without_floor_orient()
-    local floorHeight, floor = find_floor(o.oPosX + o.oVelX, o.oPosY + 50, o.oPosZ + o.oVelZ)
     o.oForwardVel = 60
     o.oFaceAnglePitch = o.oFaceAnglePitch + 0x800
-    if o.oVelY < -40 or floorHeight + 50 >= o.oPosY then
+    if o.oVelY < -40 or step & OBJ_COL_FLAG_GROUNDED ~= 0 then
         play_sound(SOUND_GENERAL_DONUT_PLATFORM_EXPLOSION, o.header.gfx.cameraToObject)
         spawn_coin_spawner(o, 25, true)
         spawn_mist_particles()

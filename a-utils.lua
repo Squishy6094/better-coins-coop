@@ -41,6 +41,7 @@ romhackData = {
                 [1] = {x = -5600, y = 260, z = 1990, yaw = 0x4000}
             },
         },
+        scarecrowSpawns = {},
     },
     ["sm74"] = {
         starCount = 151,
@@ -55,6 +56,7 @@ romhackData = {
                 [2] = {x = -3708, y = -765, z = -1200, yaw = 0x2000},
             },
         },
+        scarecrowSpawns = {},
     },
 }
 
@@ -63,6 +65,7 @@ if not romhackData[CURR_ROMHACK] then
         starCount = -1,
         masterCapSpawns = {},
         masterDoorSpawns = {},
+        scarecrowSpawns = {},
     }
 end
 
@@ -88,6 +91,19 @@ define_custom_obj_fields({
     oBooCoinAnimState = "u32",
     oBooCoinSwitchMusic = "u32",
 })
+
+evilFloorTypes = {
+    [SURFACE_BURNING] = true,
+    [SURFACE_DEEP_MOVING_QUICKSAND] = true,
+    [SURFACE_DEEP_QUICKSAND] = true,
+    [SURFACE_INSTANT_MOVING_QUICKSAND] = true,
+    [SURFACE_INSTANT_QUICKSAND] = true,
+    [SURFACE_DEATH_PLANE] = true,
+    [SURFACE_SLIPPERY] = true,
+    [SURFACE_VERY_SLIPPERY] = true,
+    [SURFACE_VERTICAL_WIND] = true,
+    [SURFACE_HORIZONTAL_WIND] = true,
+}
 
 --- @param obj Object
 --- Replacement for DROP_TO_FLOOR()
