@@ -284,7 +284,7 @@ id_bhvMasterCapBubblePlayer = hook_behavior(nil, OBJ_LIST_SPAWNER, true, nil, bh
 E_MODEL_SCARECROW = smlua_model_util_get_id("mc_scarecrow_geo")
 E_MODEL_SCARECROW_HEAD = smlua_model_util_get_id("mc_scarecrow_decap_head_geo")
 
-function mc_scarecrow_switch(node, matStackIndex)
+function bhv_scarecrow_head_switch(node, matStackIndex)
     local asSwitchNode = cast_graph_node(node)
     local o = geo_get_current_object()
     local toNode = 0

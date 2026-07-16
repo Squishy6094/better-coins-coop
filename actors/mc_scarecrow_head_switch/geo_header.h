@@ -1,0 +1,9 @@
+extern const GeoLayout mc_scarecrow_head_switch_geo[];
+extern Lights1 mc_scarecrow_head_switch_head_tip_lights;
+extern u8 mc_scarecrow_head_switch_head_alpha_ci8[];
+extern u8 mc_scarecrow_head_switch_head_alpha_pal_rgba16[];
+extern Vtx mc_scarecrow_head_switch_head_switch_mesh_layer_4_vtx_0[16];
+extern Gfx mc_scarecrow_head_switch_head_switch_mesh_layer_4_tri_0[];
+extern Gfx mat_mc_scarecrow_head_switch_head_tip[];
+extern Gfx mat_revert_mc_scarecrow_head_switch_head_tip[];
+extern Gfx mc_scarecrow_head_switch_head_switch_mesh_layer_4[];
