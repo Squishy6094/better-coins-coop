@@ -980,6 +980,11 @@ local function master_cap_update()
     ]]
 
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
+        
+        spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, m.pos.x, m.pos.y, m.pos.z - 300, function(o)
+            
+        end)
+        --[[
         local masterDoorSpawnPos = master_cap_get_door_spawn(gNetworkPlayers[0].currLevelNum, gNetworkPlayers[0].currAreaIndex)
 
         spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawnPos.x, masterDoorSpawnPos.y, masterDoorSpawnPos.z, function(o)
@@ -997,6 +1002,7 @@ local function master_cap_update()
             end
             o.oMoveAngleYaw = doorWallAngle + 0x8000
         end)
+        ]]
     end
 
     master_cap_music_update()

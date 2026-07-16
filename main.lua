@@ -12,8 +12,6 @@ gLevelValues.respawnBlueCoinsSwitch = 1
 
 gGlobalSyncTable.mouseGrab = false
 gGlobalSyncTable.courtyardSecretSolved = false
-gGlobalSyncTable.allowMasterCap = true
-gGlobalSyncTable.allowMasterCapApi = nil
 
 -- Handle Level and Server Settings
 gBetterCoinValues = {}

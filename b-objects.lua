@@ -281,17 +281,117 @@ end
 
 id_bhvMasterCapBubblePlayer = hook_behavior(nil, OBJ_LIST_SPAWNER, true, nil, bhv_master_cap_bubble_player_loop, "bhvMasterCapBubblePlayer")
 
----@param o Object
-local function bhv_scarecrow_init(o)
-    o.oGravity = 1
-    o.oPosY = o.oPosY - 500
+E_MODEL_SCARECROW = smlua_model_util_get_id("mc_scarecrow_geo")
+E_MODEL_SCARECROW_HEAD = smlua_model_util_get_id("mc_scarecrow_decap_head_geo")
+
+function mc_scarecrow_switch()
+
 end
 
 ---@param o Object
+local function bhv_scarecrow_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oHealth = 1
+    o.oGravity = 5
+    o.oHomeX = o.oPosX
+    o.oHomeY = o.oPosY
+    o.oHomeZ = o.oPosZ
+end
+
+
+---@param o Object
 local function bhv_scarecrow_loop(o)
-    if o.oAction == 0 then
-        local step = object_step_without_floor_orient()
+    local objHitbox = get_temp_object_hitbox()
+    objHitbox.hurtboxRadius = 50
+    objHitbox.hurtboxHeight = 180
+
+    local step = object_step_without_floor_orient()
+
+    local floorHeight, floor = find_floor(o.oPosX + o.oVelX, o.oPosY + 50, o.oPosZ + o.oVelZ)
+    local m = nearest_mario_state_to_object(o)
+    local dist = math.sqrt((o.oPosX - m.pos.x)^2 + (o.oPosY - m.pos.y)^2 + (o.oPosZ - m.pos.z)^2)
+
+    if o.oAction == 0 then -- Spawn Animation
+        smlua_anim_util_set_animation(o, ANIM_SCARECROW_SPAWN)
+        if cur_obj_check_if_at_animation_end() ~= 0 then
+            o.oVelY = 10
+            o.oAction = 2
+        end
+    elseif o.oAction == 1 then -- Idle action
+        if dist < 2000 then
+            o.oAction = 2
+        end
+    elseif o.oAction == 2 then -- Bounce Away from Mario
+        o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
+        if floorHeight + 30 >= o.oPosY then
+            if o.oHealth == 0 then
+                o.oAction = 3
+                return
+            end
+            o.oVelY = 50
+            local bounceRng = math.random(1, 2) == 1
+            play_sound(bounceRng and SOUND_GENERAL_BOING1 or SOUND_GENERAL_BOING2, o.header.gfx.cameraToObject)
+            djui_chat_message_create(tostring(floor.normal.y))
+            if floor and floor.normal.y < 0.9 then
+                o.oMoveAngleYaw = atan2s(floor.normal.z, floor.normal.x)
+            else
+                o.oMoveAngleYaw = math.round(atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x)/0x4000)*0x4000 + (bounceRng and 0x2000 or -0x2000)
+            end
+            djui_chat_message_create("land")
+        end
+        --o.oForwardVel = 30
+
+        if o.oHealth > 0 and obj_check_hitbox_overlap(o, m.marioObj) and determine_interaction(m,o) ~= 0 then
+            o.oHealth = 0
+            play_sound(SOUND_ACTION_UNSTUCK_FROM_GROUND, o.header.gfx.cameraToObject)
+            --spawn_coin_spawner(o, 25, false, 0, 200, 0)
+            if m.playerIndex == 0 then
+                spawn_sync_object(id_bhvMasterCapScarecrowHead, E_MODEL_SCARECROW_HEAD, o.oPosX, o.oPosY + 100, o.oPosZ, function (oHead)
+                    oHead.oMoveAngleYaw = lerp_s16(o.oMoveAngleYaw, atan2s(m.vel.z, m.vel.x), 0.5)
+                    oHead.oFaceAngleYaw = oHead.oMoveAngleYaw + 0x8000
+                    o.oVelY = m.vel.y
+                end)
+            end
+        end
+
+        --if o.oVelY > 0 then
+        smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)
+        --else
+        --    smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE_END)
+        --end
+        --o.header.gfx.animInfo.animAccel = 0x10000 * 2
+
+
+        if dist > 4000 then
+            o.oAction = 1
+        end
+    elseif o.oAction == 3 then -- Fall over when hit
+        smlua_anim_util_set_animation(o, ANIM_SCARECROW_FALL_BACKWARDS)
+    end
+    if not m then
+        o.oAction = 1
     end
 end
 
 id_bhvMasterCapScarecrow = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_init, bhv_scarecrow_loop, "id_bhvMasterCapScarecrow")
+
+local function bhv_scarecrow_head_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oGravity = 4
+    o.oVelY = o.oVelY + 60
+end
+
+local function bhv_scarecrow_head_loop(o)
+    local step = object_step_without_floor_orient()
+    local floorHeight, floor = find_floor(o.oPosX + o.oVelX, o.oPosY + 50, o.oPosZ + o.oVelZ)
+    o.oForwardVel = 60
+    o.oFaceAnglePitch = o.oFaceAnglePitch + 0x800
+    if o.oVelY < -40 or floorHeight + 50 >= o.oPosY then
+        play_sound(SOUND_GENERAL_DONUT_PLATFORM_EXPLOSION, o.header.gfx.cameraToObject)
+        spawn_coin_spawner(o, 25, true)
+        spawn_mist_particles()
+        obj_mark_for_deletion(o)
+    end
+end
+
+id_bhvMasterCapScarecrowHead = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_head_init, bhv_scarecrow_head_loop, "id_bhvMasterCapScarecrow")
