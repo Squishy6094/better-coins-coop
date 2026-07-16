@@ -931,9 +931,6 @@ local function on_sync()
             break
         end
 
-        -- Init scarecrow spawn
-        master_cap_get_scarecrow_spawn()
-
         -- Spawn Door
         if not doorSpawnsExist or (romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum] and romhackData[CURR_ROMHACK].masterDoorSpawns[realLevelNum][areaNum]) then
             local masterDoorSpawn = master_cap_get_door_spawn(realLevelNum, areaNum)
@@ -1057,6 +1054,7 @@ local function master_cap_update()
     ]]
 
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
+        master_cap_request_scarecrow_spawn()
         --[[
         local masterDoorSpawnPos = master_cap_get_door_spawn(gNetworkPlayers[0].currLevelNum, gNetworkPlayers[0].currAreaIndex)
 
@@ -1124,8 +1122,7 @@ local function master_cap_update()
                     if coins >= 999 then
                         master_cap_stop_course(levelNum)
                     end
-                    djui_chat_message_create(tostring(master_cap_data_get_field(levelNum, "spawnedScarecrow")))
-                    if coins >= 100 then
+                    if coins >= gLevelValues.coinsRequiredForCoinStar*1.5 then
                         if not master_cap_data_get_field(levelNum, "spawnedScarecrow") then
                             local targetIndex = 0
                             for index = 0, MAX_PLAYERS - 1 do

@@ -311,6 +311,7 @@ local function bhv_scarecrow_init(o)
     objHitbox.height = 180
     objHitbox.health = 1
     obj_set_hitbox(o, objHitbox)
+    play_sound_with_freq_scale(SOUND_MENU_EXIT_PIPE, o.header.gfx.cameraToObject, 1.5)
 end
 
 ---@param o Object
@@ -333,11 +334,13 @@ local function bhv_scarecrow_loop(o)
             o.oAction = 2
         end
     elseif o.oAction == 2 then -- Bounce Away from Mario
-        o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
+        if o.oHealth > 0 then
+            o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
+        end
         if step & OBJ_COL_FLAG_GROUNDED ~= 0 then
             o.oForwardVel = find_water_level(o.oPosX, o.oPosZ) - 30 < o.oPosY and 30 or 15
-            smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)
             o.header.gfx.animInfo.animFrame = 0
+            smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)
             if o.oHealth == 0 then
                 o.oAction = 3
                 return
