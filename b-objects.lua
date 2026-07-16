@@ -335,9 +335,9 @@ local function bhv_scarecrow_loop(o)
         end
     elseif o.oAction == 2 then -- Bounce Away from Mario
         o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
-        if floorHeight + 30 >= o.oPosY then
-            o.header.gfx.animInfo.animFrame = 0
+        if step & OBJ_COL_FLAG_GROUNDED ~= 0 then
             smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)
+            o.header.gfx.animInfo.animFrame = 0
             if o.oHealth == 0 then
                 o.oAction = 3
                 return
@@ -389,10 +389,9 @@ end
 
 local function bhv_scarecrow_head_loop(o)
     local step = object_step_without_floor_orient()
-    local floorHeight, floor = find_floor(o.oPosX + o.oVelX, o.oPosY + 50, o.oPosZ + o.oVelZ)
     o.oForwardVel = 60
     o.oFaceAnglePitch = o.oFaceAnglePitch + 0x800
-    if o.oVelY < -40 or floorHeight + 50 >= o.oPosY then
+    if o.oVelY < -40 or step & OBJ_COL_FLAG_GROUNDED ~= 0 then
         play_sound(SOUND_GENERAL_DONUT_PLATFORM_EXPLOSION, o.header.gfx.cameraToObject)
         spawn_coin_spawner(o, 25, true)
         spawn_mist_particles()
