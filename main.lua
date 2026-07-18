@@ -139,7 +139,8 @@ local function coin_counter()
             coinAnim = (coinAnim + coinSpeed*0.5) % (#prevTex + 1)
             local colorRed = (prevTex == sRedCoinTextures) and 0 or 255
             djui_hud_set_color(255, colorRed, colorRed, 255*coinSpeed*transOpacity)
-            djui_hud_render_texture(prevTex[math.floor(coinAnim)], screenWidth*0.25, 15, 0.5, 0.5)
+            local dX, dY = hudDodge.find_open_hud_space(22, 15, 16, 16)
+            djui_hud_render_texture(prevTex[math.floor(coinAnim)], dX, dY, 0.5, 0.5)
         else
             coinSpeed = math.lerp(coinSpeed, 0, 0.1)
         end

@@ -312,6 +312,8 @@ local function bhv_scarecrow_init(o)
     objHitbox.health = 1
     obj_set_hitbox(o, objHitbox)
     play_sound_with_freq_scale(SOUND_MENU_EXIT_PIPE, o.header.gfx.cameraToObject, 1.5)
+
+    network_init_object(o, true, {})
 end
 
 ---@param o Object
@@ -367,7 +369,7 @@ local function bhv_scarecrow_loop(o)
             o.oHealth = 0
             play_sound(SOUND_ACTION_UNSTUCK_FROM_GROUND, o.header.gfx.cameraToObject)
             --spawn_coin_spawner(o, 25, false, 0, 200, 0)
-            if m.playerIndex == 0 then
+            if sync_object_is_owned_locally(o.oSyncID) then
                 spawn_sync_object(id_bhvMasterCapScarecrowHead, E_MODEL_SCARECROW_HEAD, o.oPosX, o.oPosY + 100, o.oPosZ, function (oHead)
                     oHead.oMoveAngleYaw = lerp_s16(o.oMoveAngleYaw, atan2s(m.vel.z, m.vel.x), 0.5)
                     oHead.oFaceAngleYaw = oHead.oMoveAngleYaw + 0x8000
@@ -400,6 +402,7 @@ local function bhv_scarecrow_head_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.oGravity = 4
     o.oVelY = o.oVelY + 60
+    network_init_object(o, true, {})
 end
 
 local function bhv_scarecrow_head_loop(o)

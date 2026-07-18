@@ -1,5 +1,6 @@
 -- Load Libraries
 oTagLib = require("libs/oTagLib")
+hudDodge = require("libs/hudDodge")
 
 CURR_ROMHACK = "sm64"
 GAMEMODE_ACTIVE = false
