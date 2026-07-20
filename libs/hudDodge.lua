@@ -60,7 +60,6 @@ local function reset_hitbox_list()
         if (m.marioObj) then
             local radarY = sH - 35
             -- Red coins radar
-            gLevelValues.hudRedCoinsRadar = 1
             if (gLevelValues.hudRedCoinsRadar ~= 0) then
                 local redCoin = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvRedCoin);
                 if (redCoin) then
@@ -73,7 +72,6 @@ local function reset_hitbox_list()
             end
 
             -- Secrets radar
-            gLevelValues.hudSecretsRadar = 1
             if (gLevelValues.hudSecretsRadar ~= 0) then
                 local secret = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHiddenStarTrigger);
                 if (secret) then
