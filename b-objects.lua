@@ -70,7 +70,8 @@ local function bhv_coin_carry_loop(o)
     o.oPosY = math.lerp(o.oPosY + o.parentObj.oVelY, targetPos.y, velLerp)
     o.oPosZ = math.lerp(o.oPosZ + o.parentObj.oVelZ, targetPos.z, velLerp)
 
-    if velLerp == 1 and m.playerIndex ~= 0 then
+    -- Remove duplicate coins being stuck on other players
+    if m.playerIndex ~= 0 and obj_check_hitbox_overlap(o.parentObj, m.marioObj) then
         if interact_coin(m, INTERACT_COIN, o.parentObj) == 0 then
             obj_mark_for_deletion(o.parentObj)
         end
@@ -140,15 +141,18 @@ end
 local function coin_spawner_init(o)
     network_init_object(o, false, {
         "oCustomCoins",
+        "oAction",
     })
 end
+
+
 
 --- @param o Object
 local function coin_spawner_loop(o)
     if o.oCustomCoins > 0 then
         local m = nearest_mario_state_to_object(o)
         local isNearest = (m and m.playerIndex == 0)
-        if o.oCustomCoins >= 5 and o.oAction == 0 and (math.random() > 0.25 or o.oCustomCoins == 5) then
+        if o.oCustomCoins >= 5 and o.oAction == 0 and (random_float() > 0.25 or o.oCustomCoins == 5) then
             o.oNumLootCoins = 5
             cur_obj_spawn_loot_blue_coin();
             o.oCustomCoins = o.oCustomCoins - 5
@@ -313,7 +317,9 @@ local function bhv_scarecrow_init(o)
     obj_set_hitbox(o, objHitbox)
     play_sound_with_freq_scale(SOUND_MENU_EXIT_PIPE, o.header.gfx.cameraToObject, 1.5)
 
-    network_init_object(o, true, {})
+    network_init_object(o, true, {
+        "oMoveAngleYaw",
+    })
 end
 
 ---@param o Object
@@ -402,7 +408,9 @@ local function bhv_scarecrow_head_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.oGravity = 4
     o.oVelY = o.oVelY + 60
-    network_init_object(o, true, {})
+    network_init_object(o, true, {
+        "oMoveAngleYaw",
+    })
 end
 
 local function bhv_scarecrow_head_loop(o)

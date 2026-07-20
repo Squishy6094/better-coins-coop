@@ -1,24 +1,173 @@
 -- Library for Making sure HUD elements don't overlap each other
 
-log_to_console("loaded")
+local HUD_HITBOXES_RENDER = false
 
-local HUD_HITBOXES_RENDER = true
-local hitboxMarginWidth = 2
-local hitboxMarginHeight = 2
-local screenMarginWidth = 22
-local screenMarginHeight = 15
+local hitboxMarginX = 2
+local hitboxMarginY = 4
+local screenMarginLeft = 22
+local screenMarginTop = 15
 
+local prevHitboxList = {}
 local hitboxList = {}
 
 local function reset_hitbox_list()
-    local sW = djui_hud_get_screen_width()
+    local m = gMarioStates[0];
+    local sW = djui_hud_get_screen_width() + 1
     local sH = djui_hud_get_screen_height()
-    hitboxList = {
-        {x = 0, y = 0, w = screenMarginWidth, h = screenMarginHeight},
-        {x = sW - screenMarginWidth, y = 0, w = screenMarginWidth, h = screenMarginHeight},
-        {x = 0, y = sH - screenMarginHeight, w = screenMarginWidth, h = screenMarginHeight},
-        {x = sW - screenMarginWidth, y = sH - screenMarginHeight, w = screenMarginWidth, h = screenMarginHeight},
+    prevHitboxList = hitboxList
+    hitboxList = {}
+
+    local showHud = (not djui_hud_is_pause_menu_created() and not hud_is_hidden());
+    local hudDisplayFlags = hud_get_value(HUD_DISPLAY_FLAGS)
+
+    djui_hud_set_resolution(RESOLUTION_N64)
+    djui_hud_set_font(FONT_HUD)
+
+    --[[
+    if (gCurrentArea != NULL && gCurrentArea->camera != NULL && gCurrentArea->camera->mode == CAMERA_MODE_INSIDE_CANNON) {
+        render_hud_cannon_reticle();
     }
+    ]]
+
+    if (hudDisplayFlags & HUD_DISPLAY_FLAG_LIVES ~= 0 and showHud) then
+        table.insert(hitboxList, {x = 22, y = 15, w = 16, h = 16})
+        local xW, xH = djui_hud_measure_text("*")
+        table.insert(hitboxList, {x = 38, y = 15, w = xW, h = xH})
+        local cW, cH = djui_hud_measure_text(tostring(gLevelValues.maxLives))
+        table.insert(hitboxList, {x = 54, y = 15, w = cW, h = cH})
+    end
+
+    -- coop hud elements
+    if (showHud) then
+        if (gLevelValues.hudCapTimer ~= 0) then
+            
+            
+            local capFlags = m.flags & MARIO_SPECIAL_CAPS;
+            if (capFlags ~= 0) then
+                
+                local capTimer = m.capTimer;
+                if (capTimer > 0) then
+                    table.insert(hitboxList, {x = 22, y = 35, w = 16, h = 16})
+                    local xW, xH = djui_hud_measure_text("*")
+                    table.insert(hitboxList, {x = 38, y = 35, w = xW, h = xH})
+                    local cW, cH = djui_hud_measure_text("9999")
+                    table.insert(hitboxList, {x = 54, y = 35, w = cW, h = cH})
+                end
+            end
+        end
+
+        
+        if (m.marioObj) then
+            local radarY = sH - 35
+            -- Red coins radar
+            gLevelValues.hudRedCoinsRadar = 1
+            if (gLevelValues.hudRedCoinsRadar ~= 0) then
+                local redCoin = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvRedCoin);
+                if (redCoin) then
+                    table.insert(hitboxList, {x = 15, y = radarY - 6, w = 28, h = 28})
+                    local cW, cH = djui_hud_measure_text(tostring(0x8000))
+                    table.insert(hitboxList, {x = 47, y = radarY, w = cW, h = cH})
+
+                    radarY = radarY - 30;
+                end
+            end
+
+            -- Secrets radar
+            gLevelValues.hudSecretsRadar = 1
+            if (gLevelValues.hudSecretsRadar ~= 0) then
+                local secret = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHiddenStarTrigger);
+                if (secret) then
+                    table.insert(hitboxList, {x = 15, y = radarY - 6, w = 28, h = 28})
+                    local cW, cH = djui_hud_measure_text(tostring(0x8000))
+                    table.insert(hitboxList, {x = 47, y = radarY, w = cW, h = cH})
+
+                    radarY = radarY - 30;
+                end
+            end
+        end
+    end
+
+    if (hudDisplayFlags & HUD_DISPLAY_FLAG_COIN_COUNT ~= 0 and showHud) then
+        local coinX = sW*0.5 + 8
+        table.insert(hitboxList, {x = coinX, y = 15, w = 16, h = 16})
+        local xW, xH = djui_hud_measure_text("*")
+        table.insert(hitboxList, {x = coinX + 17, y = 15, w = xW, h = xH})
+        local cW, cH = djui_hud_measure_text(tostring(gLevelValues.maxCoins))
+        table.insert(hitboxList, {x = coinX + 32, y = 15, w = cW, h = cH})
+    end
+
+    if (hudDisplayFlags & HUD_DISPLAY_FLAG_STAR_COUNT ~= 0 and showHud) then
+
+        local showX = 0
+        if (gHudDisplay.stars < 100) then
+            showX = 1;
+        end
+
+        local x = math.ceil(sW - 78)
+        table.insert(hitboxList, {x = x, y = 15, w = 16, h = 16})
+        if (showX == 1) then
+            local xW, xH = djui_hud_measure_text("*")
+            table.insert(hitboxList, {x = x + 17, y = 15, w = xW, h = xH})
+        end
+        local cW, cH = djui_hud_measure_text("120")
+        table.insert(hitboxList, {x = x + 19 + showX*14, y = 15, w = cW, h = cH})
+    end
+
+    if (hudDisplayFlags & HUD_DISPLAY_FLAG_KEYS ~= 0 and showHud) then
+        if gHudDisplay.keys > 0 then
+            for i = 1, gHudDisplay.keys do
+                table.insert(hitboxList, {x = 22 + ((i - 1) * 16), y = 82, w = 16, h = 16})
+            end
+        end
+    end
+
+    --[[
+    -- Lazy
+    if (hudDisplayFlags & HUD_DISPLAY_FLAG_CAMERA_AND_POWER ~= 0 and showHud) then
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_CAMERA ~= 0 and showHud) then
+            render_hud_camera_status();
+        end
+
+        if (hudDisplayFlags & HUD_DISPLAY_FLAG_POWER ~= 0 and showHud) then
+            render_hud_power_meter();
+        end
+    end
+    ]]
+
+    if (hudDisplayFlags & HUD_DISPLAY_FLAG_TIMER ~= 0 and showHud) then
+    --[[
+        void render_hud_timer(void) {
+            u8 *(*hudLUT)[58];
+            u16 timerValFrames;
+            u16 timerMins;
+            u16 timerSecs;
+            u16 timerFracSecs;
+
+            timerValFrames = gHudDisplay.timer;
+            timerMins = timerValFrames / (30 * 60);
+            timerSecs = (timerValFrames - (timerMins * 1800)) / 30;
+            
+                local xW, xH = djui_hud_measure_text("*")
+                table.insert(hitboxList, {x = x + 17, y = 15, w = xW, h = xH})
+
+            timerFracSecs = ((timerValFrames - (timerMins * 1800) - (timerSecs * 30)) & 0xFFFF) / 3;
+            print_text(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 185, "TIME");
+            print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(91), 185, "%0d", timerMins);
+            print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(71), 185, "%02d", timerSecs);
+            print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(37), 185, "%d", timerFracSecs);
+            gSPDisplayList(gDisplayListHead++, dl_hud_img_begin);
+            render_hud_tex_lut(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(81), 32, (*hudLUT)[GLYPH_APOSTROPHE]);
+            render_hud_tex_lut(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(46), 32, (*hudLUT)[GLYPH_DOUBLE_QUOTE]);
+            gSPDisplayList(gDisplayListHead++, dl_hud_img_end);
+        }
+    ]]
+
+        local dW, dH = djui_hud_measure_text("9")
+        local d2W, d2H = djui_hud_measure_text("99")
+        table.insert(hitboxList, {x = sW - 91, y = 39, w = dW, h = dH})
+        table.insert(hitboxList, {x = sW - 71, y = 39, w = d2W, h = d2H})
+        table.insert(hitboxList, {x = sW - 37, y = 39, w = dW, h = dH})
+    end
 end
 
 local og_djui_hud_render_rect = djui_hud_render_rect
@@ -48,26 +197,28 @@ end
 
 local function hud_render()
     djui_hud_set_resolution(RESOLUTION_N64)
-    for seed, hitbox in pairs(hitboxList) do
+    for id, hitbox in pairs(hitboxList) do
         if HUD_HITBOXES_RENDER then
-            math.randomseed(seed)
-            djui_hud_set_color(math.random(0, 2)/2*255, math.random(0, 2)/2*255, math.random(0, 2)/2*255, 100)
+
+            djui_hud_set_color((id)/2*255, (id + 1)/2*255, (id + 2)/2*255, 100)
             og_djui_hud_render_rect(hitbox.x, hitbox.y, hitbox.w, hitbox.h)
+            djui_hud_set_color(255, 255, 255, 100)
+            og_djui_hud_print_text(tostring(id), hitbox.x, hitbox.y, 1)
         end
     end
     reset_hitbox_list()
 end
 
-hook_event(HOOK_ON_HUD_RENDER, hud_render)
+hook_event(HOOK_ON_HUD_RENDER_BEHIND, hud_render)
 
 local function set_hitbox_margin(x, y)
-    hitboxMarginWidth = x
-    hitboxMarginHeight = y
+    hitboxMarginX = x
+    hitboxMarginY = y
 end
 
 local function set_screen_margin(x, y)
-    screenMarginWidth = x
-    screenMarginHeight = y
+    screenMarginLeft = x
+    screenMarginTop = y
 end
 
 local function rects_overlap(x1, y1, w1, h1, x2, y2, w2, h2)
@@ -77,20 +228,47 @@ local function rects_overlap(x1, y1, w1, h1, x2, y2, w2, h2)
            y1 + h1 >= y2
 end
 
-local function find_open_hud_space(x, y, w, h)
+---@param x integer X Posistion of Hitbox
+---@param y integer Y Posistion of Hitbox
+---@param w integer Width of Hitbox
+---@param h integer Height of Hitbox
+---@param weightX integer How much the hitbox with prefer moving horozontally
+---@param weightY integer How much the hitbox with prefer moving vertically
+local function find_open_hud_space(x, y, w, h, weightX, weightY)
+    weightX = weightX or 1
+    weightY = weightY or 1
     local sW = djui_hud_get_screen_width()
     local sH = djui_hud_get_screen_height()
+    x = math.clamp(x, screenMarginLeft, sW - screenMarginLeft - w)
+    y = math.clamp(y, screenMarginTop, sH - screenMarginTop - h)
+    local newX = x
+    local newY = y
     repeat
         local overlapFound = false
-        for _, hitbox in ipairs(hitboxList) do
-            if rects_overlap(x, y, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h) then
-                x = hitbox.x + hitbox.w + hitboxMarginWidth
-                djui_chat_message_create(tostring(x))
-                overlapFound = true
-                break
+        for id, hitbox in ipairs(prevHitboxList) do
+            if id ~= #hitboxList + 1 then -- Avoid accounting for the next rendered 
+                -- djui_chat_message_create(tostring(id) .. " - " .. tostring(rects_overlap(x, y, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h)))
+
+                if not overlapFound and rects_overlap(newX, newY, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h) then
+                    overlapFound = true
+                    if hitbox.x > 10 then
+                        screenMarginLeft = math.min(hitbox.x, screenMarginLeft)
+                    end
+                    if hitbox.y > 10 then
+                        screenMarginTop = math.min(hitbox.y, screenMarginTop)
+                    end
+
+                    newX = math.max(x, hitbox.x + hitbox.w + hitboxMarginX)
+                    newY = math.max(y, hitbox.y + hitbox.h + hitboxMarginY)
+                end
             end
         end
     until not overlapFound
+    if weightX ~= 0 and (weightY == 0 or newX - x/weightX < newY - y/weightY) then
+        x = newX
+    else
+        y = newY
+    end
     return x, y
 end
 

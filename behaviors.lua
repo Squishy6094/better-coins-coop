@@ -151,7 +151,7 @@ local function bhv_yoshi_reward(o)
     if o.oAction == YOSHI_ACT_TALK then
         sYoshiShouldExplode = true
     elseif sYoshiShouldExplode then
-        spawn_coin_spawner(o, 100 * (gBetterCoinValues.numCoinsToLife or 50))
+        spawn_coin_spawner(o, 100 * (gBetterCoinValues.numCoinsToLife or 50), false)
         spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
         obj_mark_for_deletion(o)
     end

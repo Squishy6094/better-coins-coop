@@ -99,8 +99,8 @@ local function coin_counter()
     hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
     gLevelValues.hudCapTimer = 1
 
-    gLevelValues.hudRedCoinsRadar = 0
-    gLevelValues.hudSecretsRadar = 0
+    --gLevelValues.hudRedCoinsRadar = 0
+    --gLevelValues.hudSecretsRadar = 0
 
     -- Hud 
     if gBetterCoinValues.numCoinsToLife > 0 then
@@ -139,7 +139,7 @@ local function coin_counter()
             coinAnim = (coinAnim + coinSpeed*0.5) % (#prevTex + 1)
             local colorRed = (prevTex == sRedCoinTextures) and 0 or 255
             djui_hud_set_color(255, colorRed, colorRed, 255*coinSpeed*transOpacity)
-            local dX, dY = hudDodge.find_open_hud_space(22, 15, 16, 16)
+            local dX, dY = hudDodge.find_open_hud_space(0, 0, 16, 16, 0, 1)
             djui_hud_render_texture(prevTex[math.floor(coinAnim)], dX, dY, 0.5, 0.5)
         else
             coinSpeed = math.lerp(coinSpeed, 0, 0.1)
