@@ -99,8 +99,8 @@ local function coin_counter()
     hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
     gLevelValues.hudCapTimer = 1
 
-    --gLevelValues.hudRedCoinsRadar = 0
-    --gLevelValues.hudSecretsRadar = 0
+    gLevelValues.hudRedCoinsRadar = 0
+    gLevelValues.hudSecretsRadar = 0
 
     -- Hud 
     if gBetterCoinValues.numCoinsToLife > 0 then

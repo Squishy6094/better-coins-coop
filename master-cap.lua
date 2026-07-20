@@ -1320,10 +1320,19 @@ local function on_death()
     end
 end
 
+local function easier_mario_viewing_expirience(m)
+    if master_cap_data_get_field(nil, "runState") == 1 then
+        local bodyState = m.marioBodyState
+        m.fadeWarpOpacity = 245
+        bodyState.modelState = (MODEL_STATE_METAL | MODEL_STATE_NOISE_ALPHA) | (0x100 | 245)
+    end
+end
+
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_DEATH, on_death)
+hook_event(HOOK_MARIO_UPDATE, easier_mario_viewing_expirience)
 
 -------------------
 -- API Functions --
