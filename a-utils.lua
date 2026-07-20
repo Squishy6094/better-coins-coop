@@ -100,7 +100,6 @@ evilFloorTypes = {
     [SURFACE_INSTANT_MOVING_QUICKSAND] = true,
     [SURFACE_INSTANT_QUICKSAND] = true,
     [SURFACE_DEATH_PLANE] = true,
-    [SURFACE_SLIPPERY] = true,
     [SURFACE_VERY_SLIPPERY] = true,
     [SURFACE_VERTICAL_WIND] = true,
     [SURFACE_HORIZONTAL_WIND] = true,

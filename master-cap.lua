@@ -639,7 +639,7 @@ local function find_master_cap_spawn_position()
         local findFloorX = math.random(minX, maxX)
         local findFloorZ = math.random(minZ, maxZ)
         local findFloorHeight, findFloor = find_floor(findFloorX, 0x4000, findFloorZ)
-        if findFloor and findFloor ~= startFloor and not evilFloorTypes[findFloor.type] and math.ceil(findFloor.normal.y*50) == 50 and findFloorHeight > find_water_level(findFloorX, findFloorZ) then
+        if findFloor and findFloor ~= startFloor and not evilFloorTypes[findFloor.type] and math.ceil(findFloor.normal.y*50) == 50 then
             spawnStep = spawnStep + 1
             local surfaceX = (findFloor.vertex1.x + findFloor.vertex2.x + findFloor.vertex3.x)/3
             local surfaceY = (findFloor.vertex1.y + findFloor.vertex2.y + findFloor.vertex3.y)/3
@@ -689,7 +689,7 @@ local function find_master_cap_spawn_position()
                         end
                         spawnPos = {
                             x = surfaceX,
-                            y = surfaceY + 400,
+                            y = math.max(find_water_level(findFloorX, findFloorZ), surfaceY) + 400,
                             z = surfaceZ,
                             yaw = doorWallAngle + 0x8000,
                         }
