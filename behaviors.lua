@@ -356,20 +356,26 @@ end
 hook_coins_behavior(id_bhvTreasureChestBottom, false, bhv_chest_loot_init, bhv_chest_loot_loop)
 
 ---@param o Object
-local function breakable_wall_coins(o)
+local function breakable_wall_coins_init(o)
+    o.oCustomCoins = 10
+end
+
+---@param o Object
+local function breakable_wall_coins_loop(o)
     if cur_obj_is_any_player_on_platform() ~= 0 and cur_obj_is_mario_ground_pounding_platform() ~= 0 then
         local m = nearest_mario_state_to_object(o)
         if (m.flags & MARIO_METAL_CAP ~= 0) then
             o.oBreakableWallForce = 1
         end
     end
-    if o.oBreakableWallForce == 1 then
+    if o.oBreakableWallForce == 1 and o.oCustomCoins > 0 then
         spawn_coin_spawner(o, 10, true)
+        o.oCustomCoins = 0
     end
 end
 
-hook_coins_behavior(id_bhvWfBreakableWallLeft, false, nil, breakable_wall_coins)
-hook_coins_behavior(id_bhvWfBreakableWallRight, false, nil, breakable_wall_coins)
+hook_coins_behavior(id_bhvWfBreakableWallLeft, false, breakable_wall_coins_init, breakable_wall_coins_loop)
+hook_coins_behavior(id_bhvWfBreakableWallRight, false, breakable_wall_coins_init, breakable_wall_coins_loop)
 
 ---@param o Object
 local function bhv_1up_to_blue_coin(o)
@@ -928,7 +934,6 @@ end, update_collision)
 hook_coins_behavior(id_bhvWfSolidTowerPlatform, false, bhv_offset_tower, update_collision)
 hook_coins_behavior(id_bhvWfSlidingTowerPlatform, false, bhv_offset_tower, update_collision)
 hook_coins_behavior(id_bhvWfElevatorTowerPlatform, false, bhv_offset_tower, update_collision)
-
 
 -- Handle Master Cap Door
 E_MODEL_MASTER_DOOR = smlua_model_util_get_id("master_door_geo")

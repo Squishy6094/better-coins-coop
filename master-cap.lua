@@ -1100,7 +1100,7 @@ local function master_cap_update()
             sPrevAct[m.playerIndex].prevActionArg = m.actionArg
         end
 
-        if m.action == ACT_CROUCHING then
+        if m.action == ACT_CROUCHING or (m.action & ACT_FLAG_AIR == 0 and m.forwardVel == 0 and m.controller.buttonDown & Z_TRIG ~= 0) then
             runCrouchTimer = runCrouchTimer + 1
             if runCrouchTimer > 90 then
                 set_mario_finished_master_cap(m)
