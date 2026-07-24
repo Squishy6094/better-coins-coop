@@ -563,35 +563,28 @@ end
 hook_coins_behavior(id_bhvWaterLevelPillar, false, bhv_water_pillar_init, bhv_water_pillar_loop)
 
 ---@param o Object
+local function bhv_secret_follow_coin_init(o)
+    local oCoin = obj_get_nearest_object_with_behavior_id(o, id_bhvYellowCoin)
+    if oCoin ~= nil and obj_to_obj_dist(o, oCoin) < 100 then
+        o.oBooParentBigBoo = oCoin
+    end
+end
+
+---@param o Object
 local function bhv_secret_follow_coin_loop(o)
-    if o.parentObj ~= nil and obj_has_behavior_id(o.parentObj, id_bhvYellowCoin) ~= 0 then
-        o.oPosX = o.parentObj.oPosX
-        o.oPosY = o.parentObj.oPosY
-        o.oPosZ = o.parentObj.oPosZ
+    if o.oBooParentBigBoo ~= nil then
+        o.oPosX = o.oBooParentBigBoo.oPosX
+        o.oPosY = o.oBooParentBigBoo.oPosY
+        o.oPosZ = o.oBooParentBigBoo.oPosZ
 
-        o.oVelX = o.parentObj.oVelX
-        o.oVelY = o.parentObj.oVelY
-        o.oVelZ = o.parentObj.oVelZ
-
-        if o.parentObj.activeFlags == ACTIVE_FLAG_DEACTIVATED and sync_object_is_owned_locally(o.oSyncID) then
-            local oCarry = carry_object_to_mario(gMarioStates[0], o)
-            if oCarry ~= nil then
-                oCarry.oTimer = math.sqrt(800)
-            end
-            network_send_object(o, true)
-        end
-    else
-        if o.oTimer < 5 then
-            local oCoin = obj_get_nearest_object_with_behavior_id(o, id_bhvYellowCoin)
-            if oCoin ~= nil and obj_to_obj_dist(o, oCoin) < 100 then
-                o.parentObj = oCoin
-            end
+        if o.oBooParentBigBoo.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+            o.oBooParentBigBoo = gMarioStates[0].marioObj
         end
     end
 end
 
-hook_coins_behavior(id_bhvHiddenStarTrigger, false, nil, bhv_secret_follow_coin_loop)
-hook_coins_behavior(id_bhvHidden1upTrigger, false, nil, bhv_secret_follow_coin_loop)
+hook_coins_behavior(id_bhvHiddenStarTrigger, false, bhv_secret_follow_coin_init, bhv_secret_follow_coin_loop)
+hook_coins_behavior(id_bhvHidden1upTrigger, false, bhv_secret_follow_coin_init, bhv_secret_follow_coin_loop)
 
 ---@param o Object
 local function bhv_thi_pound_coins_init(o)
