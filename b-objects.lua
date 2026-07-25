@@ -334,6 +334,7 @@ local function bhv_scarecrow_loop(o)
             o.oAction = 2
         end
     elseif o.oAction == 1 then -- Idle action
+        smlua_anim_util_set_animation(o, ANIM_SCARECROW_IDLE)
         if dist < 2000 then
             o.oAction = 2
         end
