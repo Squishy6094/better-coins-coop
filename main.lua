@@ -286,16 +286,26 @@ local function object_unload(o)
     end
 end
 
+areaCoinDensity = 0
 local function count_possible_coins()
+    local areaCoinDistance = 0
     local areaCoinCount = 0
     -- Replace all Object Models
     for i = 0, NUM_OBJ_LISTS - 1 do
         local o = obj_get_first(i)
+        local prevO = o
         while o ~= nil do
-            areaCoinCount = areaCoinCount + math.max(o.oNumLootCoins, o.oDamageOrCoinValue)
+            local coinValue = math.max(o.oNumLootCoins, o.oDamageOrCoinValue, o.oCustomCoins)
+            if coinValue > 0 then
+                areaCoinCount = areaCoinCount + coinValue
+                prevO = o
+                areaCoinDistance = (areaCoinDistance + math.sqrt((o.oPosX + prevO.oPosX)^2 + (o.oPosY + prevO.oPosY)^2 + (o.oPosZ + prevO.oPosZ)^2))*0.5
+            end
             o = obj_get_next(o)
         end
     end
+    djui_chat_message_create(tostring(areaCoinDistance / areaCoinCount))
+    areaCoinDensity = areaCoinDistance / areaCoinCount
 end
 
 local function on_coin_sound(sound, pos)
@@ -330,6 +340,7 @@ hook_event(HOOK_ON_INTERACT, interact)
 hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
 hook_event(HOOK_ON_SYNC_VALID, courtyard_secret)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
+hook_event(HOOK_ON_SYNC_VALID, count_possible_coins)
 
 local commands = {
     ["master-cap"] = {

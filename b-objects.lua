@@ -299,7 +299,7 @@ local function bhv_scarecrow_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.oHealth = 1
     o.oGravity = 5
-    o.oBuoyancy = 1.3
+    o.oBuoyancy = 0
     o.oHomeX = o.oPosX
     o.oHomeY = o.oPosY
     o.oHomeZ = o.oPosZ
@@ -310,9 +310,9 @@ local function bhv_scarecrow_init(o)
 
     local objHitbox = get_temp_object_hitbox()
     objHitbox.hurtboxRadius = 80
-    objHitbox.hurtboxHeight = 180
+    objHitbox.hurtboxHeight = 200
     objHitbox.radius = 80
-    objHitbox.height = 180
+    objHitbox.height = 200
     objHitbox.health = 1
     obj_set_hitbox(o, objHitbox)
     play_sound_with_freq_scale(SOUND_MENU_EXIT_PIPE, o.header.gfx.cameraToObject, 1.5)
@@ -326,7 +326,16 @@ end
 ---@param o Object
 local function bhv_scarecrow_loop(o)
     local startAction = o.oAction
+    local startForwardVel = o.oForwardVel
+    local startYVel = o.oVelY
     local step = object_step()
+
+    -- Remove effects of being underwater
+    local isInWater = step & OBJ_COL_FLAG_UNDERWATER ~= 0
+    if isInWater then
+        o.oForwardVel = startForwardVel
+        o.oVelY = startYVel - o.oGravity*0.8
+    end
 
     local floorHeight, floor = find_floor(o.oPosX + o.oVelX, o.oPosY + 50, o.oPosZ + o.oVelZ)
     local m = nearest_mario_state_to_object(o)
@@ -337,7 +346,7 @@ local function bhv_scarecrow_loop(o)
     end
 
     local deathPlaneKill = (o.oAction == OBJ_ACT_DEATH_PLANE_DEATH or o.oAction == OBJ_ACT_LAVA_DEATH)
-    if o.oHealth > 0 and (obj_check_hitbox_overlap(o, m.marioObj) and determine_interaction(m, o) ~= 0) or deathPlaneKill then
+    if o.oHealth > 0 and (obj_check_hitbox_overlap(o, m.marioObj) and (determine_interaction(m, o) ~= 0 or isInWater)) or deathPlaneKill then
         o.oHealth = 0
         if deathPlaneKill then
             o.oAction = 3
@@ -374,7 +383,7 @@ local function bhv_scarecrow_loop(o)
         end
         if step & (OBJ_COL_FLAG_GROUNDED | OBJ_COL_FLAG_HIT_WALL) ~= 0 and o.oHealth > 0 then
             local isOnFloor = step & OBJ_COL_FLAG_GROUNDED ~= 0
-            o.oForwardVel = find_water_level(o.oPosX, o.oPosZ) - 30 < o.oPosY and 30 or 15
+            o.oForwardVel = isInWater and 20 or 30
             o.header.gfx.animInfo.animFrame = 0
             o.header.gfx.animInfo.animTimer = 0
             smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)

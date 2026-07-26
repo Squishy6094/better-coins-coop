@@ -223,7 +223,7 @@ function master_cap_add_coin(levelNum, value, noSync)
     local prevCapTimer = master_cap_data_get_field(levelNum, "capTimer")
     local prevCoins = master_cap_data_get_field(levelNum, "coins")
 
-    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*25*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5)))
+    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*30*(areaCoinDensity/100)*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5)))
     master_cap_data_set_field(levelNum, "coins", math.clamp(prevCoins + value, 0, 999))
 
     if network_is_server() then
@@ -907,7 +907,7 @@ end
 -- Handles only spawning one scarecrow
 function master_cap_request_scarecrow_spawn()
     local scarecrowSpawnPos = master_cap_get_scarecrow_spawn()
-    spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, scarecrowSpawnPos.x, scarecrowSpawnPos.y, scarecrowSpawnPos.z - 300, function(o)
+    spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, scarecrowSpawnPos.x, scarecrowSpawnPos.y, scarecrowSpawnPos.z, function(o)
         
     end)
 end
@@ -1054,7 +1054,9 @@ local function master_cap_update()
     ]]
 
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
-        master_cap_request_scarecrow_spawn()
+        spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, m.pos.x, m.pos.y, m.pos.z - 300, function(o)
+            
+        end)
         --[[
         local masterDoorSpawnPos = master_cap_get_door_spawn(gNetworkPlayers[0].currLevelNum, gNetworkPlayers[0].currAreaIndex)
 
