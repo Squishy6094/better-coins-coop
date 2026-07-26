@@ -305,7 +305,7 @@ local function count_possible_coins()
         end
     end
     areaCoinDensity = areaCoinDistance / areaCoinCount
-    djui_chat_message_create("Seconds Per Coin: "..tostring(math.round(areaCoinDensity)/100))
+    djui_chat_message_create("Seconds Per Coin: "..tostring(math.round(areaCoinDensity)/100*0.8 + 0.2))
 end
 
 local function on_coin_sound(sound, pos)

@@ -223,7 +223,7 @@ function master_cap_add_coin(levelNum, value, noSync)
     local prevCapTimer = master_cap_data_get_field(levelNum, "capTimer")
     local prevCoins = master_cap_data_get_field(levelNum, "coins")
 
-    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*30*(areaCoinDensity/100)*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5)))
+    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*30*(areaCoinDensity/100*0.8 + 0.2)*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5)))
     master_cap_data_set_field(levelNum, "coins", math.clamp(prevCoins + value, 0, 999))
 
     if network_is_server() then
@@ -918,6 +918,7 @@ local function on_sync()
     if not master_cap_allowed() then return end
     if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() then
         gLevelValues.disableActs = true
+        set_ttc_speed_setting(TTC_SPEED_STOPPED)
     end
 
     local levelNum = master_cap_get_merged_level_num()
