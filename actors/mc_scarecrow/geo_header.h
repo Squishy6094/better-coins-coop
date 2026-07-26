@@ -1,3 +1,4 @@
+extern const GeoLayout mc_scarecrow_mc_scarecrow_head_switch[];
 extern const GeoLayout mc_scarecrow_geo[];
 extern Lights1 mc_scarecrow_wood2_lights;
 extern Lights1 mc_scarecrow_wood1_lights;

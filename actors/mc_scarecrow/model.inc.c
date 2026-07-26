@@ -1136,6 +1136,13 @@ Gfx mc_scarecrow_body_mesh_layer_4[] = {
 	gsSPDisplayList(mat_mc_scarecrow_spring),
 	gsSPDisplayList(mc_scarecrow_body_mesh_layer_4_tri_0),
 	gsSPDisplayList(mat_revert_mc_scarecrow_spring),
+	gsDPPipeSync(),
+	gsSPSetGeometryMode(G_LIGHTING),
+	gsSPClearGeometryMode(G_TEXTURE_GEN),
+	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 0),
+	gsDPSetEnvColor(255, 255, 255, 255),
+	gsDPSetAlphaCompare(G_AC_NONE),
 	gsSPEndDisplayList(),
 };
 
@@ -1215,6 +1222,13 @@ Gfx mc_scarecrow_cape2_mesh_layer_1[] = {
 	gsSPDisplayList(mat_mc_scarecrow_crown),
 	gsSPDisplayList(mc_scarecrow_cape2_mesh_layer_1_tri_0),
 	gsSPDisplayList(mat_revert_mc_scarecrow_crown),
+	gsDPPipeSync(),
+	gsSPSetGeometryMode(G_LIGHTING),
+	gsSPClearGeometryMode(G_TEXTURE_GEN),
+	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 0),
+	gsDPSetEnvColor(255, 255, 255, 255),
+	gsDPSetAlphaCompare(G_AC_NONE),
 	gsSPEndDisplayList(),
 };
 

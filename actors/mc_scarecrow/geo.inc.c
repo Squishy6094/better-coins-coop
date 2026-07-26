@@ -1,3 +1,7 @@
+const GeoLayout mc_scarecrow_mc_scarecrow_head_switch[] = {
+	GEO_TRANSLATE_ROTATE(LAYER_OPAQUE, 0, 106, 0, 0, 0, 0),
+	GEO_RETURN(),
+};
 const GeoLayout mc_scarecrow_geo[] = {
 	GEO_NODE_START(),
 	GEO_OPEN_NODE(),
@@ -25,12 +29,16 @@ const GeoLayout mc_scarecrow_geo[] = {
 							GEO_DISPLAY_LIST(LAYER_OPAQUE, mc_scarecrow_cape2_skinned_mesh_layer_1),
 							GEO_ANIMATED_PART(LAYER_OPAQUE, 0, -135, -66, mc_scarecrow_cape2_mesh_layer_1),
 						GEO_CLOSE_NODE(),
-						GEO_ANIMATED_PART(LAYER_OPAQUE, 0, 106, 0, NULL),
+						GEO_SWITCH_CASE(0, bhv_scarecrow_head_switch),
 						GEO_OPEN_NODE(),
-							GEO_ANIMATED_PART(LAYER_OPAQUE, 0, 0, 0, mc_scarecrow_head_mesh_layer_1),
+							GEO_NODE_START(),
 							GEO_OPEN_NODE(),
-								GEO_DISPLAY_LIST(LAYER_ALPHA, mc_scarecrow_head_mesh_layer_4),
+								GEO_ANIMATED_PART(LAYER_OPAQUE, 0, 106, 0, mc_scarecrow_head_mesh_layer_1),
+								GEO_OPEN_NODE(),
+									GEO_DISPLAY_LIST(LAYER_ALPHA, mc_scarecrow_head_mesh_layer_4),
+								GEO_CLOSE_NODE(),
 							GEO_CLOSE_NODE(),
+							GEO_BRANCH(1, mc_scarecrow_mc_scarecrow_head_switch),
 						GEO_CLOSE_NODE(),
 					GEO_CLOSE_NODE(),
 				GEO_CLOSE_NODE(),
