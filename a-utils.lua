@@ -79,6 +79,8 @@ end
 ---@field oPrevHealth number
 ---@field oBooCoinFace integer
 ---@field oBooCoinAnimState integer
+---@field oBooCoinSwitchMusic integer
+---@field oScarecrowLastY integer
 define_custom_obj_fields({
     oIsCarried = "u32",
     --oIsCarried = { type = "u32", global = true }, -- used in API
@@ -91,6 +93,7 @@ define_custom_obj_fields({
     oBooCoinFace = "u32",
     oBooCoinAnimState = "u32",
     oBooCoinSwitchMusic = "u32",
+    oScarecrowLastY = "f32",
 })
 
 evilFloorTypes = {

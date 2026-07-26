@@ -303,6 +303,7 @@ local function bhv_scarecrow_init(o)
     o.oHomeX = o.oPosX
     o.oHomeY = o.oPosY
     o.oHomeZ = o.oPosZ
+    o.oScarecrowLastY = o.oPosY
 
     o.header.gfx.animInfo.animFrame = 0
     o.header.gfx.animInfo.animTimer = 0
@@ -330,6 +331,30 @@ local function bhv_scarecrow_loop(o)
     local floorHeight, floor = find_floor(o.oPosX + o.oVelX, o.oPosY + 50, o.oPosZ + o.oVelZ)
     local m = nearest_mario_state_to_object(o)
     local dist = math.sqrt((o.oPosX - m.pos.x)^2 + (o.oPosY - m.pos.y)^2 + (o.oPosZ - m.pos.z)^2)
+
+    if o.oAction ~= 3 then
+        obj_check_floor_death(step, floor)
+    end
+
+    local deathPlaneKill = (o.oAction == OBJ_ACT_DEATH_PLANE_DEATH or o.oAction == OBJ_ACT_LAVA_DEATH)
+    if o.oHealth > 0 and (obj_check_hitbox_overlap(o, m.marioObj) and determine_interaction(m, o) ~= 0) or deathPlaneKill then
+        o.oHealth = 0
+        if deathPlaneKill then
+            o.oAction = 3
+        end
+        play_sound(SOUND_ACTION_UNSTUCK_FROM_GROUND, o.header.gfx.cameraToObject)
+        --spawn_coin_spawner(o, 25, false, 0, 200, 0)
+        if sync_object_is_owned_locally(o.oSyncID) then
+            ---@param oHead Object 
+            spawn_sync_object(id_bhvMasterCapScarecrowHead, E_MODEL_SCARECROW_HEAD, o.oPosX, o.oPosY + 100, o.oPosZ, function (oHead)
+                local floorDifVel = math.max(0, math.sqrt(2 * 4 * (o.oScarecrowLastY - o.oPosY)) - 50)
+                oHead.oMoveAngleYaw = (deathPlaneKill and o.oMoveAngleYaw + 0x8000 or lerp_s16(o.oMoveAngleYaw, atan2s(m.vel.z, m.vel.x), 0.5))
+                oHead.oFaceAngleYaw = oHead.oMoveAngleYaw + 0x8000
+                oHead.oVelY = floorDifVel + (deathPlaneKill and 0 or math.max(m.vel.y, 0))
+                oHead.oForwardVel = 30 + (deathPlaneKill and -1 or m.forwardVel)
+            end)
+        end
+    end
 
     if o.oAction == 0 then -- Spawn Animation
         cur_obj_enable_rendering()
@@ -392,25 +417,14 @@ local function bhv_scarecrow_loop(o)
         end
     end
 
-    if o.oHealth > 0 and obj_check_hitbox_overlap(o, m.marioObj) and determine_interaction(m, o) ~= 0 then
-        o.oHealth = 0
-        play_sound(SOUND_ACTION_UNSTUCK_FROM_GROUND, o.header.gfx.cameraToObject)
-        --spawn_coin_spawner(o, 25, false, 0, 200, 0)
-        if sync_object_is_owned_locally(o.oSyncID) then
-            spawn_sync_object(id_bhvMasterCapScarecrowHead, E_MODEL_SCARECROW_HEAD, o.oPosX, o.oPosY + 100, o.oPosZ, function (oHead)
-                oHead.oMoveAngleYaw = lerp_s16(o.oMoveAngleYaw, atan2s(m.vel.z, m.vel.x), 0.5)
-                oHead.oFaceAngleYaw = oHead.oMoveAngleYaw + 0x8000
-                o.oVelY = m.vel.y
-            end)
-        end
-    end
-
     if step & OBJ_COL_FLAG_GROUNDED ~= 0 then
         if o.oHealth == 0 then
             o.oAction = 3
             return
         elseif not m then
             o.oAction = 1
+        else
+            o.oScarecrowLastY = o.oPosY
         end
     end
 
@@ -423,6 +437,7 @@ end
 
 id_bhvMasterCapScarecrow = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_init, bhv_scarecrow_loop, "id_bhvMasterCapScarecrow")
 
+---@param o Object
 local function bhv_scarecrow_head_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.oGravity = 4
@@ -432,9 +447,15 @@ local function bhv_scarecrow_head_init(o)
     })
 end
 
+---@param o Object
 local function bhv_scarecrow_head_loop(o)
+    -- Jank workaround to uncapping Y Vel
+    local prevVelY = o.oVelY
+    o.oVelY = 0
     local step = object_step_without_floor_orient()
-    o.oForwardVel = 60
+    o.oVelY = prevVelY - o.oGravity
+    o.oPosY = o.oPosY + o.oVelY
+
     o.oFaceAnglePitch = o.oFaceAnglePitch + 0x800
     if o.oVelY < -40 or step & OBJ_COL_FLAG_GROUNDED ~= 0 then
         play_sound(SOUND_GENERAL_DONUT_PLATFORM_EXPLOSION, o.header.gfx.cameraToObject)
