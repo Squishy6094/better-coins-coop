@@ -223,7 +223,7 @@ function master_cap_add_coin(levelNum, value, noSync)
     local prevCapTimer = master_cap_data_get_field(levelNum, "capTimer")
     local prevCoins = master_cap_data_get_field(levelNum, "coins")
 
-    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*30*(areaCoinDensity/100*0.8 + 0.2)*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5)))
+    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*30*(gPlayerSyncTable[noSync or 0].coinDensity/100*0.8 + 0.2)*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5)))
     master_cap_data_set_field(levelNum, "coins", math.clamp(prevCoins + value, 0, 999))
 
     if network_is_server() then
@@ -233,6 +233,7 @@ function master_cap_add_coin(levelNum, value, noSync)
     if not noSync then
         network_send(true, {
             packetType = PACKET_TYPE_MASTER_CAP_COIN,
+            index = network_global_index_from_local(0),
             levelNum = levelNum,
             coinsAdd = value,
         })
@@ -247,7 +248,7 @@ local function on_packet_recieve(data)
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_STOP then
         master_cap_stop_course(data.levelNum, data.newRecord, data.coinTimer, true)
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_COIN then
-        master_cap_add_coin(data.levelNum, data.coinsAdd, true)
+        master_cap_add_coin(data.levelNum, data.coinsAdd, network_local_index_from_global(data.index))
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_UPDATE then
         master_cap_data_set_field(data.levelNum, "capTimer", data.capTimer)
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_SCARECROW then
@@ -920,6 +921,26 @@ local function on_sync()
         gLevelValues.disableActs = true
         set_ttc_speed_setting(TTC_SPEED_STOPPED)
     end
+
+    -- Count Coin Density for area
+    gPlayerSyncTable[0].coinDensity = 1
+    local areaCoinDistance = 0
+    local areaCoinCount = 0
+    -- Replace all Object Models
+    for i = 0, NUM_OBJ_LISTS - 1 do
+        local o = obj_get_first(i)
+        local prevO = o
+        while o ~= nil do
+            local coinValue = math.max(o.oNumLootCoins, o.oDamageOrCoinValue, o.oCustomCoins)
+            if coinValue > 0 then
+                areaCoinCount = areaCoinCount + coinValue
+                prevO = o
+                areaCoinDistance = (areaCoinDistance + math.sqrt((o.oPosX + prevO.oPosX)^2 + (o.oPosY + prevO.oPosY)^2 + (o.oPosZ + prevO.oPosZ)^2))*0.5
+            end
+            o = obj_get_next(o)
+        end
+    end
+    gPlayerSyncTable[0].coinDensity = areaCoinCount > 0 and (areaCoinDistance / areaCoinCount) or 1
 
     local levelNum = master_cap_get_merged_level_num()
     local realLevelNum = gNetworkPlayers[0].currLevelNum
