@@ -304,6 +304,9 @@ local function bhv_scarecrow_init(o)
     o.oHomeY = o.oPosY
     o.oHomeZ = o.oPosZ
 
+    o.header.gfx.animInfo.animFrame = 0
+    o.header.gfx.animInfo.animTimer = 0
+
     local objHitbox = get_temp_object_hitbox()
     objHitbox.hurtboxRadius = 80
     objHitbox.hurtboxHeight = 180
@@ -312,6 +315,7 @@ local function bhv_scarecrow_init(o)
     objHitbox.health = 1
     obj_set_hitbox(o, objHitbox)
     play_sound_with_freq_scale(SOUND_MENU_EXIT_PIPE, o.header.gfx.cameraToObject, 1.5)
+    cur_obj_disable_rendering()
 
     network_init_object(o, true, {
         "oMoveAngleYaw",
@@ -320,42 +324,37 @@ end
 
 ---@param o Object
 local function bhv_scarecrow_loop(o)
-
+    local startAction = o.oAction
     local step = object_step()
 
     local floorHeight, floor = find_floor(o.oPosX + o.oVelX, o.oPosY + 50, o.oPosZ + o.oVelZ)
     local m = nearest_mario_state_to_object(o)
     local dist = math.sqrt((o.oPosX - m.pos.x)^2 + (o.oPosY - m.pos.y)^2 + (o.oPosZ - m.pos.z)^2)
 
-
-
     if o.oAction == 0 then -- Spawn Animation
+        cur_obj_enable_rendering()
         smlua_anim_util_set_animation(o, ANIM_SCARECROW_SPAWN)
         o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
         if cur_obj_check_if_at_animation_end() ~= 0 then
-            o.header.gfx.animInfo.animFrame = 0
-            o.header.gfx.animInfo.animTimer = 0
             o.oAction = 1
         end
     elseif o.oAction == 1 then -- Idle action
         smlua_anim_util_set_animation(o, ANIM_SCARECROW_IDLE)
         if dist < 2000 then
-            o.header.gfx.animInfo.animFrame = 0
-            o.header.gfx.animInfo.animTimer = 0
             o.oAction = 2
         end
     elseif o.oAction == 2 then -- Bounce Away from Mario
         if o.oHealth > 0 then
             o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
         end
-        if step & (OBJ_COL_FLAG_GROUNDED | OBJ_COL_FLAG_HIT_WALL) ~= 0 then
+        if step & (OBJ_COL_FLAG_GROUNDED | OBJ_COL_FLAG_HIT_WALL) ~= 0 and o.oHealth > 0 then
             local isOnFloor = step & OBJ_COL_FLAG_GROUNDED ~= 0
             o.oForwardVel = find_water_level(o.oPosX, o.oPosZ) - 30 < o.oPosY and 30 or 15
             o.header.gfx.animInfo.animFrame = 0
             o.header.gfx.animInfo.animTimer = 0
             smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)
-            local bounceRng = math.random(1, 2) == 1
-            local baitRng = isOnFloor and dist < 500 and math.random(1, 5) == 1
+            local bounceRng = random_float() > 0.5
+            local baitRng = isOnFloor and dist < 500 and m.forwardVel > 30 and random_float() > 0.66
             if not baitRng then
                 o.oVelY = 50
                 play_sound(bounceRng and SOUND_GENERAL_BOING1 or SOUND_GENERAL_BOING2, o.header.gfx.cameraToObject)
@@ -407,9 +406,7 @@ local function bhv_scarecrow_loop(o)
     end
 
     if step & OBJ_COL_FLAG_GROUNDED ~= 0 then
-        if o.oHealth == 0 and o.oAction ~= 3 then
-            o.header.gfx.animInfo.animFrame = 0
-            o.header.gfx.animInfo.animTimer = 0
+        if o.oHealth == 0 then
             o.oAction = 3
             return
         elseif not m then
@@ -417,6 +414,11 @@ local function bhv_scarecrow_loop(o)
         end
     end
 
+    if startAction ~= o.oAction then
+        o.header.gfx.animInfo.animFrame = 0
+        o.header.gfx.animInfo.animTimer = 0
+        obj_anim_skip_interpolation(o)
+    end
 end
 
 id_bhvMasterCapScarecrow = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_init, bhv_scarecrow_loop, "id_bhvMasterCapScarecrow")
