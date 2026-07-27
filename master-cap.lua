@@ -89,6 +89,9 @@ function master_cap_init_level(levelNum)
         coins = 0,
         spawnedScarecrow = false,
     }
+    for i = 0, MAX_PLAYERS - 1 do
+        gMasterCapServerState[levelNum]["playerAlive"..i] = true
+    end
     
     if network_is_server() then
         local level = tostring(saveLevelNum)
@@ -140,7 +143,7 @@ end
 function mario_master_cap_active(m, levelNum)
     levelNum = master_cap_get_merged_level_num(levelNum)
     if levelNum ~= master_cap_get_merged_level_num(gNetworkPlayers[m.playerIndex].currLevelNum) then return false end
-    return master_cap_data_get_field(levelNum, "runState") == 1 and not gPlayerSyncTable[m.playerIndex].endRunActs
+    return master_cap_data_get_field(levelNum, "runState") == 1 and not gPlayerSyncTable[m.playerIndex].diedInRun
 end
 
 function network_player_master_cap_count(currLevel)
@@ -158,6 +161,7 @@ local PACKET_TYPE_MASTER_CAP_STOP = 2
 local PACKET_TYPE_MASTER_CAP_COIN = 3
 local PACKET_TYPE_MASTER_CAP_UPDATE = 4
 local PACKET_TYPE_MASTER_CAP_SCARECROW = 5
+local PACKET_TYPE_MASTER_CAP_LEVEL_RESET = 6
 function master_cap_start_course(levelNum, noSync)
     levelNum = master_cap_get_merged_level_num(levelNum)
     masterCapMusicFreq = 1
@@ -253,6 +257,9 @@ local function on_packet_recieve(data)
         master_cap_data_set_field(data.levelNum, "capTimer", data.capTimer)
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_SCARECROW then
         master_cap_request_scarecrow_spawn()
+    elseif data.packetType == PACKET_TYPE_MASTER_CAP_LEVEL_RESET then
+        djui_chat_message_create("reset")
+        master_cap_data_set_field(data.levelNum, "runState", 0)
     end
 end
 
@@ -321,6 +328,7 @@ local function act_master_cap_results(m)
         if pA.prevAction == ACT_MASTER_CAP_BUBBLED then
             m.marioObj.oIntangibleTimer = 0;
             mario_pop_bubble(m)
+            gPlayerSyncTable[0].diedInRun = false
         else
             m.action = pA.prevAction
             m.marioObj.header.gfx.animInfo.animAccel = pA.prevActionAnimAccel
@@ -974,6 +982,7 @@ local function on_sync()
             --if master_cap_data_exists(levelNum) then return end
             if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
             if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
+            djui_chat_message_create("spawnCheck")
 
             local masterCapSpawn = master_cap_get_box_spawn(realLevelNum, areaNum)
             if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runState") == 0 then
@@ -996,7 +1005,7 @@ local runCrouchTimer = 0
 local function master_cap_music_update()
     local m = gMarioStates[0]
     local runState = master_cap_data_get_field(nil, "runState")
-    if gPlayerSyncTable[0].endRunActs then
+    if gPlayerSyncTable[0].diedInRun then
         runState = 2
     end
 
@@ -1044,8 +1053,9 @@ local prevFileProgress = save_file_get_flags()
 local function master_cap_update()
     if not master_cap_allowed() then return end
     local m = gMarioStates[0] ---@type MarioState
-    gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
-    gPlayerSyncTable[0].endRunActs = (m.action == ACT_MASTER_CAP_BUBBLED or m.action == ACT_MASTER_CAP_RESULTS)
+    local p = gPlayerSyncTable[0]
+
+    p.starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
 
     -- Check for Defeating Final Bowser
     if m.action == ACT_JUMBO_STAR_CUTSCENE or gNetworkPlayers[0].currLevelNum == LEVEL_ENDING then
@@ -1065,46 +1075,18 @@ local function master_cap_update()
     end
 
     --[[
-    if m.controller.buttonPressed & X_BUTTON ~= 0 then
-        warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
-        --[[
-        if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() and gGlobalSyncTable.defeatFinalBowser then
-            warp_to_level(LEVEL_MASTER_CAP_STAGE, 1, 0)
-        end
-        
-    end
-    ]]
-
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
         spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, m.pos.x, m.pos.y, m.pos.z - 300, function(o)
             
         end)
-        --[[
-        local masterDoorSpawnPos = master_cap_get_door_spawn(gNetworkPlayers[0].currLevelNum, gNetworkPlayers[0].currAreaIndex)
-
-        spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawnPos.x, masterDoorSpawnPos.y, masterDoorSpawnPos.z, function(o)
-            local doorWallAngle = atan2s(masterDoorSpawnPos.z - m.pos.z, masterDoorSpawnPos.x - m.pos.x)
-            local doorWallDist = nil
-            for i = 0, 7 do
-                local ray = collision_find_surface_on_ray(masterDoorSpawnPos.x, masterDoorSpawnPos.y + 200, masterDoorSpawnPos.z, sins(i*0x2000)*1000, 0, coss(i*0x2000)*1000, 1)
-                if ray.surface then
-                    rayDist = math.sqrt((ray.hitPos.x - masterDoorSpawnPos.x)^2 + (ray.hitPos.z - masterDoorSpawnPos.z)^2)
-                    if not doorWallDist or doorWallDist > rayDist then
-                        doorWallAngle = i*0x2000
-                        doorWallDist = rayDist
-                    end
-                end
-            end
-            o.oMoveAngleYaw = doorWallAngle + 0x8000
-        end)
-        ]]
     end
+    ]]
 
     master_cap_music_update()
-    --if m.playerIndex ~= 0 then return end
+    
     -- Locally Apply Master Cap
-    local runState = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runState") == 1
-    if runState then
+    local runActive = master_cap_data_exists(nil) and master_cap_data_get_field(nil, "runState") == 1
+    if runActive then
         m.capTimer = master_cap_data_get_field(nil, "capTimer")
         m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
         if m and m.area and m.area.camera then
@@ -1124,7 +1106,7 @@ local function master_cap_update()
             sPrevAct[m.playerIndex].prevActionArg = m.actionArg
         end
 
-        if m.action == ACT_CROUCHING or (m.action & ACT_FLAG_AIR == 0 and m.forwardVel == 0 and m.controller.buttonDown & Z_TRIG ~= 0) then
+        if (m.action & ACT_FLAG_AIR == 0 and m.forwardVel == 0 and m.controller.buttonDown & Z_TRIG ~= 0) and not p.diedInRun then
             runCrouchTimer = runCrouchTimer + 1
             if runCrouchTimer > 90 then
                 set_mario_finished_master_cap(m)
@@ -1133,6 +1115,14 @@ local function master_cap_update()
         else
             runCrouchTimer = math.max(runCrouchTimer - 3, 0)
         end
+
+        if (m.action == ACT_MASTER_CAP_BUBBLED or m.action == ACT_MASTER_CAP_RESULTS) then
+            p.diedInRun = true
+        elseif p.diedInRun then
+            set_mario_finished_master_cap(m)
+        end
+    else
+        p.diedInRun = false
     end
 
     if network_is_server() then
@@ -1161,6 +1151,7 @@ local function master_cap_update()
                             else
                                 master_cap_request_scarecrow_spawn()
                             end
+                            log_to_console("Better Coins: Master Cap - Requested index "..tostring(targetIndex).." to spawn a Scarecrow")
                         end
                         master_cap_data_set_field(levelNum, "spawnedScarecrow", true)
                     else
@@ -1175,25 +1166,26 @@ local function master_cap_update()
                             capTimer = capTimer - 1
                         end
                         if network_player_master_cap_count(levelNum) == 0 then
-                            local stallNoPlayers = master_cap_data_get_field(levelNum, "stallNoPlayers") or 0
-                            stallNoPlayers = stallNoPlayers + 1
-                            master_cap_data_set_field(levelNum, "stallNoPlayers", stallNoPlayers)
 
+                            local noOneInLevel = true
+                            for index = 0, MAX_PLAYERS - 1 do
+                                if gNetworkPlayers[index].connected and gNetworkPlayers[index].currAreaSyncValid and levelNum == master_cap_get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
+                                    noOneInLevel = false
+                                end
+                            end
+                            local stallNoPlayers = master_cap_data_get_field(levelNum, "stallNoPlayers") or 0
+                            if noOneInLevel then
+                                stallNoPlayers = stallNoPlayers + 1
+                                master_cap_data_set_field(levelNum, "stallNoPlayers", stallNoPlayers)
+                            end
+                            
                             if stallNoPlayers > 30 then
                                 master_cap_stop_course(levelNum)
                                 local courseNum = get_level_course_num(levelNum)
                                 local isRecord = master_cap_data_get_field(levelNum, "newRecord")
-                                local noOneInLevel = true
-                                for index = 0, MAX_PLAYERS - 1 do
-                                    if gNetworkPlayers[index].connected and levelNum == master_cap_get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
-                                        noOneInLevel = false
-                                    end
-                                end
-                                if noOneInLevel then
-                                    local levelName = get_level_name(courseNum, levelNum, 1)
-                                    djui_popup_create_global(levelName..(levelName:sub(-1):lower() == "s" and "'" or "'s").."\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(coins) .. " | Time: " .. timestamp(master_cap_data_get_field(levelNum, "coinTimer")), isRecord and 6 or 5)
-                                    master_cap_data_set_field(levelNum, "runState", 0)
-                                end
+                                local levelName = get_level_name(courseNum, levelNum, 1)
+                                djui_popup_create_global(levelName..(levelName:sub(-1):lower() == "s" and "'" or "'s").."\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(coins) .. " | Time: " .. timestamp(master_cap_data_get_field(levelNum, "coinTimer")), isRecord and 6 or 5)
+                                master_cap_data_set_field(levelNum, "runState", 2)
                             end
                         else
                             master_cap_data_set_field(levelNum, "stallNoPlayers", 0)
@@ -1229,7 +1221,12 @@ local function master_cap_update()
                         end
                     end
                     if noOneInLevel then
+                        log_to_console("Better Coins: Master Cap / Level" .. tostring(levelNum) .. " - Setting Run State to 0")
                         master_cap_data_set_field(levelNum, "runState", 0)
+                        network_send(true, {
+                            packetType = PACKET_TYPE_MASTER_CAP_LEVEL_RESET,
+                            levelNum = levelNum,
+                        })
                     end
                 end
             end
@@ -1340,7 +1337,7 @@ local function on_death()
         set_mario_finished_master_cap(m)
         return false
     end
-    if gPlayerSyncTable[0].endRunActs then
+    if gPlayerSyncTable[0].diedInRun then
         return false
     end
 end
@@ -1357,6 +1354,13 @@ local function easier_mario_viewing_expirience(m)
     end
 end
 
+local function check_late_entry()
+    local levelNum = gNetworkPlayers[0].currLevelNum
+    if master_cap_data_get_field(nil, "runState") == 1 and levelNum == master_cap_get_merged_level_num(levelNum) then
+        gPlayerSyncTable[0].diedInRun = true
+    end
+end
+
 local function block_cs_during_run()
     return master_cap_data_get_field(nil, "runState") ~= 1
 end
@@ -1367,6 +1371,7 @@ hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_DEATH, on_death)
 hook_event(HOOK_MARIO_UPDATE, easier_mario_viewing_expirience)
 hook_event(HOOK_ALLOW_FORCE_WATER_ACTION, allow_force_water_interaction)
+hook_event(HOOK_ON_LEVEL_INIT, check_late_entry)
 if charSelectExists then
     charSelect.hook_allow_menu_open(block_cs_during_run)
 end
