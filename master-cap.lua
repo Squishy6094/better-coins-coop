@@ -1357,12 +1357,19 @@ local function easier_mario_viewing_expirience(m)
     end
 end
 
+local function block_cs_during_run()
+    return master_cap_data_get_field(nil, "runState") ~= 1
+end
+
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_DEATH, on_death)
 hook_event(HOOK_MARIO_UPDATE, easier_mario_viewing_expirience)
 hook_event(HOOK_ALLOW_FORCE_WATER_ACTION, allow_force_water_interaction)
+if charSelectExists then
+    charSelect.hook_allow_menu_open(block_cs_during_run)
+end
 
 -------------------
 -- API Functions --
