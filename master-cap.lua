@@ -922,6 +922,8 @@ local function on_sync()
         set_ttc_speed_setting(TTC_SPEED_STOPPED)
     end
 
+    prevCoinsBest, prevTimeBest = master_cap_get_record()
+
     -- Count Coin Density for area
     gPlayerSyncTable[0].coinDensity = 1
     local areaCoinDistance = 0
@@ -1045,8 +1047,6 @@ local function master_cap_update()
     gPlayerSyncTable[0].starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
     gPlayerSyncTable[0].endRunActs = (m.action == ACT_MASTER_CAP_BUBBLED or m.action == ACT_MASTER_CAP_RESULTS)
 
-    prevCoinsBest, prevTimeBest = master_cap_get_record()
-
     -- Check for Defeating Final Bowser
     if m.action == ACT_JUMBO_STAR_CUTSCENE or gNetworkPlayers[0].currLevelNum == LEVEL_ENDING then
         gGlobalSyncTable.defeatFinalBowser = true
@@ -1128,6 +1128,7 @@ local function master_cap_update()
             runCrouchTimer = runCrouchTimer + 1
             if runCrouchTimer > 90 then
                 set_mario_finished_master_cap(m)
+                runCrouchTimer = 0
             end
         else
             runCrouchTimer = math.max(runCrouchTimer - 3, 0)
@@ -1344,6 +1345,10 @@ local function on_death()
     end
 end
 
+local function allow_force_water_interaction(m, water)
+    return m.action ~= ACT_MASTER_CAP_BUBBLED and m.action ~= ACT_MASTER_CAP_RESULTS
+end
+
 local function easier_mario_viewing_expirience(m)
     if master_cap_data_get_field(nil, "runState") == 1 then
         local bodyState = m.marioBodyState
@@ -1357,6 +1362,7 @@ hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_DEATH, on_death)
 hook_event(HOOK_MARIO_UPDATE, easier_mario_viewing_expirience)
+hook_event(HOOK_ALLOW_FORCE_WATER_ACTION, allow_force_water_interaction)
 
 -------------------
 -- API Functions --
