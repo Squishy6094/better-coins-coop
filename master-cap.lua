@@ -921,6 +921,8 @@ function master_cap_request_scarecrow_spawn()
     end)
 end
 
+local prevCoinDensity = {}
+
 local prevCoinsBest = 0
 local prevTimeBest = 0
 local function on_sync()
@@ -929,6 +931,8 @@ local function on_sync()
         gLevelValues.disableActs = true
         set_ttc_speed_setting(TTC_SPEED_STOPPED)
     end
+
+    local np = gNetworkPlayers[0]
 
     prevCoinsBest, prevTimeBest = master_cap_get_record()
 
@@ -951,6 +955,16 @@ local function on_sync()
         end
     end
     gPlayerSyncTable[0].coinDensity = areaCoinCount > 0 and math.ceil(areaCoinDistance / areaCoinCount)/100*0.8 + 0.2 or 1
+
+    -- Failsafe exiting and reentering
+    if not prevCoinDensity[np.currLevelNum] then
+        prevCoinDensity[np.currLevelNum] = {}
+    end
+    if prevCoinDensity[np.currLevelNum][np.currAreaIndex] then
+        gPlayerSyncTable[0].coinDensity = math.min(gPlayerSyncTable[0].coinDensity, prevCoinDensity[np.currLevelNum][np.currAreaIndex])
+    end
+    prevCoinDensity[np.currLevelNum][np.currAreaIndex] = gPlayerSyncTable[0].coinDensity
+
     log_to_console("Better Coins: Master Cap Coin Density set to " .. tostring(gPlayerSyncTable[0].coinDensity) .. " Seconds per Coin")
 
     local levelNum = master_cap_get_merged_level_num()
