@@ -227,7 +227,7 @@ function master_cap_add_coin(levelNum, value, noSync)
     local prevCapTimer = master_cap_data_get_field(levelNum, "capTimer")
     local prevCoins = master_cap_data_get_field(levelNum, "coins")
 
-    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*30*(gPlayerSyncTable[noSync or 0].coinDensity/100*0.8 + 0.2)*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5)))
+    master_cap_data_set_field(levelNum, "capTimer", prevCapTimer + value*30*(gPlayerSyncTable[noSync or 0].coinDensity)*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5)))
     master_cap_data_set_field(levelNum, "coins", math.clamp(prevCoins + value, 0, 999))
 
     if network_is_server() then
@@ -698,7 +698,7 @@ local function find_master_cap_spawn_position()
                         end
                         spawnPos = {
                             x = surfaceX,
-                            y = math.max(find_water_level(findFloorX, findFloorZ), surfaceY) + 400,
+                            y = math.max(find_water_level(findFloorX, findFloorZ) - 100, surfaceY) + 300,
                             z = surfaceZ,
                             yaw = doorWallAngle + 0x8000,
                         }
@@ -950,7 +950,8 @@ local function on_sync()
             o = obj_get_next(o)
         end
     end
-    gPlayerSyncTable[0].coinDensity = areaCoinCount > 0 and (areaCoinDistance / areaCoinCount) or 1
+    gPlayerSyncTable[0].coinDensity = areaCoinCount > 0 and math.ceil(areaCoinDistance / areaCoinCount)/100*0.8 + 0.2 or 1
+    log_to_console("Better Coins: Master Cap Coin Density set to " .. tostring(gPlayerSyncTable[0].coinDensity) .. " Seconds per Coin")
 
     local levelNum = master_cap_get_merged_level_num()
     local realLevelNum = gNetworkPlayers[0].currLevelNum
