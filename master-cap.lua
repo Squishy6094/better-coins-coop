@@ -258,7 +258,6 @@ local function on_packet_recieve(data)
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_SCARECROW then
         master_cap_request_scarecrow_spawn()
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_LEVEL_RESET then
-        djui_chat_message_create("reset")
         master_cap_data_set_field(data.levelNum, "runState", 0)
     end
 end
@@ -451,7 +450,8 @@ hook_mario_action(ACT_MASTER_CAP_RESULTS, act_master_cap_results)
 hook_mario_action(ACT_MASTER_CAP_BUBBLED, {every_frame = act_master_cap_bubbled, gravity = function(m) return 1 end})
 
 function set_mario_finished_master_cap(m)
-    if network_player_master_cap_count() == 0 then
+    gPlayerSyncTable[0].diedInRun = true
+    if network_player_master_cap_count() <= 0 then
         if m.action ~= ACT_MASTER_CAP_RESULTS then
             set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
         end
@@ -982,7 +982,6 @@ local function on_sync()
             --if master_cap_data_exists(levelNum) then return end
             if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
             if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
-            djui_chat_message_create("spawnCheck")
 
             local masterCapSpawn = master_cap_get_box_spawn(realLevelNum, areaNum)
             if master_cap_data_exists(levelNum) and master_cap_data_get_field(levelNum, "runState") == 0 then
@@ -1007,6 +1006,8 @@ local function master_cap_music_update()
     local runState = master_cap_data_get_field(nil, "runState")
     if gPlayerSyncTable[0].diedInRun then
         runState = 2
+    elseif runState == 2 and not (m.action == ACT_MASTER_CAP_BUBBLED or m.action == ACT_MASTER_CAP_RESULTS) then
+        runState = 0
     end
 
     if runState > 0 then
@@ -1116,9 +1117,7 @@ local function master_cap_update()
             runCrouchTimer = math.max(runCrouchTimer - 3, 0)
         end
 
-        if (m.action == ACT_MASTER_CAP_BUBBLED or m.action == ACT_MASTER_CAP_RESULTS) then
-            p.diedInRun = true
-        elseif p.diedInRun then
+        if p.diedInRun then
             set_mario_finished_master_cap(m)
         end
     else
@@ -1165,27 +1164,29 @@ local function master_cap_update()
                         else
                             capTimer = capTimer - 1
                         end
-                        if network_player_master_cap_count(levelNum) == 0 then
 
-                            local noOneInLevel = true
-                            for index = 0, MAX_PLAYERS - 1 do
-                                if gNetworkPlayers[index].connected and gNetworkPlayers[index].currAreaSyncValid and levelNum == master_cap_get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
-                                    noOneInLevel = false
-                                end
-                            end
+                        if network_player_master_cap_count(levelNum) == 0 then
                             local stallNoPlayers = master_cap_data_get_field(levelNum, "stallNoPlayers") or 0
-                            if noOneInLevel then
-                                stallNoPlayers = stallNoPlayers + 1
-                                master_cap_data_set_field(levelNum, "stallNoPlayers", stallNoPlayers)
-                            end
+                            stallNoPlayers = stallNoPlayers + 1
+                            master_cap_data_set_field(levelNum, "stallNoPlayers", stallNoPlayers)
                             
                             if stallNoPlayers > 30 then
                                 master_cap_stop_course(levelNum)
                                 local courseNum = get_level_course_num(levelNum)
                                 local isRecord = master_cap_data_get_field(levelNum, "newRecord")
-                                local levelName = get_level_name(courseNum, levelNum, 1)
-                                djui_popup_create_global(levelName..(levelName:sub(-1):lower() == "s" and "'" or "'s").."\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(coins) .. " | Time: " .. timestamp(master_cap_data_get_field(levelNum, "coinTimer")), isRecord and 6 or 5)
-                                master_cap_data_set_field(levelNum, "runState", 2)
+                                local noOneInLevel = true
+                                for index = 0, MAX_PLAYERS - 1 do
+                                    if gNetworkPlayers[index].connected and levelNum == master_cap_get_merged_level_num(gNetworkPlayers[index].currLevelNum) then
+                                        noOneInLevel = false
+                                    end
+                                end
+
+                                -- Check if no one is in the level to report "ditched"
+                                if noOneInLevel then
+                                    local levelName = get_level_name(courseNum, levelNum, 1)
+                                    djui_popup_create_global(levelName..(levelName:sub(-1):lower() == "s" and "'" or "'s").."\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(coins) .. " | Time: " .. timestamp(master_cap_data_get_field(levelNum, "coinTimer")), isRecord and 6 or 5)
+                                    master_cap_data_set_field(levelNum, "runState", 2)
+                                end
                             end
                         else
                             master_cap_data_set_field(levelNum, "stallNoPlayers", 0)
