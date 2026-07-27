@@ -1361,8 +1361,13 @@ local function check_late_entry()
     end
 end
 
-local function block_cs_during_run()
-    return master_cap_data_get_field(nil, "runState") ~= 1
+local function on_mods_loaded()
+    -- Block Character Select from Opening Mid-Run
+    if _G.charSelectExists then
+        _G.charSelect.hook_allow_menu_open(function ()
+            return master_cap_data_get_field(nil, "runState") ~= 1
+        end)
+    end
 end
 
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
@@ -1372,10 +1377,4 @@ hook_event(HOOK_ON_DEATH, on_death)
 hook_event(HOOK_MARIO_UPDATE, easier_mario_viewing_expirience)
 hook_event(HOOK_ALLOW_FORCE_WATER_ACTION, allow_force_water_interaction)
 hook_event(HOOK_ON_LEVEL_INIT, check_late_entry)
-if charSelectExists then
-    charSelect.hook_allow_menu_open(block_cs_during_run)
-end
-
--------------------
--- API Functions --
--------------------
+hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
