@@ -1122,7 +1122,7 @@ local function master_cap_update()
             sPrevAct[m.playerIndex].prevActionArg = m.actionArg
         end
 
-        if (m.action & ACT_FLAG_AIR == 0 and m.forwardVel == 0 and m.controller.buttonDown & Z_TRIG ~= 0) and not p.diedInRun then
+        if (m.action & ACT_FLAG_AIR == 0 and (m.forwardVel == 0 and m.vel.y == 0) and m.controller.buttonDown & Z_TRIG ~= 0) and not p.diedInRun then
             runCrouchTimer = runCrouchTimer + 1
             if runCrouchTimer > 90 then
                 set_mario_finished_master_cap(m)
@@ -1371,6 +1371,12 @@ local function easier_mario_viewing_expirience(m)
 end
 
 local function check_late_entry()
+    if not master_cap_allowed() then return end
+    if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() then
+        gLevelValues.disableActs = true
+        set_ttc_speed_setting(TTC_SPEED_STOPPED)
+    end
+
     local levelNum = gNetworkPlayers[0].currLevelNum
     if master_cap_data_get_field(nil, "runState") == 1 and levelNum == master_cap_get_merged_level_num(levelNum) then
         gPlayerSyncTable[0].diedInRun = true
