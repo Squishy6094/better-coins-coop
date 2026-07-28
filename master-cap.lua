@@ -113,11 +113,17 @@ function master_cap_data_exists(levelNum)
 end
 
 function master_cap_data_get_field(levelNum, field)
+    if not master_cap_data_exists(levelNum) then 
+        master_cap_init_level(levelNum)
+    end
     levelNum = master_cap_get_merged_level_num(levelNum)
     return gMasterCapServerState[levelNum][field]
 end
 
 function master_cap_data_set_field(levelNum, field, value)
+    if not master_cap_data_exists(levelNum) then 
+        master_cap_init_level(levelNum)
+    end
     levelNum = master_cap_get_merged_level_num(levelNum)
     gMasterCapServerState[levelNum][field] = value
 end
