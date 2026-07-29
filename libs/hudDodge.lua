@@ -10,6 +10,21 @@ local screenMarginTop = 15
 local prevHitboxList = {}
 local hitboxList = {}
 
+local currModIndex = get_active_mod().index
+
+local function add_hitbox(x, y, w, h, inMod)
+    if inMod == nil then
+        inMod = get_active_mod().index == (currModIndex)
+    end
+    table.insert(hitboxList, {
+        x = x,
+        y = y,
+        w = w,
+        h = h,
+        inMod = inMod,
+    })
+end
+
 local function reset_hitbox_list()
     local m = gMarioStates[0];
     local sW = djui_hud_get_screen_width() + 1
@@ -30,11 +45,11 @@ local function reset_hitbox_list()
     ]]
 
     if (hudDisplayFlags & HUD_DISPLAY_FLAG_LIVES ~= 0 and showHud) then
-        table.insert(hitboxList, {x = 22, y = 15, w = 16, h = 16})
+        add_hitbox(22, 15, 16, 16, false)
         local xW, xH = djui_hud_measure_text("*")
-        table.insert(hitboxList, {x = 38, y = 15, w = xW, h = xH})
+        add_hitbox(38, 15, xW, xH, false)
         local cW, cH = djui_hud_measure_text(tostring(gLevelValues.maxLives))
-        table.insert(hitboxList, {x = 54, y = 15, w = cW, h = cH})
+        add_hitbox(54, 15, cW, cH, false)
     end
 
     -- coop hud elements
@@ -47,11 +62,11 @@ local function reset_hitbox_list()
                 
                 local capTimer = m.capTimer;
                 if (capTimer > 0) then
-                    table.insert(hitboxList, {x = 22, y = 35, w = 16, h = 16})
+                    add_hitbox(22, 35, 16, 16, false)
                     local xW, xH = djui_hud_measure_text("*")
-                    table.insert(hitboxList, {x = 38, y = 35, w = xW, h = xH})
+                    add_hitbox(38, 35, xW, xH, false)
                     local cW, cH = djui_hud_measure_text("9999")
-                    table.insert(hitboxList, {x = 54, y = 35, w = cW, h = cH})
+                    add_hitbox(54, 35, cW, cH, false)
                 end
             end
         end
@@ -63,9 +78,9 @@ local function reset_hitbox_list()
             if (gLevelValues.hudRedCoinsRadar ~= 0) then
                 local redCoin = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvRedCoin);
                 if (redCoin) then
-                    table.insert(hitboxList, {x = 15, y = radarY - 6, w = 28, h = 28})
+                    add_hitbox(15, radarY - 6, 28, 28, false)
                     local cW, cH = djui_hud_measure_text(tostring(0x8000))
-                    table.insert(hitboxList, {x = 47, y = radarY, w = cW, h = cH})
+                    add_hitbox(47, radarY, cW, cH, false)
 
                     radarY = radarY - 30;
                 end
@@ -75,9 +90,9 @@ local function reset_hitbox_list()
             if (gLevelValues.hudSecretsRadar ~= 0) then
                 local secret = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHiddenStarTrigger);
                 if (secret) then
-                    table.insert(hitboxList, {x = 15, y = radarY - 6, w = 28, h = 28})
+                    add_hitbox(15, radarY - 6, 28, 28, false)
                     local cW, cH = djui_hud_measure_text(tostring(0x8000))
-                    table.insert(hitboxList, {x = 47, y = radarY, w = cW, h = cH})
+                    add_hitbox(47, radarY, cW, cH, false)
 
                     radarY = radarY - 30;
                 end
@@ -87,11 +102,11 @@ local function reset_hitbox_list()
 
     if (hudDisplayFlags & HUD_DISPLAY_FLAG_COIN_COUNT ~= 0 and showHud) then
         local coinX = sW*0.5 + 8
-        table.insert(hitboxList, {x = coinX, y = 15, w = 16, h = 16})
+        add_hitbox(coinX, 15, 16, 16, false)
         local xW, xH = djui_hud_measure_text("*")
-        table.insert(hitboxList, {x = coinX + 17, y = 15, w = xW, h = xH})
+        add_hitbox(coinX + 17, 15, xW, xH, false)
         local cW, cH = djui_hud_measure_text(tostring(gLevelValues.maxCoins))
-        table.insert(hitboxList, {x = coinX + 32, y = 15, w = cW, h = cH})
+        add_hitbox(coinX + 32, 15, cW, cH, false)
     end
 
     if (hudDisplayFlags & HUD_DISPLAY_FLAG_STAR_COUNT ~= 0 and showHud) then
@@ -102,19 +117,19 @@ local function reset_hitbox_list()
         end
 
         local x = math.ceil(sW - 78)
-        table.insert(hitboxList, {x = x, y = 15, w = 16, h = 16})
+        add_hitbox(x, 15, 16, 16, false)
         if (showX == 1) then
             local xW, xH = djui_hud_measure_text("*")
-            table.insert(hitboxList, {x = x + 17, y = 15, w = xW, h = xH})
+            add_hitbox(x + 17, 15, xW, xH, false)
         end
-        local cW, cH = djui_hud_measure_text("120")
-        table.insert(hitboxList, {x = x + 19 + showX*14, y = 15, w = cW, h = cH})
+        local cW, cH = djui_hud_measure_text(showX == 0 and "999" or "99")
+        add_hitbox(x + 19 + showX*14, 15, cW, cH, false)
     end
 
     if (hudDisplayFlags & HUD_DISPLAY_FLAG_KEYS ~= 0 and showHud) then
         if gHudDisplay.keys > 0 then
             for i = 1, gHudDisplay.keys do
-                table.insert(hitboxList, {x = 22 + ((i - 1) * 16), y = 82, w = 16, h = 16})
+                add_hitbox(22 + ((i - 1) * 16), 82, 16, 16, false)
             end
         end
     end
@@ -146,7 +161,7 @@ local function reset_hitbox_list()
             timerSecs = (timerValFrames - (timerMins * 1800)) / 30;
             
                 local xW, xH = djui_hud_measure_text("*")
-                table.insert(hitboxList, {x = x + 17, y = 15, w = xW, h = xH})
+                add_hitbox(x = x + 17, y = 15, w = xW, h = xH, false)
 
             timerFracSecs = ((timerValFrames - (timerMins * 1800) - (timerSecs * 30)) & 0xFFFF) / 3;
             print_text(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 185, "TIME");
@@ -162,9 +177,9 @@ local function reset_hitbox_list()
 
         local dW, dH = djui_hud_measure_text("9")
         local d2W, d2H = djui_hud_measure_text("99")
-        table.insert(hitboxList, {x = sW - 91, y = 39, w = dW, h = dH})
-        table.insert(hitboxList, {x = sW - 71, y = 39, w = d2W, h = d2H})
-        table.insert(hitboxList, {x = sW - 37, y = 39, w = dW, h = dH})
+        add_hitbox(sW - 91, 39, dW, dH, false)
+        add_hitbox(sW - 71, 39, d2W, d2H, false)
+        add_hitbox(sW - 37, 39, dW, dH, false)
     end
 end
 
@@ -176,7 +191,7 @@ _G.djui_hud_render_rect = function (x, y, w, h)
     local sW = djui_hud_get_screen_width()
     local sH = djui_hud_get_screen_height()
     if (w/sW) < 0.9 and (h/sH) < 0.9 then
-        table.insert(hitboxList, {x = x, y = y, w = w, h = h})
+        add_hitbox(x, y, w, h)
     end
     og_djui_hud_render_rect(x, y, w, h)
 end
@@ -184,17 +199,19 @@ end
 _G.djui_hud_print_text = function (message, x, y, scaleX, scaleY)
     scaleY = scaleY or scaleX
     local msgW, msgH = djui_hud_measure_text(message)
-    table.insert(hitboxList, {x = x, y = y, w = msgW*scaleX, h = msgH*scaleY})
+    add_hitbox(x, y, msgW*scaleX, msgH*scaleY)
     og_djui_hud_print_text(message, x, y, scaleX, scaleY)
 end
 
 _G.djui_hud_render_texture = function (tex, x, y, w, h)
-    table.insert(hitboxList, {x = x, y = y, w = w*tex.width, h = h*tex.width})
+    add_hitbox(x, y, w*tex.width, h*tex.width)
     og_djui_hud_render_texture(tex, x, y, w, h)
 end
 
 local function hud_render()
     djui_hud_set_resolution(RESOLUTION_N64)
+    screenMarginLeft = 22
+    screenMarginTop = 15
     for id, hitbox in pairs(hitboxList) do
         if HUD_HITBOXES_RENDER then
 
@@ -202,6 +219,13 @@ local function hud_render()
             og_djui_hud_render_rect(hitbox.x, hitbox.y, hitbox.w, hitbox.h)
             djui_hud_set_color(255, 255, 255, 100)
             og_djui_hud_print_text(tostring(id), hitbox.x, hitbox.y, 1)
+        end
+
+        if not hitbox.inMod then
+            screenMarginLeft = math.min(hitbox.x, screenMarginLeft)
+        end
+        if not hitbox.inMod then
+            screenMarginTop = math.min(hitbox.y, screenMarginTop)
         end
     end
     reset_hitbox_list()
@@ -249,12 +273,6 @@ local function find_open_hud_space(x, y, w, h, weightX, weightY)
 
                 if not overlapFound and rects_overlap(newX, newY, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h) then
                     overlapFound = true
-                    if hitbox.x > 10 then
-                        screenMarginLeft = math.min(hitbox.x, screenMarginLeft)
-                    end
-                    if hitbox.y > 10 then
-                        screenMarginTop = math.min(hitbox.y, screenMarginTop)
-                    end
 
                     newX = math.max(x, hitbox.x + hitbox.w + hitboxMarginX)
                     newY = math.max(y, hitbox.y + hitbox.h + hitboxMarginY)
