@@ -10,13 +10,6 @@ audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
 
 gGlobalSyncTable.allowMasterCap = true
 gGlobalSyncTable.allowMasterCapApi = nil
-function master_cap_allowed()
-    if gGlobalSyncTable.allowMasterCapApi ~= nil then
-        return gGlobalSyncTable.allowMasterCapApi
-    else
-        return gGlobalSyncTable.allowMasterCap and not GAMEMODE_ACTIVE
-    end
-end
 
 local function save_file_prefix(str)
     return "saveFile"..tostring(get_current_save_file_num())..(save_file_get_using_backup_slot() and "B" or "")..str
@@ -36,6 +29,15 @@ local function update_save()
     gGlobalSyncTable.unlockedMasterCap = mod_storage_load_bool(save_file_prefix("unlockedMasterCap"), false)
 end
 update_save()
+
+function master_cap_allowed()
+    if gGlobalSyncTable.allowMasterCapApi ~= nil then
+        return gGlobalSyncTable.allowMasterCapApi, "API"
+    else
+        return gGlobalSyncTable.allowMasterCap and not GAMEMODE_ACTIVE and (hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() and gGlobalSyncTable.defeatFinalBowser),
+        (GAMEMODE_ACTIVE and "Gamemode " or "") .. (hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() and "" or "Star Count ") .. (gGlobalSyncTable.defeatFinalBowser and "" or "Bowser ")
+    end
+end
 
 local levelMerge = {
     [LEVEL_BOWSER_1] = LEVEL_BITDW,
@@ -933,10 +935,8 @@ local prevCoinsBest = 0
 local prevTimeBest = 0
 local function on_sync()
     if not master_cap_allowed() then return end
-    if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() then
-        gLevelValues.disableActs = true
-        set_ttc_speed_setting(TTC_SPEED_STOPPED)
-    end
+    gLevelValues.disableActs = true
+    set_ttc_speed_setting(TTC_SPEED_STOPPED)
 
     local np = gNetworkPlayers[0]
 
@@ -1378,10 +1378,8 @@ end
 
 local function check_late_entry()
     if not master_cap_allowed() then return end
-    if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() then
-        gLevelValues.disableActs = true
-        set_ttc_speed_setting(TTC_SPEED_STOPPED)
-    end
+    gLevelValues.disableActs = true
+    set_ttc_speed_setting(TTC_SPEED_STOPPED)
 
     local levelNum = gNetworkPlayers[0].currLevelNum
     if master_cap_data_get_field(nil, "runState") == 1 and levelNum == master_cap_get_merged_level_num(levelNum) then

@@ -267,7 +267,8 @@ function get_romhack_star_count()
     return romhackData[CURR_ROMHACK].starCount
 end
 
-log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()).." ("..tostring(get_max_possible_stars())..")")
+local unlocked, reason = master_cap_allowed()
+log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()).." ("..tostring(get_max_possible_stars())..") | Master Cap Unlocked - " .. tostring(unlocked) .. " ( " .. reason .. ")")
 end
 
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
