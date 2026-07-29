@@ -148,6 +148,7 @@ end
 
 ---@param o Object
 local function bhv_yoshi_reward(o)
+    if o.oToadMessageState ~= 0 then return end
     if o.oAction == YOSHI_ACT_TALK then
         sYoshiShouldExplode = true
     elseif sYoshiShouldExplode then
