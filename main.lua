@@ -3,8 +3,12 @@
 
 --[[
     - Todo:
-        - Big Plants give blues
-        - Chain Chomp gate should give coins
+        - Quicksand doesn't bubble you
+        - Scarecrow syncing
+        - Poundable poles syncing?
+        - Scarecrow jailbreak?
+        - Implement Mariohunt Star Counter
+        - Fix Master Cap Box Syncing
 ]]
 
 gLevelValues.previewBlueCoins = 1

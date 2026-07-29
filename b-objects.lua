@@ -7,7 +7,7 @@ local function obj_can_interact_with_mario(m, o)
     if not o or o.activeFlags == ACTIVE_FLAG_DEACTIVATED then return true end
     if m.action & ACT_FLAG_INTANGIBLE ~= 0 then return false end
     if o.oIntangibleTimer ~= 0 then return false end
-    if master_cap_box_active() and get_level_timer() < 90 then return false end
+    if master_cap_box_active() and get_level_timer() < 150 then return false end
     return true
 end
 
