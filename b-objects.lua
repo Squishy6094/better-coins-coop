@@ -201,6 +201,7 @@ function spawn_coin_spawner(o, coins, forceYellow, rX, rY, rZ)
     end)
 end
 
+local sCourtyardSecretSolved = false
 
 --- @param o Object
 local function courtyard_condition_init(o)
@@ -211,6 +212,10 @@ end
 
 --- @param o Object
 local function courtyard_condition_loop(o)
+    if sCourtyardSecretSolved then
+        obj_mark_for_deletion(o)
+        return
+    end
     if o.oAction == 0 then
         local oBoo = obj_get_first_with_behavior_id(id_bhvGhostHuntBoo)
         local booCount = 0
@@ -237,8 +242,7 @@ local function courtyard_condition_loop(o)
     else
         if o.oTimer > 60 then
             spawn_coin_spawner(o, 241 - gMarioStates[0].numCoins)
-            gGlobalSyncTable.courtyardSecretSolved = true
-            obj_mark_for_deletion(o)
+            sCourtyardSecretSolved = true
         end
     end
     o.oBehParams2ndByte = math.max(o.oBehParams2ndByte, o.oBehParams)
@@ -320,6 +324,7 @@ local function bhv_scarecrow_init(o)
 
     network_init_object(o, true, {
         "oMoveAngleYaw",
+        "oHealth",
     })
 end
 
@@ -363,6 +368,7 @@ local function bhv_scarecrow_loop(o)
                 oHead.oForwardVel = 30 + (deathPlaneKill and -1 or m.forwardVel)
             end)
         end
+        network_send_object(o, true)
     end
 
     if o.oAction == 0 then -- Spawn Animation
@@ -410,6 +416,7 @@ local function bhv_scarecrow_loop(o)
                 play_sound_with_freq_scale(SOUND_GENERAL_BOING1, o.header.gfx.cameraToObject, 0.8)
                 o.oMoveAngleYaw = lerp_s16(atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x), m.faceAngle.y, 0.5) + 0x8000
             end
+            network_send_object(o, true)
         end
 
         if dist > 4000 then
@@ -475,3 +482,166 @@ local function bhv_scarecrow_head_loop(o)
 end
 
 id_bhvMasterCapScarecrowHead = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_head_init, bhv_scarecrow_head_loop, "id_bhvMasterCapScarecrow")
+
+local MASTER_CAP_BOX_SCALE = 3
+
+---@param o Object
+local function bhv_master_cap_box_init(o)
+    o.oFlags = o.oFlags | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.collisionData = gGlobalObjectCollisionData.exclamation_box_outline_seg8_collision_08025F78
+    o.oCollisionDistance = 450
+
+    cur_obj_set_home_once()
+
+    o.oPosY = o.oHomeY + 0x8000
+    o.oSubAction = 0
+
+    o.areaTimerType = AREA_TIMER_TYPE_MAXIMUM
+    o.areaTimer = 0
+    o.areaTimerDuration = 300
+
+    smlua_anim_util_set_animation(o, ANIM_MASTER_CAP_BOX_IDLE)
+
+    network_init_object(o, true, {
+        "oExclamationBoxForce",
+        "areaTimer",
+        "oAction",
+        "oSubAction",
+    })
+end
+
+---@param o Object
+local function bhv_master_cap_box_loop(o)
+    cur_obj_scale(MASTER_CAP_BOX_SCALE)
+    local masterCapHitbox = get_temp_object_hitbox()
+    masterCapHitbox.interactType = INTERACT_BREAKABLE
+    masterCapHitbox.downOffset = 0
+    masterCapHitbox.damageOrCoinValue = 0
+    masterCapHitbox.health = 1
+    masterCapHitbox.numLootCoins = 0
+    masterCapHitbox.radius = 30
+    masterCapHitbox.height = 30
+    masterCapHitbox.hurtboxRadius = 30
+    masterCapHitbox.hurtboxHeight = 30
+    obj_set_hitbox(o, masterCapHitbox)
+    local nearestM = nearest_mario_state_to_object(o)
+
+    local levelIndex, levelData = master_cap_get_level()
+    if not master_cap_allowed() or levelData.runState ~= 0 then
+        obj_mark_for_deletion(o)
+        return
+    end
+
+    if o.oAction == 0 then
+        o.oExclamationBoxForce = 0
+        o.oAction = 1
+    elseif o.oAction == 1 then
+        if (o.oTimer == 0) then
+            cur_obj_unhide()
+            cur_obj_become_tangible()
+            o.oInteractStatus = 0
+            --o.oPosY = o.oHomeY
+            o.oGraphYOffset = 0.0
+        end
+
+        o.oPosY = math.lerp(o.oPosY, o.oHomeY + math.sin(o.areaTimer/10)*30, 0.1)
+        if hud_get_value(HUD_DISPLAY_COINS) > 0 then
+            o.oHomeY = o.oHomeY + o.oVelY
+            o.oVelY = math.clamp(o.oVelY + 1, 0, 50)
+            o.oSubAction = 1
+            o.header.gfx.animInfo.animAccel = 0x10000 + 0x600*o.oVelY
+        end
+
+        local isNearest = (nearestM ~= nil and nearestM == gMarioStates[0])
+        if (o.oExclamationBoxForce ~= 0 or isNearest) then
+            local neicheActs = nearestM.action & ACT_FLAG_SWIMMING_OR_FLYING ~= 0 and dist_between_objects(nearestM.marioObj, o) < o.hitboxRadius*2
+            if (o.oExclamationBoxForce ~= 0 or (isNearest and (cur_obj_was_attacked_or_ground_pounded() ~= 0 or neicheActs))) then
+                if (o.oExclamationBoxForce == 0) then
+                    o.oExclamationBoxForce = 1
+                    network_send_object(o, true)
+                    o.oExclamationBoxForce = 0
+                end
+                o.oExclamationBoxUnkFC = 0x4000
+                o.oVelY = 30.0
+                o.oGravity = -8.0
+                o.oFloorHeight = o.oPosY
+                o.oAction = 2
+                spawn_mist_particles()
+                play_sound(SOUND_OBJ_KING_BOBOMB_JUMP, o.header.gfx.cameraToObject)
+                queue_rumble_data_object(o, 5, 80)
+                cur_obj_become_intangible()
+                network_send_object(o, true)
+            end
+        end
+        if nearestM.action & ACT_FLAG_SWIMMING_OR_FLYING == 0 then
+            load_object_collision_model()
+        end
+
+        if cur_obj_check_if_at_animation_end() ~= 0 then
+            play_sound(SOUND_OBJ_BOWSER_SPINNING, o.header.gfx.cameraToObject)
+        end
+    elseif o.oAction == 2 then
+        cur_obj_move_using_fvel_and_gravity()
+        if o.oPosY <= o.oHomeY then
+            o.oPosY = o.oHomeY
+            if o.oVelY < -4.0 then
+                o.oVelY = -o.oVelY * 0.35
+            else
+                o.oVelY = 0.0
+                o.oGravity = 0.0
+            end
+        end
+
+        local t = o.oTimer
+
+        o.oExclamationBoxUnkFC = o.oExclamationBoxUnkFC + 0x1800
+        local sin = sins(o.oExclamationBoxUnkFC)
+        local cos = coss(o.oExclamationBoxUnkFC)
+
+        local impact = math.max(0, 1 - t / 10)
+        local squash = 1.0 - 0.6 * impact * math.abs(sin)
+        local stretch = 1.0 + 0.8 * impact * math.abs(sin)
+
+        local increase = 1.0
+        if t < 5 then
+            increase = 1.0 + 0.35 * (1 - t / 5)
+        elseif t < 10 then
+            increase = 1.0 + 0.15 * ((t - 5) / 5)
+        end
+
+        local bounce = sin * (14.0 * MASTER_CAP_BOX_SCALE) * (0.8 ^ (t / 6))
+        o.oGraphYOffset = bounce
+
+        o.oFaceAngleYaw = o.oFaceAngleYaw + 0x900
+        o.oFaceAngleRoll = sin * 0x1200 * impact
+        o.oFaceAnglePitch = cos * 0x800 * impact
+
+        local scale = MASTER_CAP_BOX_SCALE * increase
+        o.header.gfx.scale.x = stretch * scale
+        o.header.gfx.scale.y = squash * scale
+        o.header.gfx.scale.z = stretch * scale
+
+        if t >= 14 then
+            o.oAction = 3
+        end
+        if t >= 4 then
+            play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 10, 230, 230, 230)
+        end
+    elseif o.oAction == 3 then
+        if sync_object_is_owned_locally(o.oSyncID) ~= 0 then
+            master_cap_start_course()
+        end
+        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
+        play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource)
+        play_character_sound(gMarioStates[0], CHAR_SOUND_HERE_WE_GO)
+        spawn_mist_particles_variable(0, 0, 46.0)
+        spawn_triangle_break_particles(20, 139, 0.3, o.oAnimState)
+        create_sound_spawner(SOUND_GENERAL_BREAK_BOX)
+        cur_obj_hide()
+        o.oAction = 4
+        o.oSubAction = 2
+        network_send_object(o, true)
+    end
+end
+
+id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, bhv_master_cap_box_init, bhv_master_cap_box_loop, "bhvMasterCapBox")

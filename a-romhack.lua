@@ -28,15 +28,24 @@ end
 romhackData = {
     ["sm64"] = {
         starCount = 120,
+        areaBasedLevels = false,
         masterCapSpawns = {
-            [LEVEL_BOB] = {
-                [1] = {x = -6700, y = 350, z = 4600, yaw = 0},
-            },
+            -- 1st floor
+            [LEVEL_BOB]   = { [1] = {x = -6700, y = 350, z = 4600, yaw = 0}},
+            [LEVEL_WF]    = { [1] = {x = 3000, y = 600, z = 4610, yaw = 0x4000}},
+            [LEVEL_CCM]   = { [1] = {x = -1350, y = 2900, z = -1600, yaw = 0x4000}},
+            [LEVEL_JRB]   = { [1] = {x = -6800, y = 1500, z = -500, yaw = -0x2000}},
+            [LEVEL_SA]    = { [1] = {x = 800, y = -1800, z = 800, yaw = -0x2000}},
+            [LEVEL_PSS]   = { [1] = {x = 5423, y = 6400, z = -4754, yaw = -0x4000}},
+            [LEVEL_TOTWC] = { [1] = {x = 0, y = 2400, z = 0, yaw = 0}},
+            [LEVEL_BITDW] = { [1] = {x = -7150, y = -2700, z = 3550, yaw = 0}},
+            -- 2nd floor
+            [LEVEL_BITFS] = { [1] = {x = -7150, y = -2700, z = 3550, yaw = 0}},
+            -- 3rd floor
+            [LEVEL_BITS]  = { [1] = {x = -7150, y = -2700, z = 3550, yaw = 0}},
         },
         masterDoorSpawns = {
-            [LEVEL_CASTLE_GROUNDS] = {
-                [1] = {x = -5600, y = 260, z = 1990, yaw = 0x4000}
-            },
+            [LEVEL_CASTLE_GROUNDS] = { [1] = {x = -5600, y = 260, z = 1990, yaw = 0x4000} },
         },
         scarecrowSpawns = {},
     },
@@ -64,6 +73,11 @@ if not romhackData[CURR_ROMHACK] then
         masterDoorSpawns = {},
         scarecrowSpawns = {},
     }
+end
+
+function get_romhack_data(romhack)
+    romhack = romhack or CURR_ROMHACK
+    return romhackData[romhack]
 end
 
 --------------------------

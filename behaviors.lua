@@ -331,8 +331,12 @@ end
 
 ---@param o Object
 local function bhv_bowser_spawn_coins(o)
+    local BITS = o.oBehParams2ndByte == 2
     if o.oAction == 4 then
         if (o.oSubAction == 4 or o.oSubAction == 11) and o.oNumLootCoins > 0 then
+            if BITS then
+                gGlobalSyncTable.defeatFinalBowser = true
+            end
             spawn_coin_spawner(o, o.oNumLootCoins, true)
             o.oNumLootCoins = 0
         end

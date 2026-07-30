@@ -299,7 +299,7 @@ end
 
 local function courtyard_secret()
     if CURR_ROMHACK ~= "sm64" then return end
-    if gNetworkPlayers[0].currLevelNum == LEVEL_CASTLE_COURTYARD and not gGlobalSyncTable.courtyardSecretSolved and gMarioStates[0].numStars >= 12 then
+    if gNetworkPlayers[0].currLevelNum == LEVEL_CASTLE_COURTYARD and gMarioStates[0].numStars >= 12 then
         if obj_get_first_with_behavior_id(id_bhvCourtyardCondition) == nil then
             spawn_sync_object(id_bhvCourtyardCondition, E_MODEL_NONE, 0, 425, -1735, function (o) end)
         end
