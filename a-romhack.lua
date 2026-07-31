@@ -206,6 +206,11 @@ gStarBehaviors = {
     [id_bhvMips] = check_mips, -- how do i even check this he can appears multiple times..
 }
 
+-- Check for common custom behaviors
+if get_id_from_behavior_name("bhvFlipswitch_Panel_MOP") then
+    gStarBehaviors[get_id_from_behavior_name("bhvFlipswitch_Panel_MOP")] = function (bhvParams, count) return ((bhvParams & 0x00FF0000) ~= 0 and count == 1) end
+end
+
 local behaviorCounts = {}
 local function check_bhv_for_star(behavior, bhvParams)
     if not behavior then return 0 end
@@ -244,7 +249,7 @@ local function get_all_possible_level_stars(level)
         end
     end)
 
-    if gLevelValues.coinsRequiredForCoinStar > 0 and course_is_main_course(get_level_course_num(level)) then
+    if stars ~= 7 and gLevelValues.coinsRequiredForCoinStar > 0 and course_is_main_course(get_level_course_num(level)) then
         stars = stars + 1
     end
 
@@ -256,9 +261,10 @@ end
 local function get_max_possible_stars()
     local count = 0
     for i = 1, #sLevelTable do
+        local levelCollected = save_file_get_course_star_count(get_current_save_file_num() - 1, get_level_course_num(sLevelTable[i]) - 1)
         local levelCount = get_all_possible_level_stars(sLevelTable[i])
         count = count + levelCount
-        log_to_console(tostring(get_level_course_num(sLevelTable[i])).. " - " .. get_level_name(get_level_course_num(sLevelTable[i]), sLevelTable[i], 1) .. " - " .. levelCount .. " ("..tostring(count)..")\n-----")
+        log_to_console(tostring(get_level_course_num(sLevelTable[i])).. " - " .. get_level_name(get_level_course_num(sLevelTable[i]), sLevelTable[i], 1) .. " - " .. tostring(levelCollected) .. "/" .. tostring(levelCount) .. " ("..tostring(count)..")\n-----", (levelCollected < levelCount) and CONSOLE_MESSAGE_WARNING or CONSOLE_MESSAGE_INFO)
     end
 
     -- Account for slide stars

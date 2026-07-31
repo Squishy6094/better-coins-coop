@@ -715,9 +715,16 @@ local function bhv_exclamation_box_edit_contents(o)
     local m = nearest_mario_state_to_object(o)
     if m and mario_master_cap_active(m) then
         -- Edit contents to 10 coins if box is a cap
-        if o.oBehParams2ndByte < 3 then
-            o.oBehParams2ndByte = 6
+        if o.oExclamationBoxForce ~= 0 then
+            if o.oBehParams2ndByte < 3 then
+                o.oBehParams2ndByte = 6
+            end
         end
+    end
+
+    -- When hit, make sure it doesn't respawn
+    if o.oAction == 6 and o.oBehParams2ndByte > 3 then
+        set_object_respawn_info_bits(o, 0xFF);
     end
 end
 
@@ -966,3 +973,16 @@ end
 
 hook_event(HOOK_ON_SCREEN_TRANSITION, master_door_on_screen_trans)
 hook_event(HOOK_BEFORE_WARP, master_door_before_warp)
+
+local function is_giant_fire_piranha_plant(o)
+    return (o.oBehParams & 0x00FF0000) ~= 0;
+end
+
+local function bhv_fire_piranha_plant_coins_init(o)
+    o.oNumLootCoins = 0
+    if (o.oBehParams & 0x0000FF00) == 0 then
+        o.oNumLootCoins = is_giant_fire_piranha_plant(o) and 5 or 1;
+    end
+end
+
+hook_coins_behavior(id_bhvFirePiranhaPlant, false, bhv_fire_piranha_plant_coins_init, nil)
