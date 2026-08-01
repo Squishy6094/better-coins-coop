@@ -224,7 +224,7 @@ local function check_bhv_for_star(behavior, bhvParams)
     local result = gStarBehaviors[behavior](bhvParams, count)
 
     if result then
-        log_to_console(get_behavior_name_from_id(behavior) .. " - " .. tostring(result))
+        --log_to_console(get_behavior_name_from_id(behavior) .. " - " .. tostring(result))
     end
 
     if result == true then return 1 end
@@ -259,12 +259,14 @@ local function get_all_possible_level_stars(level)
 end
 
 local function get_max_possible_stars()
+    log_to_console("Better Coins: Running Star Parser...")
     local count = 0
     for i = 1, #sLevelTable do
-        local levelCollected = save_file_get_course_star_count(get_current_save_file_num() - 1, get_level_course_num(sLevelTable[i]) - 1)
+        local courseNum = get_level_course_num(sLevelTable[i])
+        local levelCollected = save_file_get_course_star_count(get_current_save_file_num() - 1, courseNum - 1)
         local levelCount = get_all_possible_level_stars(sLevelTable[i])
         count = count + levelCount
-        log_to_console(tostring(get_level_course_num(sLevelTable[i])).. " - " .. get_level_name(get_level_course_num(sLevelTable[i]), sLevelTable[i], 1) .. " - " .. tostring(levelCollected) .. "/" .. tostring(levelCount) .. " ("..tostring(count)..")\n-----", (levelCollected < levelCount) and CONSOLE_MESSAGE_WARNING or CONSOLE_MESSAGE_INFO)
+        log_to_console("   "..i.. " - " .. get_level_name(courseNum, sLevelTable[i], 1) .. " - " .. tostring(levelCollected) .. "/" .. tostring(levelCount) .. " ("..tostring(count)..")", (levelCollected < levelCount) and CONSOLE_MESSAGE_WARNING or CONSOLE_MESSAGE_INFO)
     end
 
     -- Account for slide stars
@@ -279,8 +281,9 @@ local function get_max_possible_stars()
     return count
 end
 
+romhackData[CURR_ROMHACK].parsedStars = get_max_possible_stars()
 if romhackData[CURR_ROMHACK].starCount == -1 then
-    romhackData[CURR_ROMHACK].starCount = get_max_possible_stars()
+    romhackData[CURR_ROMHACK].starCount = romhackData[CURR_ROMHACK].parsedStars
 end
 
 function get_romhack_star_count()
@@ -288,7 +291,7 @@ function get_romhack_star_count()
 end
 
 local unlocked, reason = master_cap_allowed()
-log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()).." ("..tostring(get_max_possible_stars())..") | Master Cap Unlocked - " .. tostring(unlocked) .. " ( " .. reason .. ")")
+log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()).." ("..tostring(romhackData[CURR_ROMHACK].parsedStars)..") | Master Cap " .. (unlocked and "Unlocked" or "Locked - (" .. reason .. ")"))
 end
 
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)

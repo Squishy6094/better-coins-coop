@@ -30,13 +30,24 @@ local function update_save()
 end
 update_save()
 
+---@return boolean
+---@return string
 function master_cap_allowed()
+    local reasons = ""
     if gGlobalSyncTable.allowMasterCapApi ~= nil then
-        return gGlobalSyncTable.allowMasterCapApi, "API"
+        reasons = reasons .. "API, "
     else
-        return gGlobalSyncTable.allowMasterCap and not GAMEMODE_ACTIVE and (hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() and gGlobalSyncTable.defeatFinalBowser),
-        (GAMEMODE_ACTIVE and "Gamemode " or "") .. (hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() and "" or "Star Count ") .. (gGlobalSyncTable.defeatFinalBowser and "" or "Bowser ")
+        if GAMEMODE_ACTIVE then
+            reasons = reasons .. "Gamemode, "
+        end
+        if hud_get_value(HUD_DISPLAY_STARS) < get_romhack_star_count() then
+            reasons = reasons .. "Star Count, "
+        end
+        if not gGlobalSyncTable.defeatFinalBowser then
+            reasons = reasons .. "Bowser, "
+        end
     end
+    return reasons == "", string.sub(reasons, 1, -3)
 end
 
 local levelFallbackMerge = {
