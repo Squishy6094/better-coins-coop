@@ -267,7 +267,6 @@ function master_cap_add_coin(levelIndex, value, index)
     levelData.capTimer = levelData.capTimer + value*30*(gPlayerSyncTable[index or 0].coinDensity)*(1/(network_player_master_cap_count(levelIndex)*0.5 + 0.5))
     levelData.coins = math.clamp(levelData.coins + value, 0, 999)
 
-    djui_chat_message_create(tostring(network_player_master_cap_count(levelIndex)))
     if network_is_server() then
         levelData.coinTimer = levelData.totalTimer
     end
