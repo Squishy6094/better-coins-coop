@@ -269,8 +269,6 @@ local function find_open_hud_space(x, y, w, h, weightX, weightY)
         local overlapFound = false
         for id, hitbox in ipairs(prevHitboxList) do
             if id ~= #hitboxList + 1 then -- Avoid accounting for the next rendered 
-                -- djui_chat_message_create(tostring(id) .. " - " .. tostring(rects_overlap(x, y, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h)))
-
                 if not overlapFound and rects_overlap(newX, newY, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h) then
                     overlapFound = true
 

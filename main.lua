@@ -358,7 +358,6 @@ local function chat_command(msg)
     if not askedForHelp then
         djui_chat_message_create("Invalid Command (/better-coins help)")
     end
-    djui_chat_message_create("")
 
     return askedForHelp
 end
