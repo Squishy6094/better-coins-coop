@@ -32,7 +32,7 @@ update_save()
 
 ---@return boolean
 ---@return string
-function master_cap_allowed()
+function master_cap_allowed(ignoreSwitch)
     local reasons = ""
     if gGlobalSyncTable.allowMasterCapApi ~= nil then
         reasons = reasons .. "API, "
@@ -45,6 +45,9 @@ function master_cap_allowed()
         end
         if not gGlobalSyncTable.defeatFinalBowser then
             reasons = reasons .. "Bowser, "
+        end
+        if not gGlobalSyncTable.unlockedMasterCap and not ignoreSwitch then
+            reasons = reasons .. "Master Cap Switch, "
         end
     end
     return reasons == "", string.sub(reasons, 1, -3)
@@ -806,7 +809,7 @@ local prevCoinDensity = {}
 local prevCoinsBest = 0
 local prevTimeBest = 0
 local function on_sync()
-    if not master_cap_allowed() then return end
+    if not master_cap_allowed(true) then return end
     local levelIndex, levelData = master_cap_get_level()
     local hackData = get_romhack_data()
     gLevelValues.disableActs = true
@@ -979,7 +982,7 @@ local function master_cap_update()
 
     -- Actual Master Cap Stuffs
 
-    if not master_cap_allowed() then return end
+    if not master_cap_allowed(true) then return end
     master_cap_music_update(levelData)
     
     -- Locally Apply Master Cap
@@ -1244,7 +1247,7 @@ local function easier_mario_viewing_expirience(m)
 end
 
 local function check_late_entry()
-    if not master_cap_allowed() then return end
+    if not master_cap_allowed(true) then return end
     gLevelValues.disableActs = true
     set_ttc_speed_setting(TTC_SPEED_STOPPED)
 

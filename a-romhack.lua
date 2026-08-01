@@ -290,7 +290,7 @@ function get_romhack_star_count()
     return romhackData[CURR_ROMHACK].starCount
 end
 
-local unlocked, reason = master_cap_allowed()
+local unlocked, reason = master_cap_allowed(true)
 log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()).." ("..tostring(romhackData[CURR_ROMHACK].parsedStars)..") | Master Cap " .. (unlocked and "Unlocked" or "Locked - (" .. reason .. ")"))
 end
 
