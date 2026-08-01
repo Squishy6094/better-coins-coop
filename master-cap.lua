@@ -933,15 +933,15 @@ end
 local prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
 local prevFileProgress = save_file_get_flags()
 local function master_cap_update()
-    if not master_cap_allowed() then return end
     local levelIndex, levelData = master_cap_get_level()
     local m = gMarioStates[0] ---@type MarioState
     local p = gPlayerSyncTable[0]
+    local np = gNetworkPlayers[0]
 
     p.starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
 
     -- Check for Defeating Final Bowser
-    if m.action == ACT_JUMBO_STAR_CUTSCENE or gNetworkPlayers[0].currLevelNum == LEVEL_ENDING then
+    if m.action == ACT_JUMBO_STAR_CUTSCENE or np.currLevelNum == LEVEL_ENDING then
         gGlobalSyncTable.defeatFinalBowser = true
     end
     if network_is_server() then
@@ -966,6 +966,9 @@ local function master_cap_update()
     end
     ]]
 
+    -- Actual Master Cap Stuffs
+
+    if not master_cap_allowed() then return end
     master_cap_music_update(levelData)
     
     -- Locally Apply Master Cap
