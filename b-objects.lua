@@ -624,15 +624,10 @@ local function bhv_master_cap_box_loop(o)
         if t >= 14 then
             o.oAction = 3
         end
-        if t >= 4 then
-            play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 10, 230, 230, 230)
-        end
     elseif o.oAction == 3 then
         if sync_object_is_owned_locally(o.oSyncID) ~= 0 then
             master_cap_start_course()
         end
-        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
-        play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource)
         play_character_sound(gMarioStates[0], CHAR_SOUND_HERE_WE_GO)
         spawn_mist_particles_variable(0, 0, 46.0)
         spawn_triangle_break_particles(20, 139, 0.3, o.oAnimState)

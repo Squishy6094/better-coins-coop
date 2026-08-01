@@ -212,6 +212,10 @@ function master_cap_start_course(levelIndex, noSync)
     levelData.coinTimer = 0
     levelData.coins = 0
 
+    play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 10, 230, 230, 230)
+    play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
+    play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource)
+
     if not noSync then
         network_send(true, {
             packetType = PACKET_TYPE_MASTER_CAP_START,
@@ -294,6 +298,7 @@ local function on_packet_recieve(data)
         master_cap_add_coin(levelIndex, data.coinsAdd, network_local_index_from_global(data.index))
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_UPDATE then
         levelData.capTimer = data.capTimer
+        levelData.runState = 1 -- Hopefully fix Mel Bug
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_SCARECROW then
         master_cap_request_scarecrow_spawn()
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_LEVEL_RESET then
@@ -861,8 +866,16 @@ local function on_sync()
             break
         end
 
+        -- Check if another door already exists
+        local doorCheck = false
+        local o = obj_get_first_with_behavior_id(id_bhvDoorWarp)
+        while o ~= nil and not doorCheck do
+            doorCheck = obj_get_model_id_extended(o) == E_MODEL_MASTER_DOOR
+            o = obj_get_next_with_same_behavior_id(o)
+        end
+
         -- Spawn Door
-        if not doorSpawnsExist or (hackData.masterDoorSpawns[levelNum] and hackData.masterDoorSpawns[levelNum][areaNum]) then
+        if not doorCheck and not doorSpawnsExist or (hackData.masterDoorSpawns[levelNum] and hackData.masterDoorSpawns[levelNum][areaNum]) then
             local masterDoorSpawn = master_cap_get_door_spawn(levelNum, areaNum)
             spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
                 o.oFaceAnglePitch = 0
@@ -872,6 +885,7 @@ local function on_sync()
                 o.oMoveAnglePitch = o.oFaceAnglePitch
                 o.oMoveAngleYaw = o.oFaceAngleYaw
                 o.oMoveAngleRoll = o.oFaceAngleRoll
+                oTagLib.obj_set_nametag(o, "WORK IN PROGRESS\n  DO NOT ENTER", {r = 255, g = 0, b = 0})
             end)
         end
         
@@ -1142,6 +1156,7 @@ local TEXT_RESULT_PB = "Personal Best: "
 local TEXT_RESULT_TIME = "Time Spent:"
 local TEXT_RECORD = "HI SCORE"
 local TEXT_ENDING_RUN = "ENDING RUN EARLY..."
+local TEXT_GIVING_UP = "GIVING UP..."
 local function master_cap_render()
     local m = gMarioStates[0]
     local levelIndex, levelData = master_cap_get_level()
@@ -1165,7 +1180,8 @@ local function master_cap_render()
             djui_hud_set_font(FONT_RECOLOR_HUD)
             local xShake = math.random(-2, 2)*untilCancel
             local yShake = math.random(-2, 2)*untilCancel
-            djui_hud_print_text(TEXT_ENDING_RUN, sWidth*0.5 - djui_hud_measure_text(TEXT_ENDING_RUN)*0.5 + xShake, sHeight*0.5 - 8 + yShake, 1)
+            local text = network_player_master_cap_count() > 1 and TEXT_GIVING_UP or TEXT_ENDING_RUN
+            djui_hud_print_text(text, sWidth*0.5 - djui_hud_measure_text(text)*0.5 + xShake, sHeight*0.5 - 8 + yShake, 1)
         end
     end
 
