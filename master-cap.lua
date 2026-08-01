@@ -46,9 +46,11 @@ function master_cap_allowed(ignoreSwitch)
         if not gGlobalSyncTable.defeatFinalBowser then
             reasons = reasons .. "Bowser, "
         end
+        --[[
         if not gGlobalSyncTable.unlockedMasterCap and not ignoreSwitch then
             reasons = reasons .. "Master Cap Switch, "
         end
+        ]]
     end
     return reasons == "", string.sub(reasons, 1, -3)
 end
@@ -875,7 +877,7 @@ local function on_sync()
         end
         
         -- Spawn Cap
-        if levelIndex ~= -1 or (romhackData[CURR_ROMHACK].masterCapSpawns[levelNum] and romhackData[CURR_ROMHACK].masterCapSpawns[levelNum][areaNum]) then
+        if master_cap_allowed() and levelIndex ~= -1 or (romhackData[CURR_ROMHACK].masterCapSpawns[levelNum] and romhackData[CURR_ROMHACK].masterCapSpawns[levelNum][areaNum]) then
             --if master_cap_data_exists(levelNum) then return end
             if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
             if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
@@ -1247,7 +1249,7 @@ local function easier_mario_viewing_expirience(m)
 end
 
 local function check_late_entry()
-    if not master_cap_allowed(true) then return end
+    if not master_cap_allowed() then return end
     gLevelValues.disableActs = true
     set_ttc_speed_setting(TTC_SPEED_STOPPED)
 
