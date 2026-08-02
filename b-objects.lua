@@ -333,7 +333,8 @@ local function bhv_scarecrow_loop(o)
     local startAction = o.oAction
     local startForwardVel = o.oForwardVel
     local startYVel = o.oVelY
-    local step = object_step()
+    local step = object_step_without_floor_orient()
+    o.oFloorHeight, o.oFloor = find_floor(o.oPosX + o.oVelX, o.oPosY, o.oPosZ + o.oVelZ)
 
     -- Remove effects of being underwater
     local isInWater = step & OBJ_COL_FLAG_UNDERWATER ~= 0
@@ -342,15 +343,14 @@ local function bhv_scarecrow_loop(o)
         o.oVelY = startYVel - o.oGravity*0.8
     end
 
-    local floorHeight, floor = find_floor(o.oPosX + o.oVelX, o.oPosY + 50, o.oPosZ + o.oVelZ)
     local m = nearest_mario_state_to_object(o)
     local dist = math.sqrt((o.oPosX - m.pos.x)^2 + (o.oPosY - m.pos.y)^2 + (o.oPosZ - m.pos.z)^2)
 
-    if o.oAction ~= 3 then
-        obj_check_floor_death(step, floor)
+    if o.oAction ~= 3 and o.oPosY < o.oFloorHeight + 10 then
+        obj_check_floor_death(step, o.oFloor)
     end
 
-    local deathPlaneKill = (o.oAction == OBJ_ACT_DEATH_PLANE_DEATH or o.oAction == OBJ_ACT_LAVA_DEATH or not floor)
+    local deathPlaneKill = (o.oAction == OBJ_ACT_DEATH_PLANE_DEATH or o.oAction == OBJ_ACT_LAVA_DEATH or not o.oFloor)
     if o.oHealth > 0 and ((obj_check_hitbox_overlap(o, m.marioObj) and (determine_interaction(m, o) ~= 0 or isInWater)) or deathPlaneKill) then
         o.oHealth = 0
         if deathPlaneKill then
@@ -387,28 +387,87 @@ local function bhv_scarecrow_loop(o)
         if o.oHealth > 0 then
             o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
         end
+        o.oForwardVel = isInWater and 15 or 35
         if step & (OBJ_COL_FLAG_GROUNDED | OBJ_COL_FLAG_HIT_WALL) ~= 0 and o.oHealth > 0 then
             local isOnFloor = step & OBJ_COL_FLAG_GROUNDED ~= 0
-            o.oForwardVel = isInWater and 20 or 30
             o.header.gfx.animInfo.animFrame = 0
             o.header.gfx.animInfo.animTimer = 0
             smlua_anim_util_set_animation(o, ANIM_SCARECROW_BOUNCE)
             local bounceRng = random_float() > 0.5
-            local baitRng = isOnFloor and dist < 500 and m.forwardVel > 30 and random_float() > 0.66
+            local baitRng = isOnFloor and dist < 500 and m.forwardVel > 30 and random_float() < 0.2
             if not baitRng then
-                o.oVelY = 50
+                o.oVelY = (isOnFloor and random_float() < 0.2) and 35 or 55
                 play_sound(bounceRng and SOUND_GENERAL_BOING1 or SOUND_GENERAL_BOING2, o.header.gfx.cameraToObject)
-                if floor and floor.normal.y < 0.9 then
-                    o.oMoveAngleYaw = atan2s(floor.normal.z, floor.normal.x)
-                elseif isOnFloor then
-                    o.oMoveAngleYaw = math.round(atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x)/0x4000)*0x4000 + (bounceRng and 0x2000 or -0x2000)
+                if isOnFloor then
+                    o.oMoveAngleYaw = math.round(atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x)/0x4000)*0x4000 + 0x2000*(bounceRng and 1 or -1)
                     for i = 0, 7 do
-                        local targetAngle = o.oMoveAngleYaw + 0x2000*i
+                        local targetAngle = o.oMoveAngleYaw + 0x2000*i*(bounceRng and 1 or -1)
+                        local angleValid = nil
+                        local emulate = {
+                            oPosX = o.oPosX,
+                            oPosY = o.oPosY,
+                            oPosZ = o.oPosZ,
+                            oMoveAngle = targetAngle,
+                            oVelX = o.oForwardVel*sins(targetAngle),
+                            oVelY = o.oVelY,
+                            oVelZ = o.oForwardVel*coss(targetAngle)
+                        }
+                        repeat
+                            local floorHeight, floor = find_floor(emulate.oPosX, emulate.oPosY, emulate.oPosZ)
+                            local wall = nil
+                            for i = 0, 2 do
+                                wall = collision_find_surface_on_ray(emulate.oPosX, emulate.oPosY + o.hitboxHeight*(i/2), emulate.oPosZ, emulate.oVelX, emulate.oVelY, emulate.oVelZ, 128)
+                                if wall.surface then
+                                    break
+                                end
+                            end
+                            if wall.surface and wall.surface.normal.y == 0 then
+                                local nX = wall.surface.normal.x
+                                local nY = wall.surface.normal.y
+                                local nZ = wall.surface.normal.z
+                                
+                                local objYawX = (nZ * nZ - nX * nX) * emulate.oVelX / (nX * nX + nZ * nZ)
+                                        - 2 * emulate.oVelZ * (nX * nZ) / (nX * nX + nZ * nZ);
+
+                                local objYawZ = (nX * nX - nZ * nZ) * emulate.oVelZ / (nX * nX + nZ * nZ)
+                                        - 2 * emulate.oVelX * (nX * nZ) / (nX * nX + nZ * nZ);
+                                emulate.oMoveAngle = atan2s(objYawZ, objYawX);
+                                emulate.oVelX = o.oForwardVel*sins(emulate.oMoveAngle)
+                                emulate.oVelY = 50
+                                emulate.oVelZ = o.oForwardVel*coss(emulate.oMoveAngle)
+                            elseif not floor then
+                                angleValid = false
+                                break
+                            end
+
+                            if emulate.oVelY < 0 and emulate.oPosY > floorHeight - 75 and emulate.oPosY < floorHeight + 75 then
+                                if floor.normal.y > 0.825 and not evilFloorTypes[floor.type] and (isInWater or emulate.oPosY > find_water_level(emulate.oPosX, emulate.oPosZ)) then
+                                    angleValid = true
+                                    break
+                                end
+                            end
+                            spawn_non_sync_object(id_bhvSparkleSpawn, E_MODEL_NONE, emulate.oPosX, emulate.oPosY, emulate.oPosZ, function (o)
+                            
+                            end)
+
+                            emulate.oPosX = emulate.oPosX + emulate.oVelX
+                            emulate.oPosY = emulate.oPosY + emulate.oVelY
+                            emulate.oPosZ = emulate.oPosZ + emulate.oVelZ
+                            emulate.oVelY = math.clamp(emulate.oVelY - o.oGravity, -75, 75)
+                        until angleValid ~= nil
+
+                        if angleValid then
+                            o.oMoveAngleYaw = targetAngle
+                            break
+                        end
+
+                        --[[
                         local floorHeight, floor = find_floor(o.oPosX + sins(targetAngle)*600, o.oPosY + 500, o.oPosZ + coss(targetAngle)*600)
                         if floor and floor.normal.y > 0.9 and math.abs(floorHeight - o.oPosY) < 300 then
                             o.oMoveAngleYaw = targetAngle
                             break
                         end
+                        ]]
                     end
                 end
             else
@@ -416,7 +475,9 @@ local function bhv_scarecrow_loop(o)
                 play_sound_with_freq_scale(SOUND_GENERAL_BOING1, o.header.gfx.cameraToObject, 0.8)
                 o.oMoveAngleYaw = lerp_s16(atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x), m.faceAngle.y, 0.5) + 0x8000
             end
-            network_send_object(o, true)
+            if sync_object_is_owned_locally(o.oSyncID) then
+                network_send_object(o, true)
+            end
         end
 
         if dist > 4000 then
@@ -440,7 +501,7 @@ local function bhv_scarecrow_loop(o)
         elseif not m then
             o.oAction = 1
         else
-            o.oScarecrowLastY = o.oPosY
+            o.oScarecrowLastY = o.oPosY + 300
         end
     end
 
