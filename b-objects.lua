@@ -414,16 +414,18 @@ local function bhv_scarecrow_loop(o)
                         }
                         repeat
                             local floorHeight, floor = find_floor(emulate.oPosX, emulate.oPosY, emulate.oPosZ)
+                            local velAngle = atan2s(emulate.oVelZ, emulate.oVelX)
+                            local velHitboxX = sins(velAngle)*o.hitboxRadius
+                            local velHitboxZ = coss(velAngle)*o.hitboxRadius
                             local wall = nil
                             for i = 0, 2 do
-                                wall = collision_find_surface_on_ray(emulate.oPosX, emulate.oPosY + o.hitboxHeight*(i/2), emulate.oPosZ, emulate.oVelX, emulate.oVelY, emulate.oVelZ, 128)
+                                wall = collision_find_surface_on_ray(emulate.oPosX, emulate.oPosY + o.hitboxHeight*(i/2), emulate.oPosZ, velHitboxX, 0, velHitboxZ, 128)
                                 if wall.surface then
                                     break
                                 end
                             end
                             if wall.surface and wall.surface.normal.y == 0 then
                                 local nX = wall.surface.normal.x
-                                local nY = wall.surface.normal.y
                                 local nZ = wall.surface.normal.z
                                 
                                 local objYawX = (nZ * nZ - nX * nX) * emulate.oVelX / (nX * nX + nZ * nZ)
@@ -446,14 +448,12 @@ local function bhv_scarecrow_loop(o)
                                     break
                                 end
                             end
-                            spawn_non_sync_object(id_bhvSparkleSpawn, E_MODEL_NONE, emulate.oPosX, emulate.oPosY, emulate.oPosZ, function (o)
-                            
-                            end)
+                            --spawn_non_sync_object(id_bhvSparkle, E_MODEL_METALLIC_BALL, emulate.oPosX, emulate.oPosY, emulate.oPosZ, function (o) end)
 
                             emulate.oPosX = emulate.oPosX + emulate.oVelX
                             emulate.oPosY = emulate.oPosY + emulate.oVelY
                             emulate.oPosZ = emulate.oPosZ + emulate.oVelZ
-                            emulate.oVelY = math.clamp(emulate.oVelY - o.oGravity, -75, 75)
+                            emulate.oVelY = math.clamp(emulate.oVelY - o.oGravity, -math.abs(emulate.oVelY), math.abs(emulate.oVelY))
                         until angleValid ~= nil
 
                         if angleValid then

@@ -620,14 +620,9 @@ function master_cap_get_box_spawn(level, area)
     return romhackData[CURR_ROMHACK].masterCapSpawns[level][area]
 end
 
-function master_cap_set_box_spawn(level, area, x, y, z, yaw)
-    if not romhackData[CURR_ROMHACK].masterCapSpawns[level] then
-        romhackData[CURR_ROMHACK].masterCapSpawns[level] = {}
-    end
-    romhackData[CURR_ROMHACK].masterCapSpawns[level][area] = {x = x, y = y, z = z, yaw = yaw}
-end
-
-master_cap_set_box_spawn(LEVEL_MASTER_CAP_STAGE, 1, 0, 350, -1500, 0)
+romhackData[CURR_ROMHACK].masterCapSpawns[LEVEL_MASTER_CAP_STAGE] = {
+    [1] = {x = -6600, y = 400, z = -900}
+}
 
 local function find_master_door_spawn_position()
     local m = gMarioStates[0] ---@type MarioState
