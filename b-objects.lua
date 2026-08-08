@@ -512,7 +512,7 @@ local function bhv_scarecrow_loop(o)
     end
 end
 
-id_bhvMasterCapScarecrow = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_init, bhv_scarecrow_loop, "id_bhvMasterCapScarecrow")
+id_bhvMasterCapScarecrow = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_init, bhv_scarecrow_loop, "bhvMasterCapScarecrow")
 
 ---@param o Object
 local function bhv_scarecrow_head_init(o)
@@ -542,7 +542,7 @@ local function bhv_scarecrow_head_loop(o)
     end
 end
 
-id_bhvMasterCapScarecrowHead = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_head_init, bhv_scarecrow_head_loop, "id_bhvMasterCapScarecrow")
+id_bhvMasterCapScarecrowHead = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_head_init, bhv_scarecrow_head_loop, "bhvMasterCapScarecrowHead")
 
 local MASTER_CAP_BOX_SCALE = 3
 

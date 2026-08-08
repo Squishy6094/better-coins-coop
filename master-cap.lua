@@ -621,7 +621,7 @@ function master_cap_get_box_spawn(level, area)
 end
 
 romhackData[CURR_ROMHACK].masterCapSpawns[LEVEL_MASTER_CAP_STAGE] = {
-    [1] = {x = -6600, y = 400, z = -900}
+    [1] = {x = -6700, y = 400, z = -900}
 }
 
 local function find_master_door_spawn_position()
