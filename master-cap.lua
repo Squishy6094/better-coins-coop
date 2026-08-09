@@ -982,13 +982,11 @@ local function master_cap_update()
         end
     end
 
-    --[[
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
         spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, m.pos.x, m.pos.y, m.pos.z - 300, function(o)
             
         end)
     end
-    ]]
 
     -- Actual Master Cap Stuffs
 

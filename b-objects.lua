@@ -325,6 +325,12 @@ local function bhv_scarecrow_init(o)
     network_init_object(o, true, {
         "oMoveAngleYaw",
         "oHealth",
+        "oPosX",
+        "oPosY",
+        "oPosZ",
+        "oVelX",
+        "oVelY",
+        "oVelZ",
     })
 end
 
@@ -410,18 +416,19 @@ local function bhv_scarecrow_loop(o)
                             oMoveAngle = targetAngle,
                             oVelX = o.oForwardVel*sins(targetAngle),
                             oVelY = o.oVelY,
-                            oVelZ = o.oForwardVel*coss(targetAngle)
+                            oVelZ = o.oForwardVel*coss(targetAngle),
+                            frame = 0
                         }
                         repeat
-                            local floorHeight, floor = find_floor(emulate.oPosX, emulate.oPosY, emulate.oPosZ)
+                            local floorRay = collision_find_surface_on_ray(emulate.oPosX, emulate.oPosY + 100, emulate.oPosZ, 0, -0x8000, 0)
+                            local floorHeight, floor = floorRay.hitPos.y, floorRay.surface
                             local velAngle = atan2s(emulate.oVelZ, emulate.oVelX)
                             local velHitboxX = sins(velAngle)*o.hitboxRadius
                             local velHitboxZ = coss(velAngle)*o.hitboxRadius
                             local wall = nil
                             for i = 0, 2 do
-                                wall = collision_find_surface_on_ray(emulate.oPosX, emulate.oPosY + o.hitboxHeight*(i/2), emulate.oPosZ, velHitboxX, 0, velHitboxZ, 128)
-                                if wall.surface then
-                                    break
+                                if not wall or not wall.surface then
+                                    wall = collision_find_surface_on_ray(emulate.oPosX, emulate.oPosY + o.hitboxHeight*(i/2), emulate.oPosZ, velHitboxX, 0, velHitboxZ, 128)
                                 end
                             end
                             if wall.surface and wall.surface.normal.y == 0 then
@@ -442,32 +449,29 @@ local function bhv_scarecrow_loop(o)
                                 break
                             end
 
-                            if emulate.oVelY < 0 and emulate.oPosY > floorHeight - 75 and emulate.oPosY < floorHeight + 75 then
+                            log_to_console(emulate.oPosY .. " - " .. floorHeight)
+                            if emulate.oVelY < 0 and emulate.oPosY > floorHeight - math.abs(emulate.oVelY) and emulate.oPosY < floorHeight + math.abs(emulate.oVelY) then
                                 if floor.normal.y > 0.825 and not evilFloorTypes[floor.type] and (isInWater or emulate.oPosY > find_water_level(emulate.oPosX, emulate.oPosZ)) then
                                     angleValid = true
                                     break
                                 end
                             end
-                            --spawn_non_sync_object(id_bhvSparkle, E_MODEL_METALLIC_BALL, emulate.oPosX, emulate.oPosY, emulate.oPosZ, function (o) end)
+                            spawn_non_sync_object(id_bhvSparkle, E_MODEL_METALLIC_BALL, emulate.oPosX, emulate.oPosY, emulate.oPosZ, function (o) end)
 
                             emulate.oPosX = emulate.oPosX + emulate.oVelX
                             emulate.oPosY = emulate.oPosY + emulate.oVelY
                             emulate.oPosZ = emulate.oPosZ + emulate.oVelZ
-                            emulate.oVelY = math.clamp(emulate.oVelY - o.oGravity, -math.abs(emulate.oVelY), math.abs(emulate.oVelY))
+                            emulate.oVelY = math.clamp(emulate.oVelY - o.oGravity, -75, 75)
+                            emulate.frame = emulate.frame + 1
+                            if emulate.frame > 5000 then
+                                angleValid = false
+                            end
                         until angleValid ~= nil
 
                         if angleValid then
                             o.oMoveAngleYaw = targetAngle
                             break
                         end
-
-                        --[[
-                        local floorHeight, floor = find_floor(o.oPosX + sins(targetAngle)*600, o.oPosY + 500, o.oPosZ + coss(targetAngle)*600)
-                        if floor and floor.normal.y > 0.9 and math.abs(floorHeight - o.oPosY) < 300 then
-                            o.oMoveAngleYaw = targetAngle
-                            break
-                        end
-                        ]]
                     end
                 end
             else
