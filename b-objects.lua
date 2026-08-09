@@ -449,7 +449,6 @@ local function bhv_scarecrow_loop(o)
                                 break
                             end
 
-                            log_to_console(emulate.oPosY .. " - " .. floorHeight)
                             if emulate.oVelY < 0 and emulate.oPosY > floorHeight - math.abs(emulate.oVelY) and emulate.oPosY < floorHeight + math.abs(emulate.oVelY) then
                                 if floor.normal.y > 0.825 and not evilFloorTypes[floor.type] and (isInWater or emulate.oPosY > find_water_level(emulate.oPosX, emulate.oPosZ)) then
                                     angleValid = true
