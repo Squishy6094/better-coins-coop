@@ -456,7 +456,7 @@ local function bhv_scarecrow_loop(o)
                                     break
                                 end
                             end
-                            spawn_non_sync_object(id_bhvSparkle, E_MODEL_METALLIC_BALL, emulate.oPosX, emulate.oPosY, emulate.oPosZ, function (o) end)
+                            --spawn_non_sync_object(id_bhvSparkle, E_MODEL_METALLIC_BALL, emulate.oPosX, emulate.oPosY, emulate.oPosZ, function (o) end)
 
                             emulate.oPosX = emulate.oPosX + emulate.oVelX
                             emulate.oPosY = emulate.oPosY + emulate.oVelY
