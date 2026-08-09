@@ -1,3 +1,8 @@
+hook_event(HOOK_ON_MODS_LOADED, function()
+    SEQ_MUSICBOX = smlua_audio_utils_allocate_sequence()
+    smlua_audio_utils_replace_sequence(SEQ_MUSICBOX, 0x14, 1, "musicbox")
+end)
+
 
 ---@param id BehaviorId|number
 ---@param override boolean
@@ -649,7 +654,9 @@ end
 hook_coins_behavior(id_bhvKingBobomb, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvWhompKingBoss, false, function (o)
     bhv_generic_boss_coins_init(o)
-    bhv_merged_acts_move(o, 400, 0, 1200)
+    if obj_get_first_with_behavior_id(id_bhvTower) then
+        bhv_merged_acts_move(o, 400, 0, 1200)
+    end
 end, bhv_coins_on_damage_at_mario_loop)
 hook_coins_behavior(id_bhvBalconyBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvGhostHuntBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
@@ -791,6 +798,7 @@ end
 
 ---@param o Object
 local function bhv_ghost_coin_loop(o)
+    local m = nearest_mario_state_to_object(o)
     if o.oAction == HIDDEN_BLUE_COIN_ACT_INACTIVE then
         -- Set action to HIDDEN_BLUE_COIN_ACT_WAITING after the blue coin switch is found.
         o.oHiddenBlueCoinSwitch = cur_obj_nearest_object_with_behavior(get_behavior_from_id(id_bhvBlueCoinSwitch));
@@ -813,23 +821,15 @@ local function bhv_ghost_coin_loop(o)
         end
 
         -- Show blue coins if a Mario is standing on the blue coins switch
-        local preview = false
-        if (gLevelValues.previewBlueCoins) then
-            for i = 0, MAX_PLAYERS - 1 do
-                if (gMarioStates[i].marioObj and gMarioStates[i].marioObj.platform == blueCoinSwitch) then
-                    preview = true
-                    break;
-                end
-            end
+        if m and dist_between_objects(blueCoinSwitch, m.marioObj) < 500 then
+            o.oOpacity = math.clamp(400 - (dist_between_objects(blueCoinSwitch, m.marioObj) - 100), 0, 400)/400*150
+        else
+            o.oOpacity = math.clamp(o.oOpacity - 15, 0, 255)
         end
-
-        o.oOpacity = math.clamp(o.oOpacity + (preview and 15 or -10), 0, 150)
     elseif o.oAction == HIDDEN_BLUE_COIN_ACT_ACTIVE then
-        local m = nearest_mario_state_to_object(o)
         if not m then return end
         local blueCoinSwitch = o.oHiddenBlueCoinSwitch;
 
-        -- Delete the coin once collected
         if not is_object_being_carried(o) then
             if dist_between_objects(m.marioObj, o) < 400 then
                 carry_object_to_mario(m, o)
@@ -879,9 +879,6 @@ local function bhv_ghost_coin_loop(o)
 end
 
 hook_coins_behavior(id_bhvHiddenBlueCoin, true, bhv_ghost_coin_init, bhv_ghost_coin_loop)
-
-local SEQ_MUSICBOX = smlua_audio_utils_allocate_sequence()
-smlua_audio_utils_replace_sequence(SEQ_MUSICBOX, 0x14, 1, "musicbox")
 
 local function bhv_boo_coin_switch_delete(o)
 

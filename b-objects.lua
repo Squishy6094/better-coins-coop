@@ -15,6 +15,7 @@ end
 local function bhv_coin_carry_init(o)
     o.oFlags = o.oFlags | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO
     o.oBobombFuseTimer = 90
+    o.oFaceAngleYaw = 0
     network_init_object(o, true, {})
 end
 
@@ -51,15 +52,16 @@ local function bhv_coin_carry_loop(o)
     -- Make objs circle mario when uninteractable
     if not obj_can_interact_with_mario(m, o.parentObj) then
         local total, curr = count_carrier_objects(m, o)
-        local angle = 0x10000*((curr - 1)/total) + get_global_timer()*0x200
-        targetPos.x = targetPos.x + sins(angle)*250
-        targetPos.z = targetPos.z + coss(angle)*250
+        o.oFaceAngleYaw = lerp_s16(o.oFaceAngleYaw, 0x10000*((curr - 1)/math.max(total, 1)) + get_global_timer()*0x200, 0.08)
+        targetPos.x = targetPos.x + sins(o.oFaceAngleYaw)*250
+        targetPos.z = targetPos.z + coss(o.oFaceAngleYaw)*250
         o.oForwardVel = math.min(o.oForwardVel, carrierMax)
         o.parentObj.oTimer = o.parentObj.oTimer - 1
         o.oAction = 1
         velLerp = math.min(velLerp, 0.99)
     else
         if o.oAction == 1 then
+            djui_chat_message_create("fuck")
             velLerp = 0
             o.oForwardVel = 0
             o.oAction = 0
@@ -125,7 +127,8 @@ function count_carrier_objects(marioTarget, oTarget)
     local objCount = 0
     local oCarry = obj_get_first_with_behavior_id(id_bhvCoinCarry)
     while oCarry ~= nil do
-        if oCarry.globalPlayerIndex == network_global_index_from_local(marioTarget.playerIndex) and not obj_can_interact_with_mario(marioTarget, oCarry.parentObj) then
+        if oCarry.globalPlayerIndex == network_global_index_from_local(marioTarget.playerIndex)
+        and oCarry.oAction == 1 then
             totalCount = totalCount + 1
             if oTarget == oCarry then
                 objCount = totalCount

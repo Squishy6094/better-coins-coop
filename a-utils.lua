@@ -318,8 +318,8 @@ function num_to_hex(num)
 end
 
 function lerp_s16(a, b, t)
-    a = math.s16(a)
-    b = math.s16(b)
+    a = math.s16(math.round(a))
+    b = math.s16(math.round(b))
 
     local delta = b - a
 
