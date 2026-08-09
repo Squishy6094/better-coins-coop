@@ -61,7 +61,6 @@ local function bhv_coin_carry_loop(o)
         velLerp = math.min(velLerp, 0.99)
     else
         if o.oAction == 1 then
-            djui_chat_message_create("fuck")
             velLerp = 0
             o.oForwardVel = 0
             o.oAction = 0
