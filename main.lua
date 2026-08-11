@@ -207,25 +207,6 @@ local function coin_counter()
     end
 end
 
-local saveFile = get_current_save_file_num()
-local function obj_is_star_collected(o)
-    local starId = o.oBehParams >> 24;
-    local currentLevelStarFlags = save_file_get_star_flags(saveFile - 1, (gLevelValues.useGlobalStarIds ~= 0 and (starId / 7) - 1 or gNetworkPlayers[0].currCourseNum - 1))
-    return (currentLevelStarFlags & (1 << (gLevelValues.useGlobalStarIds ~= 0 and starId % 7 or starId)) ~= 0)
-end
-
-local originalStayInLevel = gServerSettings.stayInLevelAfterStar
-local function allow_interact(m, o, int)
-    if o.oIntangibleTimer ~= 0 then return end
-    if (int == INTERACT_STAR_OR_KEY) then
-        -- Make Transparent Stars turn on nonstop
-        if obj_is_star_collected(o) then
-            originalStayInLevel = gServerSettings.stayInLevelAfterStar
-            gServerSettings.stayInLevelAfterStar = 2
-        end
-    end
-end
-
 local coinSoundCount = 0
 local coinSoundCombo = 0
 local coinSoundComboEnd = 0
@@ -244,7 +225,6 @@ local function interact(m, o, int)
     if o.oIntangibleTimer ~= 0 then return end
     if int == INTERACT_COIN then
         -- Make Coin Sound
-        --local currCoinSound = coinsSounds[coinSoundCount]
         if get_global_timer() > coinSoundComboEnd then
             coinSoundCombo = 0
         else
@@ -253,39 +233,16 @@ local function interact(m, o, int)
         local freqScale = math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1))
         customCoinSound = true
         play_sound_with_freq_scale(SOUND_GENERAL_COIN, gGlobalSoundSource, freqScale)
-        --audio_stream_set_frequency(currCoinSound, math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1)))
-        --audio_stream_play(currCoinSound, true, 1.25)
         coinSoundCount = (coinSoundCount + 1)%4
         coinSoundComboEnd = get_global_timer() + 90
 
         if mario_master_cap_active(m) then
             master_cap_add_coin(nil, o.oDamageOrCoinValue)
         else
-            m.capTimer = m.capTimer + 25*o.oDamageOrCoinValue
+            if m.capTimer > 0 then
+                m.capTimer = m.capTimer + 25*o.oDamageOrCoinValue
+            end
         end
-        return
-    end
-
-    if (int == INTERACT_STAR_OR_KEY) then
-        -- Spawn Coins and turn it back on
-        if gServerSettings.stayInLevelAfterStar == 2 then
-            spawn_coin_spawner(o, 10, true)
-        end
-        gServerSettings.stayInLevelAfterStar = originalStayInLevel
-        return
-    end
-end
-
-local function object_unload(o)
-    -- Handle Celebration Stars poofing into coins
-    if obj_has_behavior_id(o, id_bhvCelebrationStar) ~= 0 then
-        spawn_mist_from_global()
-        spawn_coin_spawner(o, 10, true)
-        return
-    end
-
-    if obj_has_behavior_id(o, id_bhvGrandStar) ~= 0 then
-        spawn_coin_spawner(o, 10, true)
         return
     end
 end
@@ -316,8 +273,6 @@ local function mario_update(m)
 end
 
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, coin_counter)
-hook_event(HOOK_ALLOW_INTERACT, allow_interact)
-hook_event(HOOK_ON_OBJECT_UNLOAD, object_unload)
 hook_event(HOOK_ON_INTERACT, interact)
 hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
 hook_event(HOOK_ON_SYNC_VALID, courtyard_secret)

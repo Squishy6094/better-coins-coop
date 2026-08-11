@@ -3,13 +3,21 @@ hook_event(HOOK_ON_MODS_LOADED, function()
     smlua_audio_utils_replace_sequence(SEQ_MUSICBOX, 0x14, 1, "musicbox")
 end)
 
+coinBhvIds = {}
 
 ---@param id BehaviorId|number
 ---@param override boolean
 ---@param init function?
 ---@param loop function?
+---@return BehaviorId|integer
 local function hook_coins_behavior(id, override, init, loop)
-    hook_behavior(id, get_object_list_from_behavior(get_behavior_from_id(id)), override, init, loop, (get_behavior_name_from_id(id):gsub("bhv", "bhvCoins", 1)))
+    local newId = hook_behavior(id, get_object_list_from_behavior(get_behavior_from_id(id)), override, init, loop, (get_behavior_name_from_id(id):gsub("bhv", "bhvCoins", 1)))
+    coinBhvIds[id] = newId
+    coinBhvIds[newId] = id
+end
+
+local function obj_init_custom_coins(o, coins)
+    o.oCustomCoins = o.oBehParams & 0x100 == 0 and coins or o.oCustomCoins
 end
 
 -- Coin Magnitize Behaviors
@@ -167,7 +175,7 @@ hook_coins_behavior(id_bhvYoshi, false, bhv_yoshi_blew_up, bhv_yoshi_reward)
 
 ---@param o Object
 local function bhv_recovery_heart_set_coins(o)
-    o.oCustomCoins = o.oBehParams & 0x100 == 0 and 5 or o.oCustomCoins
+    obj_init_custom_coins(o, 5)
     network_init_object(o, false, {
         "oCustomCoins",
     })
@@ -456,7 +464,7 @@ hook_coins_behavior(id_bhvHidden1upInPole, false, nil, bhv_1up_hidden_in_pole_lo
 
 ---@param o Object
 function bhv_purple_switch_coins_init(o)
-    o.oCustomCoins = 3
+    o.oCustomCoins = o.oBehParams & 0x100 == 0 and 3 or o.oCustomCoins
     network_init_object(o, false, {
         "oAction",
         "oTimer",
@@ -469,6 +477,7 @@ function bhv_purple_switch_coins_loop(o)
     if o.oAction == PURPLE_SWITCH_PRESSED and o.oCustomCoins > 0 then
         spawn_coin_spawner(o, o.oCustomCoins, true)
         o.oCustomCoins = 0
+        set_object_respawn_info_bits(o, 1)
         network_send_object(o, true)
     end
 end
@@ -981,3 +990,72 @@ local function bhv_fire_piranha_plant_coins_init(o)
 end
 
 hook_coins_behavior(id_bhvFirePiranhaPlant, false, bhv_fire_piranha_plant_coins_init, nil)
+
+
+local saveFile = get_current_save_file_num()
+local function obj_is_star_collected(o)
+    local starId = o.oBehParams >> 24;
+    local currentLevelStarFlags = save_file_get_star_flags(saveFile - 1, (gLevelValues.useGlobalStarIds ~= 0 and (starId / 7) - 1 or gNetworkPlayers[0].currCourseNum - 1))
+    return (currentLevelStarFlags & (1 << (gLevelValues.useGlobalStarIds ~= 0 and starId % 7 or starId)) ~= 0)
+end
+
+local starBhvs = {
+    [id_bhvStar] = true,
+    [id_bhvSpawnedStar] = true,
+    [id_bhvSpawnedStarNoLevelExit] = true,
+    [id_bhvStarSpawnCoordinates] = true,
+}
+
+local originalStayInLevel = gServerSettings.stayInLevelAfterStar
+local function allow_interact(m, o, int)
+    if o.oIntangibleTimer ~= 0 then return end
+    if starBhvs[coinBhvIds[get_id_from_behavior(o.behavior)]] and (int == INTERACT_STAR_OR_KEY) then
+        -- Make Transparent Stars turn on nonstop
+        if obj_is_star_collected(o) then
+            originalStayInLevel = gServerSettings.stayInLevelAfterStar
+            gServerSettings.stayInLevelAfterStar = 2
+        end
+    end
+end
+
+local function bhv_stars_give_coins_init(o)
+    obj_init_custom_coins(o, 10)
+end
+
+local function bhv_stars_give_coins_loop(o)
+    if o.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+        -- Spawn Coins and turn it back on
+        if gServerSettings.stayInLevelAfterStar == 2 then
+            spawn_coin_spawner(o, o.oCustomCoins, true)
+            o.oCustomCoins = 0
+            set_object_respawn_info_bits(o, 0xFF);
+        end
+        gServerSettings.stayInLevelAfterStar = originalStayInLevel
+    end
+end
+
+-- Handle Celebration Stars poofing into coins
+local function bhv_celebration_stars_give_coins_loop(o)
+    if o.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+        spawn_mist_from_global()
+        spawn_coin_spawner(o, o.oCustomCoins, true)
+        o.oCustomCoins = 0
+    end
+end
+
+hook_event(HOOK_ALLOW_INTERACT, allow_interact)
+for bhvId, _ in pairs(starBhvs) do
+    local newBhv = hook_coins_behavior(bhvId, false, bhv_stars_give_coins_init, bhv_stars_give_coins_loop)
+end
+hook_coins_behavior(id_bhvCelebrationStar, false, bhv_stars_give_coins_init, bhv_celebration_stars_give_coins_loop)
+
+-- Prevent Red Coin Star Respawn
+
+local function bhv_red_coin_star_no_respawn(o)
+    if o.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+        set_object_respawn_info_bits(o, 0xFF)
+    end
+end 
+
+hook_coins_behavior(id_bhvHiddenRedCoinStar, false, nil, bhv_red_coin_star_no_respawn)
+hook_coins_behavior(id_bhvBowserCourseRedCoinStar, false, nil, bhv_red_coin_star_no_respawn)

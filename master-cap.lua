@@ -194,6 +194,8 @@ function network_player_master_cap_count(currLevel)
     return count
 end
 
+local masterCapMusicFreq = 1
+
 local PACKET_TYPE_MASTER_CAP_START = 1
 local PACKET_TYPE_MASTER_CAP_STOP = 2
 local PACKET_TYPE_MASTER_CAP_COIN = 3
@@ -934,7 +936,7 @@ local function master_cap_music_update(levelData)
         local freqTargetEnd = 1 + (runCrouchTimer/90)*0.3
         local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
 
-        masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.02)
+        masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.02) or 1
         audio_stream_set_frequency(MUSIC_MASTER_CAP, masterCapMusicFreq)
         audio_stream_set_frequency(MUSIC_MASTER_CAP_END, masterCapMusicFreq)
         audio_stream_set_volume(MUSIC_MASTER_CAP, volume * volShift)
@@ -1281,6 +1283,10 @@ local function on_mods_loaded()
     end
 end
 
+local function on_pause_exit()
+    gPlayerSyncTable[0].diedInRun = true
+end
+
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
@@ -1289,3 +1295,4 @@ hook_event(HOOK_MARIO_UPDATE, easier_mario_viewing_expirience)
 hook_event(HOOK_ALLOW_FORCE_WATER_ACTION, allow_force_water_interaction)
 hook_event(HOOK_ON_LEVEL_INIT, check_late_entry)
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
+hook_event(HOOK_ON_PAUSE_EXIT, on_pause_exit)
