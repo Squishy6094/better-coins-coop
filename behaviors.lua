@@ -1052,8 +1052,10 @@ hook_coins_behavior(id_bhvCelebrationStar, false, bhv_stars_give_coins_init, bhv
 -- Prevent Red Coin Star Respawn
 
 local function bhv_red_coin_star_no_respawn(o)
-    if o.activeFlags == ACTIVE_FLAG_DEACTIVATED then
-        set_object_respawn_info_bits(o, 0xFF)
+    if o.oAction == 1 then
+        if o.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+            set_object_respawn_info_bits(o, 0xFF)
+        end
     end
 end 
 
