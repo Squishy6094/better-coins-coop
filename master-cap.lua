@@ -933,8 +933,6 @@ local function on_sync()
     end
     
     -- Spawn Cap
-    djui_chat_message_create(tostring(np.currLevelNum))
-    djui_chat_message_create(tostring(LEVEL_MASTER_CAP_STAGE))
     if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelIndex ~= -1 or (romhackData[CURR_ROMHACK].masterCapSpawns[levelNum] and romhackData[CURR_ROMHACK].masterCapSpawns[levelNum][areaNum])) then
         --if master_cap_data_exists(levelNum) then return end
         if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
@@ -942,7 +940,6 @@ local function on_sync()
 
         local masterCapSpawn = master_cap_get_box_spawn(levelNum, areaNum)
         if levelData ~= nil and levelData.runState == 0 then
-        djui_chat_message_create("badabing")
             spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)
                 o.oFaceAnglePitch = 0
                 o.oFaceAngleYaw = masterCapSpawn.yaw or 0
@@ -1053,7 +1050,6 @@ local function master_cap_update()
         masterCapLevelColor.r = math.ceil(math.lerp(masterCapLevelColor.r, 255, 0.03))
         masterCapLevelColor.g = math.ceil(math.lerp(masterCapLevelColor.g, 255, 0.03))
         masterCapLevelColor.b = math.ceil(math.lerp(masterCapLevelColor.b, 255, 0.03))
-        djui_chat_message_create(tostring(masterCapLevelColor.r))
         set_lighting_color(0, masterCapLevelColor.r * worldColor.lighting.r/255)
         set_lighting_color(1, masterCapLevelColor.g * worldColor.lighting.g/255)
         set_lighting_color(2, masterCapLevelColor.b * worldColor.lighting.b/255)
