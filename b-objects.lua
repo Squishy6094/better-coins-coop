@@ -600,7 +600,7 @@ local function bhv_master_cap_box_loop(o)
     local nearestM = nearest_mario_state_to_object(o)
 
     local levelIndex, levelData = master_cap_get_level()
-    if not master_cap_allowed() or levelData.runState ~= 0 then
+    if not master_cap_allowed(true) or levelData.runState ~= 0 then
         obj_mark_for_deletion(o)
         return
     end

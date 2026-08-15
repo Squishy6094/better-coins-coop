@@ -903,54 +903,55 @@ local function on_sync()
     local levelNum = gNetworkPlayers[0].currLevelNum
     local areaNum = gNetworkPlayers[0].currAreaIndex
 
-    if hud_get_value(HUD_DISPLAY_STARS) >= get_romhack_star_count() then
-        local doorSpawnsExist = false
-        for _, _ in pairs(romhackData[CURR_ROMHACK].masterDoorSpawns) do
-            doorSpawnsExist = true
-            break
-        end
+    local doorSpawnsExist = false
+    for _, _ in pairs(romhackData[CURR_ROMHACK].masterDoorSpawns) do
+        doorSpawnsExist = true
+        break
+    end
 
-        -- Check if another door already exists
-        local doorCheck = false
-        local o = obj_get_first_with_behavior_id(id_bhvDoorWarp)
-        while o ~= nil and not doorCheck do
-            doorCheck = obj_get_model_id_extended(o) == E_MODEL_MASTER_DOOR
-            o = obj_get_next_with_same_behavior_id(o)
-        end
+    -- Check if another door already exists
+    local doorCheck = false
+    local o = obj_get_first_with_behavior_id(id_bhvDoorWarp)
+    while o ~= nil and not doorCheck do
+        doorCheck = obj_get_model_id_extended(o) == E_MODEL_MASTER_DOOR
+        o = obj_get_next_with_same_behavior_id(o)
+    end
 
-        -- Spawn Door
-        if not doorCheck and not doorSpawnsExist or (hackData.masterDoorSpawns[levelNum] and hackData.masterDoorSpawns[levelNum][areaNum]) then
-            local masterDoorSpawn = master_cap_get_door_spawn(levelNum, areaNum)
-            spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
+    -- Spawn Door
+    if not doorCheck and not doorSpawnsExist or (hackData.masterDoorSpawns[levelNum] and hackData.masterDoorSpawns[levelNum][areaNum]) then
+        local masterDoorSpawn = master_cap_get_door_spawn(levelNum, areaNum)
+        spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
+            o.oFaceAnglePitch = 0
+            o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
+            o.oFaceAngleRoll = 0
+
+            o.oMoveAnglePitch = o.oFaceAnglePitch
+            o.oMoveAngleYaw = o.oFaceAngleYaw
+            o.oMoveAngleRoll = o.oFaceAngleRoll
+            oTagLib.obj_set_nametag(o, "WORK IN PROGRESS\n  DO NOT ENTER", {r = 255, g = 0, b = 0})
+        end)
+    end
+    
+    -- Spawn Cap
+    djui_chat_message_create(tostring(np.currLevelNum))
+    djui_chat_message_create(tostring(LEVEL_MASTER_CAP_STAGE))
+    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelIndex ~= -1 or (romhackData[CURR_ROMHACK].masterCapSpawns[levelNum] and romhackData[CURR_ROMHACK].masterCapSpawns[levelNum][areaNum])) then
+        --if master_cap_data_exists(levelNum) then return end
+        if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
+        if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
+
+        local masterCapSpawn = master_cap_get_box_spawn(levelNum, areaNum)
+        if levelData ~= nil and levelData.runState == 0 then
+        djui_chat_message_create("badabing")
+            spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)
                 o.oFaceAnglePitch = 0
-                o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
+                o.oFaceAngleYaw = masterCapSpawn.yaw or 0
                 o.oFaceAngleRoll = 0
 
                 o.oMoveAnglePitch = o.oFaceAnglePitch
                 o.oMoveAngleYaw = o.oFaceAngleYaw
                 o.oMoveAngleRoll = o.oFaceAngleRoll
-                oTagLib.obj_set_nametag(o, "WORK IN PROGRESS\n  DO NOT ENTER", {r = 255, g = 0, b = 0})
             end)
-        end
-        
-        -- Spawn Cap
-        if master_cap_allowed() and levelIndex ~= -1 or (romhackData[CURR_ROMHACK].masterCapSpawns[levelNum] and romhackData[CURR_ROMHACK].masterCapSpawns[levelNum][areaNum]) then
-            --if master_cap_data_exists(levelNum) then return end
-            if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
-            if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
-
-            local masterCapSpawn = master_cap_get_box_spawn(levelNum, areaNum)
-            if levelData ~= nil and levelData.runState == 0 then
-                spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)
-                    o.oFaceAnglePitch = 0
-                    o.oFaceAngleYaw = masterCapSpawn.yaw or 0
-                    o.oFaceAngleRoll = 0
-
-                    o.oMoveAnglePitch = o.oFaceAnglePitch
-                    o.oMoveAngleYaw = o.oFaceAngleYaw
-                    o.oMoveAngleRoll = o.oFaceAngleRoll
-                end)
-            end
         end
     end
 end
