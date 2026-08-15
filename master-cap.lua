@@ -46,11 +46,9 @@ function master_cap_allowed(ignoreSwitch)
         if not gGlobalSyncTable.defeatFinalBowser then
             reasons = reasons .. "Bowser, "
         end
-        --[[
         if not gGlobalSyncTable.unlockedMasterCap and not ignoreSwitch then
             reasons = reasons .. "Master Cap Switch, "
         end
-        ]]
     end
     return reasons == "", string.sub(reasons, 1, -3)
 end
@@ -202,6 +200,7 @@ local PACKET_TYPE_MASTER_CAP_COIN = 3
 local PACKET_TYPE_MASTER_CAP_UPDATE = 4
 local PACKET_TYPE_MASTER_CAP_SCARECROW = 5
 local PACKET_TYPE_MASTER_CAP_LEVEL_RESET = 6
+local PACKET_TYPE_MASTER_CAP_SWITCH_PRESS = 7
 function master_cap_start_course(levelIndex, noSync)
     levelIndex = levelIndex or master_cap_get_level()
     local levelData = gMasterCapServerState[levelIndex]
@@ -229,7 +228,7 @@ end
 function master_cap_stop_course(levelIndex, newRecord, coinTimer, noSync)
     local levelData = gMasterCapServerState[levelIndex]
 
-    levelData.capTimer = math.floor(gLevelValues.wingCapDuration*0.5)
+    levelData.capTimer = 0
     levelData.runState = 2
     if newRecord then
         levelData.newRecord = true
@@ -287,6 +286,49 @@ function master_cap_add_coin(levelIndex, value, index)
     end
 end
 
+local masterCapLevelColor = {r = 255, g = 255, b = 255}
+local worldColor = {
+    lighting = {r = 255, g = 255, b = 255},
+    skybox = {r = 255, g = 255, b = 255},
+    fog = {r = 255, g = 255, b = 255},
+    vertex = {r = 255, g = 255, b = 255},
+    ambient = {r = 255, g = 255, b = 255}
+}
+local warpToHubTimer = -1
+function master_cap_switch_press(value, noSync)
+    play_sound_with_freq_scale(SOUND_GENERAL_ACTIVATE_CAP_SWITCH, gGlobalSoundSource, value > 1 and 1.5 - value*0.1 or 0.6)
+    if value == 4 then
+        masterCapLevelColor.r = 255
+        masterCapLevelColor.g = 0
+        masterCapLevelColor.b = 0
+    elseif value == 3 then
+        masterCapLevelColor.r = 0
+        masterCapLevelColor.g = 255
+        masterCapLevelColor.b = 0
+    elseif value == 2 then
+        masterCapLevelColor.r = 0
+        masterCapLevelColor.g = 0
+        masterCapLevelColor.b = 255
+    elseif value == 1 then
+        warpToHubTimer = 75
+        play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 45, 230, 230, 230)
+        gGlobalSyncTable.unlockedMasterCap = true
+        if network_is_server() then
+            mod_storage_save_bool(save_file_prefix("unlockedMasterCap"), true)
+            log_to_console("Better Coins: Saved Master Cap Being Unlocked")
+        end
+    end
+
+
+    if not noSync then
+        network_send(true, {
+            packetType = PACKET_TYPE_MASTER_CAP_SWITCH_PRESS,
+            index = network_global_index_from_local(0),
+            value = value,
+        })
+    end
+end
+
 --local function update_master_cap_courses 
 
 local function on_packet_recieve(data)
@@ -300,11 +342,13 @@ local function on_packet_recieve(data)
         master_cap_add_coin(levelIndex, data.coinsAdd, network_local_index_from_global(data.index))
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_UPDATE then
         levelData.capTimer = data.capTimer
-        levelData.runState = 1 -- Hopefully fix Mel Bug
+        levelData.runState = data.runState -- Hopefully fix Mel Bug
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_SCARECROW then
         master_cap_request_scarecrow_spawn()
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_LEVEL_RESET then
         levelData.runState = 0
+    elseif data.packetType == PACKET_TYPE_MASTER_CAP_SWITCH_PRESS then
+        master_cap_switch_press(data.value, true)
     end
 end
 
@@ -375,7 +419,6 @@ local function act_master_cap_results(m)
         if pA.prevAction == ACT_MASTER_CAP_BUBBLED then
             m.marioObj.oIntangibleTimer = 0;
             mario_pop_bubble(m)
-            gPlayerSyncTable[0].diedInRun = false
         else
             m.action = pA.prevAction
             m.marioObj.header.gfx.animInfo.animAccel = pA.prevActionAnimAccel
@@ -383,6 +426,7 @@ local function act_master_cap_results(m)
             m.actionTimer = pA.prevActionTimer
             m.actionState = pA.prevActionState
         end
+        gPlayerSyncTable[m.playerIndex].diedInRun = false
     end
 
 
@@ -500,7 +544,7 @@ hook_mario_action(ACT_MASTER_CAP_RESULTS, act_master_cap_results)
 hook_mario_action(ACT_MASTER_CAP_BUBBLED, {every_frame = act_master_cap_bubbled, gravity = function(m) return 1 end})
 
 function set_mario_finished_master_cap(m)
-    gPlayerSyncTable[0].diedInRun = true
+    gPlayerSyncTable[m.playerIndex].diedInRun = true
     if network_player_master_cap_count() <= 0 then
         if m.action ~= ACT_MASTER_CAP_RESULTS then
             set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
@@ -815,8 +859,11 @@ local function on_sync()
     if not master_cap_allowed(true) then return end
     local levelIndex, levelData = master_cap_get_level()
     local hackData = get_romhack_data()
-    gLevelValues.disableActs = true
-    set_ttc_speed_setting(TTC_SPEED_STOPPED)
+
+    if master_cap_allowed() then
+        gLevelValues.disableActs = true
+        set_ttc_speed_setting(TTC_SPEED_STOPPED)
+    end
 
     local np = gNetworkPlayers[0]
 
@@ -991,8 +1038,54 @@ local function master_cap_update()
         end)
     end
     ]]
+    if warpToHubTimer > 0 then
+        warpToHubTimer = warpToHubTimer - 1
+        if warpToHubTimer <= 0 then
+            warp_to_start_level()
+            play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
+            warpToHubTimer = -1
+        end
+    end
 
     -- Actual Master Cap Stuffs
+    if masterCapLevelColor.r ~= 255 or masterCapLevelColor.g ~= 255 or masterCapLevelColor.b ~= 255 then
+        masterCapLevelColor.r = math.ceil(math.lerp(masterCapLevelColor.r, 255, 0.03))
+        masterCapLevelColor.g = math.ceil(math.lerp(masterCapLevelColor.g, 255, 0.03))
+        masterCapLevelColor.b = math.ceil(math.lerp(masterCapLevelColor.b, 255, 0.03))
+        djui_chat_message_create(tostring(masterCapLevelColor.r))
+        set_lighting_color(0, masterCapLevelColor.r * worldColor.lighting.r/255)
+        set_lighting_color(1, masterCapLevelColor.g * worldColor.lighting.g/255)
+        set_lighting_color(2, masterCapLevelColor.b * worldColor.lighting.b/255)
+        set_lighting_color_ambient(0, masterCapLevelColor.r * worldColor.ambient.r/255)
+        set_lighting_color_ambient(1, masterCapLevelColor.g * worldColor.ambient.g/255)
+        set_lighting_color_ambient(2, masterCapLevelColor.b * worldColor.ambient.b/255)
+        set_skybox_color(0, masterCapLevelColor.r * worldColor.skybox.r/255)
+        set_skybox_color(1, masterCapLevelColor.g * worldColor.skybox.g/255)
+        set_skybox_color(2, masterCapLevelColor.b * worldColor.skybox.b/255)
+        set_fog_color(0, masterCapLevelColor.r * worldColor.fog.r/255)
+        set_fog_color(1, masterCapLevelColor.g * worldColor.fog.g/255)
+        set_fog_color(2, masterCapLevelColor.b * worldColor.fog.b/255)
+        set_vertex_color(0, masterCapLevelColor.r * worldColor.vertex.r/255)
+        set_vertex_color(1, masterCapLevelColor.g * worldColor.vertex.g/255)
+        set_vertex_color(2, masterCapLevelColor.b * worldColor.vertex.b/255)
+    else
+        worldColor.lighting.r = get_lighting_color(0)
+        worldColor.lighting.g = get_lighting_color(1)
+        worldColor.lighting.b = get_lighting_color(2)
+        worldColor.ambient.r = get_lighting_color_ambient(0)
+        worldColor.ambient.g = get_lighting_color_ambient(1)
+        worldColor.ambient.b = get_lighting_color_ambient(2)
+        worldColor.skybox.r = get_skybox_color(0)
+        worldColor.skybox.g = get_skybox_color(1)
+        worldColor.skybox.b = get_skybox_color(2)
+        worldColor.fog.r = get_fog_color(0)
+        worldColor.fog.g = get_fog_color(1)
+        worldColor.fog.b = get_fog_color(2)
+        worldColor.vertex.r = get_vertex_color(0)
+        worldColor.vertex.g = get_vertex_color(1)
+        worldColor.vertex.b = get_vertex_color(2)
+    end
+
 
     if not master_cap_allowed(true) then return end
     master_cap_music_update(levelData)
@@ -1117,6 +1210,7 @@ local function master_cap_update()
                         packetType = PACKET_TYPE_MASTER_CAP_UPDATE,
                         levelIndex = levelIndex,
                         capTimer = levelData.capTimer,
+                        runState = levelData.runState,
                     })
                 end
 
@@ -1240,9 +1334,6 @@ local function on_death()
     local levelIndex, levelData = master_cap_get_level()
     if levelData.runState == 1 then
         set_mario_finished_master_cap(m)
-        return false
-    end
-    if gPlayerSyncTable[0].diedInRun then
         return false
     end
 end

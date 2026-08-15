@@ -713,3 +713,70 @@ local function bhv_master_cap_box_loop(o)
 end
 
 id_bhvMasterCapBox = hook_behavior(id_bhvMasterCapBox, OBJ_LIST_SURFACE, true, bhv_master_cap_box_init, bhv_master_cap_box_loop, "bhvMasterCapBox")
+
+local masterCapScale = 1.5
+---@param o Object
+local function bhv_master_cap_switch_init(o)
+    o.oFlags = o.oFlags | (OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
+    o.collisionData = gGlobalObjectCollisionData.capswitch_collision_050033D0
+    o.oHealth = 4
+    o.oDamageOrCoinValue = 0
+
+    spawn_non_sync_object(id_bhvCapSwitchBase, E_MODEL_CAP_SWITCH_BASE, o.oPosX, o.oPosY - 71*masterCapScale, o.oPosZ, function(oBase)
+        obj_scale(oBase, masterCapScale)
+    end)
+
+    network_init_object(o, false, {
+        "oHealth",
+        "oAction",
+        "oDamageOrCoinValue",
+    })
+    obj_set_model_extended(o, E_MODEL_CAP_SWITCH)
+end
+
+---@param o Object
+local function bhv_master_cap_switch_loop(o)
+    if o.oAction == 0 then
+        o.oAnimState = o.oBehParams2ndByte;
+        cur_obj_scale(masterCapScale)
+        o.oPosY = o.oPosY + 71*masterCapScale
+        --spawn_object_relative_with_scale(0, 0, -71, 0, 0.5f, o, MODEL_CAP_SWITCH_BASE, bhvCapSwitchBase);
+        if gGlobalSyncTable.unlockedMasterCap then
+            o.header.gfx.scale.y = masterCapScale*0.2
+            o.oAction = 3;
+        else
+            o.oAction = 1;
+        end
+    elseif o.oAction == 1 then
+        if (o.oDamageOrCoinValue ~= 0 or (cur_obj_is_mario_on_platform() ~= 0 and cur_obj_is_mario_ground_pounding_platform() ~= 0)) then
+            --save_file_set_flags(BHV_ARR(D_8032F0C0, o->oBehParams2ndByte, s32));
+            o.oAction = 2;
+            if sync_object_is_owned_locally(o.oSyncID) then
+                master_cap_switch_press(o.oHealth)
+            end
+            if (o.oDamageOrCoinValue == 0) then
+                o.oDamageOrCoinValue = 1;
+                network_send_object(o);
+            end
+            o.oDamageOrCoinValue = 0;
+        end
+    elseif o.oAction == 2 then
+        o.oDamageOrCoinValue = 0
+        if (o.oTimer < 5) then
+            cur_obj_scale_over_time(2, 4, masterCapScale*((o.oHealth + 1)/5), masterCapScale*((o.oHealth)/5));
+            if (o.oTimer == 4) then
+                cur_obj_shake_screen(SHAKE_POS_LARGE);
+                spawn_mist_particles();
+                spawn_triangle_break_particles(60, 139, 0.3, o.oBehParams2ndByte);
+                queue_rumble_data_object(o, 5, 80);
+            end
+        else
+            o.oHealth = o.oHealth - 1
+            o.oAction = o.oHealth > 0 and 1 or 3
+            network_send_object(o)
+        end
+    end
+    load_object_collision_model()
+end
+
+id_bhvMasterCapSwitch = hook_behavior(id_bhvMasterCapSwitch, OBJ_LIST_SURFACE, true, bhv_master_cap_switch_init, bhv_master_cap_switch_loop, "bhvMasterCapSwitch")
