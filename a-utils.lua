@@ -105,7 +105,7 @@ function nearest_mario_state_to_pos(x, y, z)
     for i = 0, MAX_PLAYERS - 1 do
         local m = gMarioStates[i]
         if (not m.marioObj) then goto continue end
-        --if (not mario_visible) then goto continue end
+        if (not m.visibleToObjects) then goto continue end
         if (not is_player_active(gMarioStates[i])) then goto continue end
         local dist = math.sqrt((gMarioStates[i].pos.x - x)^2 + (gMarioStates[i].pos.y - y)^2 + (gMarioStates[i].pos.z - z)^2);
         if (nearest == nil or dist < nearestDist) then
@@ -330,4 +330,29 @@ function lerp_s16(a, b, t)
     end
 
     return math.s16(a + delta * t)
+end
+
+function obj_get_nearest_object(o)
+    local minDist = 0x20000;
+    local closestObj = nil;
+
+    if (o) then
+        for i = 0, NUM_OBJ_LISTS - 1 do
+            local obj = obj_get_first(i)
+            repeat
+                if obj ~= nil then
+                    if o ~= obj and obj.activeFlags ~= ACTIVE_FLAG_DEACTIVATED then
+                        local objDist = dist_between_objects(o, obj);
+                        if (objDist < minDist) then
+                            closestObj = obj;
+                            minDist = objDist;
+                            djui_chat_message_create(tostring(objDist))
+                        end
+                    end
+                    obj = obj_get_next(obj)
+                end
+            until obj == nil
+        end
+    end
+    return closestObj;
 end

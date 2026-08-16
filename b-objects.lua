@@ -262,32 +262,42 @@ id_bhvCourtyardCondition = hook_behavior(nil, OBJ_LIST_SPAWNER, true, courtyard_
 -- Master Cap Objects
 
 function bhv_master_cap_bubble_player_loop(o)
-    if (o.heldByPlayerIndex >= MAX_PLAYERS) then return end
+    --if (o.globalPlayerIndex >= MAX_PLAYERS) then return end
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-    local marioState = gMarioStates[o.heldByPlayerIndex];
-    if (not marioState) then return end
+    o.oOpacity = 150
+    local m = gMarioStates[o.heldByPlayerIndex];
+    if (not m) then return end
+    smlua_anim_util_set_animation(o, ANIM_MASTER_CAP_BOX_IDLE)
 
     -- set position
-    o.oPosX = marioState.pos.x;
-    o.oPosY = marioState.pos.y + 35;
-    o.oPosZ = marioState.pos.z;
+    o.oPosX = m.pos.x + m.vel.x;
+    o.oPosY = m.pos.y + m.vel.y - 35;
+    o.oPosZ = m.pos.z + m.vel.z;
 
     -- slowly rotate the bubble
+    o.oFaceAnglePitch = m.marioObj.oFaceAnglePitch;
+    o.oFaceAngleYaw = m.marioObj.oFaceAngleYaw;
+    o.oFaceAngleRoll = m.marioObj.oFaceAngleRoll;
+    --[[
     o.oFaceAnglePitch = o.oFaceAnglePitch + 300;
     o.oFaceAngleYaw = o.oFaceAngleYaw + 230;
     o.oFaceAngleRoll = o.oFaceAngleRoll + 170;
+    ]]
 
     -- scale the bubble
+    cur_obj_scale(3)
+    --[[
     local scale = sins(get_global_timer() * 800) * 0.1 + 1.4;
     o.header.gfx.scale.x = scale;
     o.header.gfx.scale.y = sins(get_global_timer() * 1500) * 0.2 + scale;
     o.header.gfx.scale.z = scale;
+    ]]
 
     -- check if the bubble popped
-    if (marioState.action ~= ACT_MASTER_CAP_BUBBLED or is_player_in_local_area(marioState) == 0) then
+    if (m.action ~= ACT_MASTER_CAP_BUBBLED or is_player_in_local_area(m) == 0) then
         spawn_mist_particles();
         create_sound_spawner(SOUND_OBJ_DIVING_IN_WATER);
-        marioState.bubbleObj = nil;
+        m.bubbleObj = nil;
         obj_mark_for_deletion(o);
     end
 end
@@ -359,7 +369,7 @@ local function bhv_scarecrow_loop(o)
     end
 
     local m = nearest_mario_state_to_object(o)
-    local dist = math.sqrt((o.oPosX - m.pos.x)^2 + (o.oPosY - m.pos.y)^2 + (o.oPosZ - m.pos.z)^2)
+    local dist = not m and 0x8000 or math.sqrt((o.oPosX - m.pos.x)^2 + (o.oPosY - m.pos.y)^2 + (o.oPosZ - m.pos.z)^2)
 
     if o.oAction ~= 3 and o.oPosY < o.oFloorHeight + 10 then
         obj_check_floor_death(step, o.oFloor)

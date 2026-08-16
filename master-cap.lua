@@ -383,6 +383,7 @@ local function act_master_cap_results(m)
     m.marioObj.header.gfx.animInfo.animFrame = pA.prevActionAnimFrame or 0
     m.marioObj.header.gfx.animInfo.animAccel = 0
     m.flags = m.flags & ~(MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
+    m.visibleToObjects = false
     --camera_freeze()
     if m.playerIndex == 0 then
         game_unpause()
@@ -416,8 +417,8 @@ local function act_master_cap_results(m)
         end
     else
         --camera_unfreeze()
+        m.marioObj.oIntangibleTimer = 0;
         if pA.prevAction == ACT_MASTER_CAP_BUBBLED then
-            m.marioObj.oIntangibleTimer = 0;
             mario_pop_bubble(m)
         else
             m.action = pA.prevAction
@@ -432,6 +433,8 @@ local function act_master_cap_results(m)
 
     m.actionTimer = m.actionTimer + 1
 end
+
+local E_MODEL_MASTER_CAP = smlua_model_util_get_id("master_box_geo")
 
 local function act_master_cap_bubbled(m)
     if not m then return end
@@ -459,17 +462,19 @@ local function act_master_cap_bubbled(m)
 
     -- create bubble
     if (m.bubbleObj == nil and is_player_in_local_area(m) ~= 0) then
-        m.bubbleObj = spawn_non_sync_object(id_bhvMasterCapBubblePlayer, E_MODEL_BUBBLE_PLAYER, m.marioObj.oPosX, m.marioObj.oPosY, m.marioObj.oPosZ, function(o)
-            if (m.bubbleObj ~= nil) then
-                m.bubbleObj.heldByPlayerIndex = m.playerIndex;
-            end
+        m.bubbleObj = spawn_non_sync_object(id_bhvMasterCapBubblePlayer, E_MODEL_MASTER_CAP, m.marioObj.oPosX, m.marioObj.oPosY, m.marioObj.oPosZ, function(o)
+            o.heldByPlayerIndex = m.playerIndex;
         end);
     end
 
     -- force inactive state
     if (m.heldObj ~= nil) then mario_drop_held_object(m); end
     m.heldByObj = nil;
-    m.marioObj.oIntangibleTimer = -1;
+    local nearestObj = obj_get_nearest_object(m.marioObj)
+    m.marioObj.oIntangibleTimer = (nearestObj and nearestObj.oInteractType == INTERACT_WARP) and 0 or -1;
+    djui_chat_message_create(get_behavior_name_from_id(get_id_from_behavior(nearestObj.behavior)))
+    djui_chat_message_create(tostring(m.marioObj.oIntangibleTimer))
+    m.visibleToObjects = false
     m.squishTimer = 0;
     m.bounceSquishTimer = 0;
     set_character_animation(m, CHAR_ANIM_SLEEP_IDLE);
@@ -550,7 +555,9 @@ function set_mario_finished_master_cap(m)
             set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
         end
     else
-        mario_set_master_cap_bubbled(m)
+        if m.action ~= ACT_DISAPPEARED then
+            mario_set_master_cap_bubbled(m)
+        end
     end
 end
 
@@ -561,7 +568,6 @@ function master_cap_box_active()
     return true, o
 end
 
-local E_MODEL_MASTER_CAP = smlua_model_util_get_id("master_box_geo")
 
 local capSpawnRadius = 400
 local function find_master_cap_spawn_position()
