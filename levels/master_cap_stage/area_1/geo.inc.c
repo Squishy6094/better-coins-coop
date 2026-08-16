@@ -6,8 +6,12 @@ const GeoLayout master_cap_stage_area_1_geo[] = {
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_TRANSPARENT, 0, -3700, -3000, master_cap_stage_dl_Death_Plane_mesh_layer_5),
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, master_cap_stage_dl_Level_mesh_layer_1),
 		GEO_DISPLAY_LIST(LAYER_TRANSPARENT, master_cap_stage_dl_Level_mesh_layer_5),
-		GEO_DISPLAY_LIST(LAYER_TRANSPARENT, master_cap_stage_dl_final_revert_mesh_layer_5),
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, master_cap_stage_dl_final_revert_mesh_layer_1),
+		GEO_TRANSLATE_NODE_WITH_DL(LAYER_TRANSPARENT, -2201, -100, 3335, master_cap_stage_dl_Water_Box_Mesh_mesh_layer_5),
+		GEO_TRANSLATE_NODE_WITH_DL(LAYER_TRANSPARENT, -6701, 1500, 5135, master_cap_stage_dl_Water_Box_Mesh_001_mesh_layer_5),
+		GEO_OPEN_NODE(),
+			GEO_DISPLAY_LIST(LAYER_TRANSPARENT, master_cap_stage_dl_final_revert_mesh_layer_5),
+		GEO_CLOSE_NODE(),
 	GEO_CLOSE_NODE(),
 	GEO_RETURN(),
 };

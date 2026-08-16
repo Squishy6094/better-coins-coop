@@ -1008,6 +1008,7 @@ local function master_cap_update()
     local m = gMarioStates[0] ---@type MarioState
     local p = gPlayerSyncTable[0]
     local np = gNetworkPlayers[0]
+    local runActive = levelData ~= nil and levelData.runState == 1
 
     p.starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
 
@@ -1036,6 +1037,8 @@ local function master_cap_update()
         end)
     end
     ]]
+
+    -- Actual Master Cap Stuffs
     if warpToHubTimer > 0 then
         warpToHubTimer = warpToHubTimer - 1
         if warpToHubTimer <= 0 then
@@ -1045,7 +1048,7 @@ local function master_cap_update()
         end
     end
 
-    -- Actual Master Cap Stuffs
+
     if masterCapLevelColor.r ~= 255 or masterCapLevelColor.g ~= 255 or masterCapLevelColor.b ~= 255 then
         masterCapLevelColor.r = math.ceil(math.lerp(masterCapLevelColor.r, 255, 0.03))
         masterCapLevelColor.g = math.ceil(math.lerp(masterCapLevelColor.g, 255, 0.03))
@@ -1088,7 +1091,6 @@ local function master_cap_update()
     master_cap_music_update(levelData)
     
     -- Locally Apply Master Cap
-    local runActive = levelData ~= nil and levelData.runState == 1
     if runActive then
         m.capTimer = levelData.capTimer
         m.flags = m.flags | (MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
