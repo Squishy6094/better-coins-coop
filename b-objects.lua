@@ -376,7 +376,7 @@ local function bhv_scarecrow_loop(o)
     end
 
     local deathPlaneKill = (o.oAction == OBJ_ACT_DEATH_PLANE_DEATH or o.oAction == OBJ_ACT_LAVA_DEATH or not o.oFloor)
-    if o.oHealth > 0 and ((obj_check_hitbox_overlap(o, m.marioObj) and (determine_interaction(m, o) ~= 0 or isInWater)) or deathPlaneKill) then
+    if o.oHealth > 0 and (m and (obj_check_hitbox_overlap(o, m.marioObj) and (determine_interaction(m, o) ~= 0 or isInWater)) or deathPlaneKill) then
         o.oHealth = 0
         if deathPlaneKill then
             o.oAction = 3
