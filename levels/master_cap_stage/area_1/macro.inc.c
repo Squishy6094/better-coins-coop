@@ -20,6 +20,7 @@ const MacroObject master_cap_stage_area_1_macro_objs[] = {
 	MACRO_OBJECT_WITH_BEH_PARAM(macro_coin_line_horizontal, 90, 4600, 3000, -3200, 0x00000000),
 	MACRO_OBJECT_WITH_BEH_PARAM(macro_coin_line_horizontal, 0, 100, 2200, 3900, 0x00000000),
 	MACRO_OBJECT_WITH_BEH_PARAM(macro_coin_line_horizontal, 0, -2700, 2200, 3900, 0x00000000),
+	MACRO_OBJECT_WITH_BEH_PARAM(macro_coin_line_horizontal, 90, 4000, 3500, -7750, 0x00000000),
 	MACRO_OBJECT_END(),
 };
 

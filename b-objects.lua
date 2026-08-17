@@ -733,6 +733,8 @@ local function bhv_master_cap_switch_init(o)
     o.oDamageOrCoinValue = 0
 
     spawn_non_sync_object(id_bhvCapSwitchBase, E_MODEL_CAP_SWITCH_BASE, o.oPosX, o.oPosY - 71*masterCapScale, o.oPosZ, function(oBase)
+        oBase.oFaceAngleYaw = o.oFaceAngleYaw
+        oBase.oMoveAngleYaw = o.oMoveAngleYaw
         obj_scale(oBase, masterCapScale)
     end)
 
