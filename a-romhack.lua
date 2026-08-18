@@ -29,28 +29,83 @@ romhackData = {
     ["sm64"] = {
         starCount = 120,
         areaBasedLevels = false,
-        masterCapSpawns = {
-            -- 1st floor
-            [LEVEL_BOB]   = { [1] = {x = -6700, y = 350, z = 4600, yaw = 0}},
-            [LEVEL_WF]    = { [1] = {x = 3000, y = 600, z = 4610, yaw = 0x4000}},
-            [LEVEL_CCM]   = { [1] = {x = -1350, y = 2900, z = -1600, yaw = 0x4000}},
-            [LEVEL_JRB]   = { [1] = {x = -6800, y = 1500, z = -500, yaw = -0x2000}},
-            [LEVEL_SA]    = { [1] = {x = 800, y = -1800, z = 800, yaw = -0x2000}},
-            [LEVEL_PSS]   = { [1] = {x = 5423, y = 6400, z = -4754, yaw = -0x4000}},
-            [LEVEL_TOTWC] = { [1] = {x = 0, y = 2400, z = 0, yaw = 0}},
-            [LEVEL_BITDW] = { [1] = {x = -7150, y = -2700, z = 3550, yaw = 0}},
-            -- 2nd floor
-            [LEVEL_BITFS] = { [1] = {x = -7150, y = -2700, z = 3550, yaw = 0}},
-            -- 3rd floor
-            [LEVEL_BITS]  = { [1] = {x = -7150, y = -2700, z = 3550, yaw = 0}},
+        [LEVEL_CASTLE_GROUNDS] = {
+            [1] = {
+                masterCap = 0,
+                masterDoor = {x = -5600, y = 260, z = 1990, yaw = 0x4000},
+            },
         },
-        masterDoorSpawns = {
-            [LEVEL_CASTLE_GROUNDS] = { [1] = {x = -5600, y = 260, z = 1990, yaw = 0x4000} },
+        [LEVEL_CASTLE] = {
+            [1] = {
+                masterCap = 0,
+            },
+            [2] = {
+                masterCap = 0,
+            },
+            [3] = {
+                masterCap = 0,
+            },
         },
-        scarecrowSpawns = {},
+        [LEVEL_CASTLE_COURTYARD] = {
+            [1] = {
+                masterCap = 0,
+            },
+        },
+        [LEVEL_BOB] = {
+            [1] = {
+                masterCap = {x = -6700, y = 350, z = 4600, yaw = 0}
+            }
+        },
+        [LEVEL_WF] = {
+            [1] = {
+                masterCap = {x = 3000, y = 600, z = 4610, yaw = 0x4000}
+            }
+        },
+        [LEVEL_CCM] = {
+            [1] = {
+                masterCap = {x = -1350, y = 2900, z = -1600, yaw = 0x4000}
+            }
+        },
+        [LEVEL_JRB] = {
+            [1] = {
+                masterCap = {x = -6800, y = 1500, z = -500, yaw = -0x2000}
+            }
+        },
+        [LEVEL_SA] = {
+            [1] = {
+                masterCap = {x = 800, y = -1800, z = 800, yaw = -0x2000}
+            }
+        },
+        [LEVEL_PSS] = {
+            [1] = {
+                masterCap = {x = 5423, y = 6400, z = -4754, yaw = -0x4000}
+            }
+        },
+        [LEVEL_TOTWC] = {
+            [1] = {
+                masterCap = {x = 0, y = 2400, z = 0, yaw = 0}
+            }
+        },
+        [LEVEL_BITDW] = {
+            [1] = {
+                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0}
+            }
+        },
+        [LEVEL_BITFS] = {
+            [1] = {
+                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0}
+            }
+        },
+        [LEVEL_BITS] = {
+            [1] = {
+                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0}
+            }
+        },
     },
+    --[[
     ["sm74"] = {
         starCount = 151,
+        areaBasedLevels = false,
         masterCapSpawns = {
             [LEVEL_BOB] = {
                 --[1] = {x = -6700, y = 350, z = 4600},
@@ -64,20 +119,63 @@ romhackData = {
         },
         scarecrowSpawns = {},
     },
+    ]]
 }
 
 if not romhackData[CURR_ROMHACK] then
     romhackData[CURR_ROMHACK] = {
         starCount = -1,
-        masterCapSpawns = {},
-        masterDoorSpawns = {},
-        scarecrowSpawns = {},
+        areaBasedLevels = false,
+        [LEVEL_CASTLE_GROUNDS] = {},
+        [LEVEL_CASTLE] = {},
+        [LEVEL_CASTLE_COURTYARD] = {},
+        [LEVEL_BOWSER_1] = {
+            levelMerge = LEVEL_BITDW,
+        },
+        [LEVEL_BOWSER_2] = {
+            levelMerge = LEVEL_BITFS,
+        },
+        [LEVEL_BOWSER_3] = {
+            levelMerge = LEVEL_BITS,
+        },
     }
+    for i = 1, 7 do
+        romhackData[CURR_ROMHACK][LEVEL_CASTLE_GROUNDS][i] = {
+            masterCap = 0,
+        }
+        romhackData[CURR_ROMHACK][LEVEL_CASTLE][i] = {
+            masterCap = 0,
+        }
+        romhackData[CURR_ROMHACK][LEVEL_CASTLE_COURTYARD][i] = {
+            masterCap = 0,
+        }
+    end
 end
 
 function get_romhack_data(romhack)
     romhack = romhack or CURR_ROMHACK
     return romhackData[romhack]
+end
+
+function get_romhack_level_data(romhack, level, area)
+    local hackData = get_romhack_data(romhack)
+    local level = hackData.areaBasedLevels and level*7 + area or level
+    repeat
+        if hackData[level] and hackData[level].levelMerge then
+            level = hackData[level].levelMerge
+        else
+            break
+        end
+    until hackData[level].levelMerge == nil
+    if not hackData[level] then
+        hackData[level] = {}
+    end
+    if not hackData.areaBasedLevels then
+        if not hackData[level][area] then
+            hackData[level][area] = {}
+        end
+    end
+    return hackData.areaBasedLevels and hackData[level] or hackData[level][area], level
 end
 
 --------------------------

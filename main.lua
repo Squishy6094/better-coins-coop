@@ -1,16 +1,6 @@
 -- name: Better Coins
 -- description: Overhauls the coin collecting expirience to make 100 coin stars fun and satisfying to work towards\n\nMade by: Squishy6094
 
---[[
-    - Todo:
-        - Quicksand doesn't bubble you
-        - Scarecrow syncing
-        - Poundable poles syncing?
-        - Scarecrow jailbreak?
-        - Implement Mariohunt Star Counter
-        - Fix Master Cap Box Syncing
-]]
-
 gLevelValues.previewBlueCoins = 1
 gLevelValues.respawnBlueCoinsSwitch = 1
 

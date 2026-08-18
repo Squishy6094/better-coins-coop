@@ -53,15 +53,6 @@ function master_cap_allowed(ignoreSwitch)
     return reasons == "", string.sub(reasons, 1, -3)
 end
 
-local levelFallbackMerge = {
-    [LEVEL_BOWSER_1] = LEVEL_BITDW,
-    [LEVEL_BOWSER_2] = LEVEL_BITFS,
-    [LEVEL_BOWSER_3] = LEVEL_BITS,
-    [LEVEL_CASTLE_GROUNDS] = -1,
-    [LEVEL_CASTLE] = -1,
-    [LEVEL_CASTLE_COURTYARD] = -1,
-}
-
 local modLevelCount = {
     [CURR_ROMHACK] = LEVEL_COUNT
 }
@@ -69,19 +60,8 @@ local modLevelCount = {
 function master_cap_get_merged_level_num(levelNum, areaNum)
     levelNum = levelNum or gNetworkPlayers[0].currLevelNum
     areaNum = areaNum or gNetworkPlayers[0].currAreaIndex
-    local hack = get_romhack_data()
-    if hack.areaIndexed then
-        levelNum = levelNum*7 + (areaNum - 1)
-    end
-    
-    if hack.masterCapSpawns[levelNum] then
-        if hack.masterCapSpawns[levelNum].levelMerge then
-            return hack.masterCapSpawns[levelNum].levelMerge
-        else
-            return levelNum
-        end
-    end
-    return levelFallbackMerge[levelNum] or levelNum
+    local levelData, mergedLevelNum = get_romhack_level_data(nil, levelNum, areaNum)
+    return levelData.masterCap ~= 0 and mergedLevelNum or -1
 end
 
 function master_cap_get_merged_player_level_num(index)
@@ -662,18 +642,20 @@ local function find_master_cap_spawn_position()
     return spawnPos
 end
 
-function master_cap_get_box_spawn(level, area)
-    if not romhackData[CURR_ROMHACK].masterCapSpawns[level] then
-        romhackData[CURR_ROMHACK].masterCapSpawns[level] = {}
+function master_cap_get_spawn(spawnName, spawnFunc, level, area)
+    level = level or gNetworkPlayers[0].currLevelNum
+    area = area or gNetworkPlayers[0].currAreaIndex
+    local levelData = get_romhack_level_data(nil, level, area)
+    if not levelData[spawnName] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area and spawnFunc then
+        levelData[spawnName] = spawnFunc()
     end
-    if not romhackData[CURR_ROMHACK].masterCapSpawns[level][area] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
-        romhackData[CURR_ROMHACK].masterCapSpawns[level][area] = find_master_cap_spawn_position()
-    end
-    return romhackData[CURR_ROMHACK].masterCapSpawns[level][area]
+    return levelData[spawnName]
 end
 
-romhackData[CURR_ROMHACK].masterCapSpawns[LEVEL_MASTER_CAP_STAGE] = {
-    [1] = {x = -6700, y = 400, z = -900}
+get_romhack_data()[LEVEL_MASTER_CAP_STAGE] = {
+    [1] = {
+        masterCap = {x = -6700, y = 400, z = -900}
+    }
 }
 
 local function find_master_door_spawn_position()
@@ -761,23 +743,6 @@ local function find_master_door_spawn_position()
     return spawnPos
 end
 
-function master_cap_get_door_spawn(level, area)
-    if not romhackData[CURR_ROMHACK].masterDoorSpawns[level] then
-        romhackData[CURR_ROMHACK].masterDoorSpawns[level] = {}
-    end
-    if not romhackData[CURR_ROMHACK].masterDoorSpawns[level][area] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
-        romhackData[CURR_ROMHACK].masterDoorSpawns[level][area] = find_master_door_spawn_position()
-    end
-    return romhackData[CURR_ROMHACK].masterDoorSpawns[level][area]
-end
-
-function master_cap_set_door_spawn(level, area, x, y, z, yaw)
-    if not romhackData[CURR_ROMHACK].masterDoorSpawns[level] then
-        romhackData[CURR_ROMHACK].masterDoorSpawns[level] = {}
-    end
-    romhackData[CURR_ROMHACK].masterDoorSpawns[level][area] = {x = x, y = y, z = z, yaw = yaw}
-end
-
 local function find_scarecrow_spawn_position()
     local spawnPos = nil
     math.randomseed(hash(CURR_ROMHACK))
@@ -830,28 +795,9 @@ local function find_scarecrow_spawn_position()
     return spawnPos
 end
 
-function master_cap_get_scarecrow_spawn(level, area)
-    level = level or gNetworkPlayers[0].currLevelNum
-    area = area or gNetworkPlayers[0].currAreaIndex
-    if not romhackData[CURR_ROMHACK].scarecrowSpawns[level] then
-        romhackData[CURR_ROMHACK].scarecrowSpawns[level] = {}
-    end
-    if not romhackData[CURR_ROMHACK].scarecrowSpawns[level][area] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
-        romhackData[CURR_ROMHACK].scarecrowSpawns[level][area] = find_scarecrow_spawn_position()
-    end
-    return romhackData[CURR_ROMHACK].scarecrowSpawns[level][area]
-end
-
-function master_cap_set_scarecrow_spawn(level, area, x, y, z, yaw)
-    if not romhackData[CURR_ROMHACK].scarecrowSpawns[level] then
-        romhackData[CURR_ROMHACK].scarecrowSpawns[level] = {}
-    end
-    romhackData[CURR_ROMHACK].scarecrowSpawns[level][area] = {x = x, y = y, z = z, yaw = yaw}
-end
-
 -- Handles only spawning one scarecrow
 function master_cap_request_scarecrow_spawn()
-    local scarecrowSpawnPos = master_cap_get_scarecrow_spawn()
+    local scarecrowSpawnPos = master_cap_get_spawn("scarecrow", find_scarecrow_spawn_position)
     spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, scarecrowSpawnPos.x, scarecrowSpawnPos.y, scarecrowSpawnPos.z, function(o)
         
     end)
@@ -910,9 +856,15 @@ local function on_sync()
     local areaNum = gNetworkPlayers[0].currAreaIndex
 
     local doorSpawnsExist = false
-    for _, _ in pairs(romhackData[CURR_ROMHACK].masterDoorSpawns) do
-        doorSpawnsExist = true
-        break
+    for _, levelData in pairs(get_romhack_data()) do
+        if type(levelData) == "table" then
+            for i = 1, 7 do
+                if levelData[i] and levelData[i].masterDoor then
+                    doorSpawnsExist = true
+                    break
+                end
+            end
+        end
     end
 
     -- Check if another door already exists
@@ -924,8 +876,8 @@ local function on_sync()
     end
 
     -- Spawn Door
-    if not doorCheck and not doorSpawnsExist or (hackData.masterDoorSpawns[levelNum] and hackData.masterDoorSpawns[levelNum][areaNum]) then
-        local masterDoorSpawn = master_cap_get_door_spawn(levelNum, areaNum)
+    if not doorCheck and not doorSpawnsExist or (get_romhack_level_data(nil, levelNum, areaNum).masterDoor) then
+        local masterDoorSpawn = master_cap_get_spawn("masterDoor", find_master_door_spawn_position, levelNum, areaNum)
         spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
             o.oFaceAnglePitch = 0
             o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
@@ -939,12 +891,12 @@ local function on_sync()
     end
     
     -- Spawn Cap
-    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelIndex ~= -1 or (romhackData[CURR_ROMHACK].masterCapSpawns[levelNum] and romhackData[CURR_ROMHACK].masterCapSpawns[levelNum][areaNum])) then
+    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelIndex ~= -1 or (get_romhack_level_data(nil, levelNum, areaNum).masterCap ~= 0)) then
         --if master_cap_data_exists(levelNum) then return end
         if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
         if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
 
-        local masterCapSpawn = master_cap_get_box_spawn(levelNum, areaNum)
+        local masterCapSpawn = master_cap_get_spawn("masterCap", find_master_cap_spawn_position, levelNum, areaNum)
         if levelData ~= nil and levelData.runState == 0 then
             spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)
                 o.oFaceAnglePitch = 0
