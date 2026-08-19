@@ -161,15 +161,15 @@ function get_romhack_level_data(romhack, level, area)
     local hackData = get_romhack_data(romhack)
     local level = hackData.areaBasedLevels and level*7 + area or level
     repeat
-        if hackData[level] and hackData[level].levelMerge then
-            level = hackData[level].levelMerge
+        if hackData[level] then
+            if hackData[level].levelMerge then
+                level = hackData[level].levelMerge
+            end
         else
+            hackData[level] = {}
             break
         end
     until hackData[level].levelMerge == nil
-    if not hackData[level] then
-        hackData[level] = {}
-    end
     if not hackData.areaBasedLevels then
         if not hackData[level][area] then
             hackData[level][area] = {}
