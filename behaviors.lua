@@ -716,7 +716,7 @@ local function bhv_wooden_post_loop(o)
         end
     end
 
-    if o.oBehParams ~= WOODEN_POST_BP_NO_COINS_MASK and o.oWoodenPostOffsetY == -190.0 then
+    if not _G.OmmEnabled and o.oBehParams ~= WOODEN_POST_BP_NO_COINS_MASK and o.oWoodenPostOffsetY == -190.0 then
         spawn_coin_spawner(o, 5, true, 0, -o.oWoodenPostOffsetY, 0);
         set_object_respawn_info_bits(o, 1);
         o.oBehParams = WOODEN_POST_BP_NO_COINS_MASK;

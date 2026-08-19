@@ -6,11 +6,18 @@ local hitboxMarginX = 2
 local hitboxMarginY = 4
 local screenMarginLeft = 22
 local screenMarginTop = 15
+local screenSegments = 4
 
 local prevHitboxList = {}
 local hitboxList = {}
 
 local currModIndex = get_active_mod().index
+
+local function ceil_power(x)
+    local p = 1
+    while p < x do p = p * 2 end
+    return p
+end
 
 local function add_hitbox(x, y, w, h, inMod)
     if inMod == nil then
@@ -210,11 +217,19 @@ end
 
 local function hud_render()
     djui_hud_set_resolution(RESOLUTION_N64)
+    local sW = djui_hud_get_screen_width()
+    local sH = djui_hud_get_screen_height()
     screenMarginLeft = 22
     screenMarginTop = 15
+    if HUD_HITBOXES_RENDER then
+        djui_hud_set_color(0, 0, 0, 150)
+        for i = 1, screenSegments - 1 do
+            og_djui_hud_render_rect(sW*(i/screenSegments), 0, 1, sH)
+            og_djui_hud_render_rect(0, sH*(i/screenSegments), sW, 1)
+        end
+    end
     for id, hitbox in pairs(hitboxList) do
         if HUD_HITBOXES_RENDER then
-
             djui_hud_set_color((id)/2*255, (id + 1)/2*255, (id + 2)/2*255, 100)
             og_djui_hud_render_rect(hitbox.x, hitbox.y, hitbox.w, hitbox.h)
             djui_hud_set_color(255, 255, 255, 100)
@@ -268,17 +283,19 @@ local function find_open_hud_space(x, y, w, h, weightX, weightY)
     repeat
         local overlapFound = false
         for id, hitbox in ipairs(prevHitboxList) do
-            if id ~= #hitboxList + 1 then -- Avoid accounting for the next rendered 
+            -- Avoid accounting for the next rendered and not relevent
+            if id ~= #hitboxList + 1 and (math.ceil(x/(sW*screenSegments)) == math.ceil(hitbox.x/(sW*screenSegments)) and math.ceil(y/(sH*screenSegments)) == math.ceil(hitbox.y/(sH*screenSegments))) then
                 if not overlapFound and rects_overlap(newX, newY, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h) then
                     overlapFound = true
-
-                    newX = math.max(x, hitbox.x + hitbox.w + hitboxMarginX)
-                    newY = math.max(y, hitbox.y + hitbox.h + hitboxMarginY)
+                    newX = math.lerp(newX, math.max(x, hitbox.x + hitbox.w + hitboxMarginX), weightX)
+                    newY = math.lerp(newY, math.max(y, hitbox.y + hitbox.h + hitboxMarginY), weightY)
+                    goto skip
                 end
             end
         end
+        ::skip::
     until not overlapFound
-    if weightX ~= 0 and (weightY == 0 or newX - x/weightX < newY - y/weightY) then
+    if newX - x > newY - y then
         x = newX
     else
         y = newY
@@ -286,8 +303,37 @@ local function find_open_hud_space(x, y, w, h, weightX, weightY)
     return x, y
 end
 
+-- Gets the average difference of hitbox height from thier nearest power of 2, useful for detecting different hud styles like OMM
+local function find_average_hud_scale(x, y)
+    local sW = djui_hud_get_screen_width()
+    local sH = djui_hud_get_screen_height()
+    if x then x = math.clamp(x, 1, sW) end
+    if y then y = math.clamp(y, 1, sH) end
+    local maxCount = 0
+    local hudScale = 0
+    local count = 0
+    local scaleList = {}
+    for id, hitbox in ipairs(prevHitboxList) do
+        if ((not x or math.ceil(x/(sW*screenSegments)) == math.ceil(hitbox.x/(sW*screenSegments))) and (not y or math.ceil(y/(sH*screenSegments)) == math.ceil(hitbox.y/(sH*screenSegments)))) then
+            local scale = math.round((hitbox.h / ceil_power(hitbox.h)*20))
+            if not scaleList[scale] then
+                scaleList[scale] = 0
+            end
+            scaleList[scale] = scaleList[scale] + 1
+        end
+    end
+    for num, count in pairs(scaleList) do
+        if count > maxCount then
+            maxCount = count
+            hudScale = num/20
+        end
+    end
+    return hudScale
+end
+
 return {
     set_hitbox_margin = set_hitbox_margin,
     set_screen_margin = set_screen_margin,
     find_open_hud_space = find_open_hud_space,
+    find_average_hud_scale = find_average_hud_scale,
 }

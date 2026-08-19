@@ -128,13 +128,14 @@ local function coin_counter()
         end
 
         if currDist and prevTex then
+            local hudScale = hudDodge.find_average_hud_scale(0, 0)
             local targetCoinSpeed = math.clamp((500*5 / currDist), 0, 1)
             coinSpeed = math.lerp(coinSpeed, targetCoinSpeed, 0.1)
             coinAnim = (coinAnim + coinSpeed*0.5) % (#prevTex + 1)
             local colorRed = (prevTex == sRedCoinTextures) and 0 or 255
             djui_hud_set_color(255, colorRed, colorRed, 255*coinSpeed*transOpacity)
-            local dX, dY = hudDodge.find_open_hud_space(0, 0, 16, 16, 0, 1)
-            djui_hud_render_texture(prevTex[math.floor(coinAnim)], dX, dY, 0.5, 0.5)
+            local dX, dY = hudDodge.find_open_hud_space(0, 0, 16*hudScale, 16*hudScale, 0, 1)
+            djui_hud_render_texture(prevTex[math.floor(coinAnim)], dX, dY, 0.5*hudScale, 0.5*hudScale)
         else
             coinSpeed = math.lerp(coinSpeed, 0, 0.1)
         end
