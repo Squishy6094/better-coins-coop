@@ -10,6 +10,7 @@ local screenSegments = 4
 
 local prevHitboxList = {}
 local hitboxList = {}
+local isRenderBehind = true
 
 local currModIndex = get_active_mod().index
 
@@ -17,6 +18,26 @@ local function ceil_power(x)
     local p = 1
     while p < x do p = p * 2 end
     return p
+end
+
+local function table_get_common_entry(list)
+    local entryCount = {}
+    for _, entry in pairs(list) do
+        if not entryCount[entry] then
+            entryCount[entry] = 0
+        end
+        entryCount[entry] = entryCount[entry] + 1
+    end
+
+    local maxCount = 0
+    local maxEntry = nil
+    for entry, count in pairs(entryCount) do
+        if count > maxCount then
+            maxCount = count
+            maxEntry = entry
+        end
+    end
+    return maxEntry or 0
 end
 
 local function add_hitbox(x, y, w, h, inMod)
@@ -29,6 +50,7 @@ local function add_hitbox(x, y, w, h, inMod)
         w = w,
         h = h,
         inMod = inMod,
+        behind = isRenderBehind,
     })
 end
 
@@ -215,6 +237,10 @@ _G.djui_hud_render_texture = function (tex, x, y, w, h)
     og_djui_hud_render_texture(tex, x, y, w, h)
 end
 
+local function hud_render_behind()
+    isRenderBehind = false
+end
+
 local function hud_render()
     djui_hud_set_resolution(RESOLUTION_N64)
     local sW = djui_hud_get_screen_width()
@@ -228,6 +254,7 @@ local function hud_render()
             og_djui_hud_render_rect(0, sH*(i/screenSegments), sW, 1)
         end
     end
+    
     for id, hitbox in pairs(hitboxList) do
         if HUD_HITBOXES_RENDER then
             djui_hud_set_color((id)/2*255, (id + 1)/2*255, (id + 2)/2*255, 100)
@@ -237,16 +264,22 @@ local function hud_render()
         end
 
         if not hitbox.inMod then
-            screenMarginLeft = math.min(hitbox.x, screenMarginLeft)
-        end
-        if not hitbox.inMod then
-            screenMarginTop = math.min(hitbox.y, screenMarginTop)
+            if 1 == math.ceil(hitbox.x/(sW/screenSegments)) then
+                screenMarginTop = math.min(hitbox.y, screenMarginTop)
+            end
+            if 1 == math.ceil(hitbox.y/(sH/screenSegments)) then
+                screenMarginLeft = math.min(hitbox.x, screenMarginLeft)
+            end
         end
     end
     reset_hitbox_list()
+    isRenderBehind = true
 end
 
-hook_event(HOOK_ON_HUD_RENDER_BEHIND, hud_render)
+hook_event(HOOK_ON_MODS_LOADED, function ()
+    hook_event(HOOK_ON_HUD_RENDER, hud_render)
+    hook_event(HOOK_ON_HUD_RENDER_BEHIND, hud_render_behind)
+end)
 
 local function set_hitbox_margin(x, y)
     hitboxMarginX = x
@@ -280,11 +313,12 @@ local function find_open_hud_space(x, y, w, h, weightX, weightY)
     y = math.clamp(y, screenMarginTop, sH - screenMarginTop - h)
     local newX = x
     local newY = y
+
     repeat
         local overlapFound = false
         for id, hitbox in ipairs(prevHitboxList) do
             -- Avoid accounting for the next rendered and not relevent
-            if id ~= #hitboxList + 1 and (math.ceil(x/(sW*screenSegments)) == math.ceil(hitbox.x/(sW*screenSegments)) and math.ceil(y/(sH*screenSegments)) == math.ceil(hitbox.y/(sH*screenSegments))) then
+            if id ~= #hitboxList + 1 and hitbox.behind == isRenderBehind and (math.ceil(x/(sW/screenSegments)) == math.ceil(hitbox.x/(sW/screenSegments)) and math.ceil(y/(sH/screenSegments)) == math.ceil(hitbox.y/(sH/screenSegments))) then
                 if not overlapFound and rects_overlap(newX, newY, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h) then
                     overlapFound = true
                     newX = math.lerp(newX, math.max(x, hitbox.x + hitbox.w + hitboxMarginX), weightX)
@@ -309,26 +343,13 @@ local function find_average_hud_scale(x, y)
     local sH = djui_hud_get_screen_height()
     if x then x = math.clamp(x, 1, sW) end
     if y then y = math.clamp(y, 1, sH) end
-    local maxCount = 0
-    local hudScale = 0
-    local count = 0
     local scaleList = {}
     for id, hitbox in ipairs(prevHitboxList) do
-        if ((not x or math.ceil(x/(sW*screenSegments)) == math.ceil(hitbox.x/(sW*screenSegments))) and (not y or math.ceil(y/(sH*screenSegments)) == math.ceil(hitbox.y/(sH*screenSegments)))) then
-            local scale = math.round((hitbox.h / ceil_power(hitbox.h)*20))
-            if not scaleList[scale] then
-                scaleList[scale] = 0
-            end
-            scaleList[scale] = scaleList[scale] + 1
+        if hitbox.behind == isRenderBehind and ((not x or math.ceil(x/(sW/screenSegments)) == math.ceil(hitbox.x/(sW/screenSegments))) and (not y or math.ceil(y/(sH/screenSegments)) == math.ceil(hitbox.y/(sH/screenSegments)))) then
+            table.insert(scaleList, math.round((hitbox.h / ceil_power(hitbox.h)*20)))
         end
     end
-    for num, count in pairs(scaleList) do
-        if count > maxCount then
-            maxCount = count
-            hudScale = num/20
-        end
-    end
-    return hudScale
+    return table_get_common_entry(scaleList)/20
 end
 
 return {
