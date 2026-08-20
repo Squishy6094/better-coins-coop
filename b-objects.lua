@@ -566,8 +566,6 @@ end
 
 id_bhvMasterCapScarecrowHead = hook_behavior(nil, OBJ_LIST_DEFAULT, true, bhv_scarecrow_head_init, bhv_scarecrow_head_loop, "bhvMasterCapScarecrowHead")
 
-local MASTER_CAP_BOX_SCALE = 3
-
 ---@param o Object
 local function bhv_master_cap_box_init(o)
     o.oFlags = o.oFlags | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
@@ -595,7 +593,12 @@ end
 
 ---@param o Object
 local function bhv_master_cap_box_loop(o)
-    cur_obj_scale(MASTER_CAP_BOX_SCALE)
+    local spawnData = master_cap_get_spawn("masterCap")
+    local boxScale = 3
+    if spawnData and spawnData.scale then
+        boxScale = boxScale * spawnData.scale
+    end
+    cur_obj_scale(boxScale)
     local masterCapHitbox = get_temp_object_hitbox()
     masterCapHitbox.interactType = INTERACT_BREAKABLE
     masterCapHitbox.downOffset = 0
@@ -692,14 +695,14 @@ local function bhv_master_cap_box_loop(o)
             increase = 1.0 + 0.15 * ((t - 5) / 5)
         end
 
-        local bounce = sin * (14.0 * MASTER_CAP_BOX_SCALE) * (0.8 ^ (t / 6))
+        local bounce = sin * (14.0 * boxScale) * (0.8 ^ (t / 6))
         o.oGraphYOffset = bounce
 
         o.oFaceAngleYaw = o.oFaceAngleYaw + 0x900
         o.oFaceAngleRoll = sin * 0x1200 * impact
         o.oFaceAnglePitch = cos * 0x800 * impact
 
-        local scale = MASTER_CAP_BOX_SCALE * increase
+        local scale = boxScale * increase
         o.header.gfx.scale.x = stretch * scale
         o.header.gfx.scale.y = squash * scale
         o.header.gfx.scale.z = stretch * scale

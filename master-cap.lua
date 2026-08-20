@@ -654,7 +654,7 @@ end
 
 get_romhack_data()[LEVEL_MASTER_CAP_STAGE] = {
     [1] = {
-        masterCap = {x = -6700, y = 400, z = -900}
+        masterCap = {x = -6700, y = 400, z = -900, yaw = 0x4000}
     }
 }
 

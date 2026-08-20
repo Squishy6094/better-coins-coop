@@ -268,9 +268,6 @@ function mario_set_master_cap_bubbled(m)
 
     gLocalBubbleCounter = 20;
 
-    --if (m.numLives > -1) {
-    --    m.numLives--;
-    --}
     m.health = 0x880
     m.healCounter = 0;
     m.hurtCounter = 0;
@@ -280,8 +277,7 @@ function mario_set_master_cap_bubbled(m)
     m.marioObj.activeFlags = m.marioObj.activeFlags | ACTIVE_FLAG_MOVE_THROUGH_GRATE;
     set_mario_action(m, ACT_MASTER_CAP_BUBBLED, 0);
 
-    --extern s16 gCutsceneTimer;
-    --gCutsceneTimer = 0;
+    gCutsceneTimer = 0;
     soft_reset_camera(m.area.camera);
 end
 

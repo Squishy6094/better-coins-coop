@@ -53,73 +53,147 @@ romhackData = {
         },
         [LEVEL_BOB] = {
             [1] = {
-                masterCap = {x = -6700, y = 350, z = 4600, yaw = 0}
+                masterCap = {x = -6700, y = 350, z = 4600, yaw = 0x4000}
             }
         },
         [LEVEL_WF] = {
             [1] = {
-                masterCap = {x = 3000, y = 600, z = 4610, yaw = 0x4000}
+                masterCap = {x = 3000, y = 600, z = 4610, yaw = 0x8000}
             }
         },
         [LEVEL_CCM] = {
             [1] = {
-                masterCap = {x = -1350, y = 2900, z = -1600, yaw = 0x4000}
+                masterCap = {x = -1350, y = 2900, z = -1600, yaw = 0x8000}
             }
         },
         [LEVEL_JRB] = {
             [1] = {
-                masterCap = {x = -6800, y = 1500, z = -500, yaw = -0x2000}
+                masterCap = {x = -6800, y = 1500, z = -500, yaw = 0x2000}
             }
         },
         [LEVEL_SA] = {
             [1] = {
-                masterCap = {x = 800, y = -1800, z = 800, yaw = -0x2000}
+                masterCap = {x = 800, y = -1800, z = 800, yaw = 0x2000}
             }
         },
         [LEVEL_PSS] = {
             [1] = {
-                masterCap = {x = 5423, y = 6400, z = -4754, yaw = -0x4000}
+                masterCap = {x = 5423, y = 6400, z = -4754, yaw = 0}
             }
         },
         [LEVEL_TOTWC] = {
             [1] = {
-                masterCap = {x = 0, y = 2400, z = 0, yaw = 0}
+                masterCap = {x = 0, y = 2400, z = 0, yaw = 0x4000}
             }
         },
         [LEVEL_BITDW] = {
             [1] = {
-                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0}
+                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0x4000}
             }
+        },
+        [LEVEL_BOWSER_1] = {
+            levelMerge = LEVEL_BITDW
+        },
+
+        [LEVEL_LLL] = {
+            [1] = {
+                masterCap = {x = -2558, y = 500, z = 6278, yaw = 0x4000}
+            },
+        },
+        [LEVEL_SSL] = {
+            [1] = {
+                masterCap = {x = -400, y = 400, z = 6522, yaw = 0x4000}
+            },
+        },
+        [LEVEL_HMC] = {
+            [1] = {
+                masterCap = {x = -7346, y = 2425, z = 6923, yaw = 0x6000}
+            },
+        },
+        [LEVEL_DDD] = {
+            [1] = {
+                masterCap = {x = -3000, y = 200, z = 500, yaw = 0}
+            },
+        },
+        [LEVEL_COTMC] = {
+            [1] = {
+                masterCap = {x = -3400, y = 400, z = 10, yaw = 0x3D00}
+            },
+        },
+        [LEVEL_VCUTM] = {
+            [1] = {
+                masterCap = {x = -3276, y = 6134, z = -6143, yaw = -0x4000}
+            },
+        },
+        [LEVEL_WMOTR] = {
+            [1] = {
+                masterCap = {x = -355, y = 2069, z = -771, yaw = 0x2000}
+            },
+        },
+        [LEVEL_BOWSER_2] = {
+            levelMerge = LEVEL_BITFS
+        },
+
+        [LEVEL_SL] = {
+            [1] = {
+                masterCap = {x = 5500, y = 1400, z = 3000, yaw = 0x8000}
+            },
+        },
+        [LEVEL_WDW] = {
+            [1] = {
+                masterCap = {x = 4080, y = 400, z = -2048, yaw = 0x0000}
+            },
+        },
+        [LEVEL_TTM] = {
+            [1] = {
+                masterCap = {x = 4939, y = -3500, z = 5087, yaw = 0x4000}
+            },
+        },
+        [LEVEL_THI] = {
+            [1] = {
+                masterCap = {x = -5799, y = -2369, z = 7594, yaw = -0x4000, scale = 2}
+            },
+            [2] = {
+                masterCap = {x = -1716, y = -690, z = 2267, yaw = -0x4000, scale = 0.5}
+            },
+        },
+        [LEVEL_TTC] = {
+            [1] = {
+                masterCap = {x = 1068, y = -4422, z = -217, yaw = 0x6000}
+            },
+        },
+        [LEVEL_RR] = {
+            [1] = {
+                masterCap = {x = 2060, y = -1433, z = 2070, yaw = 0x4000}
+            },
         },
         [LEVEL_BITFS] = {
             [1] = {
-                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0}
+                masterCap = {x = -6280, y = -2400, z = 0, yaw = 0x4000}
             }
         },
+
         [LEVEL_BITS] = {
             [1] = {
-                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0}
+                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0x4000}
             }
         },
+        [LEVEL_BOWSER_3] = {
+            levelMerge = LEVEL_BITS
+        },
     },
-    --[[
     ["sm74"] = {
         starCount = 151,
         areaBasedLevels = false,
-        masterCapSpawns = {
-            [LEVEL_BOB] = {
-                --[1] = {x = -6700, y = 350, z = 4600},
+        [LEVEL_CASTLE_COURTYARD] = {
+            [1] = {
+                masterDoor = {x = 3708, y = -714, z = -1200, yaw = -0x2000},
+            },
+            [2] = {
+                masterDoor = {x = -3708, y = -765, z = -1200, yaw = 0x2000},
             },
         },
-        masterDoorSpawns = {
-            [LEVEL_CASTLE_COURTYARD] = {
-                [1] = {x = 3708, y = -714, z = -1200, yaw = -0x2000},
-                [2] = {x = -3708, y = -765, z = -1200, yaw = 0x2000},
-            },
-        },
-        scarecrowSpawns = {},
     },
-    ]]
 }
 
 if not romhackData[CURR_ROMHACK] then
@@ -229,7 +303,6 @@ end
 local function check_exclamation_box(bhvParams)
     local contents = get_exclamation_box_contents()
     local bhvParams2ndByte = (bhvParams >> 16) & 0xFF
-    --log_to_console(tostring(bhvParams2ndByte))
 
     for id, content in pairs(contents) do
         if content.id == bhvParams2ndByte and gStarBehaviors[content.behavior] then
@@ -301,7 +374,7 @@ gStarBehaviors = {
     [id_bhvUnagi] = function (bhvParams) return ((bhvParams >> 16) & 0xFF) == 1 end,
     [id_bhvToadMessage] = check_toad,
 
-    [id_bhvMips] = check_mips, -- how do i even check this he can appears multiple times..
+    [id_bhvMips] = check_mips,
 }
 
 -- Check for common custom behaviors
@@ -320,10 +393,6 @@ local function check_bhv_for_star(behavior, bhvParams)
     bhvParams = bhvParams or 0
 
     local result = gStarBehaviors[behavior](bhvParams, count)
-
-    if result then
-        --log_to_console(get_behavior_name_from_id(behavior) .. " - " .. tostring(result))
-    end
 
     if result == true then return 1 end
     if result == false or result == nil then return 0 end
