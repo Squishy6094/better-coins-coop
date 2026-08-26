@@ -243,8 +243,11 @@ function get_romhack_level_data(romhack, level, area)
             hackData[level] = {}
             break
         end
-    until hackData[level].levelMerge == nil
+    until hackData[level] == nil or hackData[level].levelMerge == nil
     if not hackData.areaBasedLevels then
+        if not hackData[level] then
+            hackData[level] = {}
+        end
         if not hackData[level][area] then
             hackData[level][area] = {}
         end
@@ -312,6 +315,7 @@ local function check_exclamation_box(bhvParams)
 end
 
 local function check_toad(bhvParams)
+
 
     local sStarDialogTable = {
         [gBehaviorValues.dialogs.ToadStar1Dialog] = true,
@@ -393,6 +397,9 @@ local function check_bhv_for_star(behavior, bhvParams)
     bhvParams = bhvParams or 0
 
     local result = gStarBehaviors[behavior](bhvParams, count)
+    if result and result ~= 0 then
+        log_to_console("      "..get_behavior_name_from_id(behavior).." - "..tostring(result))
+    end
 
     if result == true then return 1 end
     if result == false or result == nil then return 0 end
@@ -429,11 +436,13 @@ local function get_max_possible_stars()
     log_to_console("Better Coins: Running Star Parser...")
     local count = 0
     for i = 1, #sLevelTable do
-        local courseNum = get_level_course_num(sLevelTable[i])
-        local levelCollected = save_file_get_course_star_count(get_current_save_file_num() - 1, courseNum - 1)
-        local levelCount = get_all_possible_level_stars(sLevelTable[i])
-        count = count + levelCount
-        log_to_console("   "..i.. " - " .. get_level_name(courseNum, sLevelTable[i], 1) .. " - " .. tostring(levelCollected) .. "/" .. tostring(levelCount) .. " ("..tostring(count)..")", (levelCollected < levelCount) and CONSOLE_MESSAGE_WARNING or CONSOLE_MESSAGE_INFO)
+        if not (isRomhack and level_is_vanilla_level(i)) then
+            local courseNum = get_level_course_num(sLevelTable[i])
+            local levelCollected = save_file_get_course_star_count(get_current_save_file_num() - 1, courseNum - 1)
+            local levelCount = get_all_possible_level_stars(sLevelTable[i])
+            count = count + levelCount
+            log_to_console("   "..i.. " - " .. get_level_name(courseNum, sLevelTable[i], 1) .. " - " .. tostring(levelCollected) .. "/" .. tostring(levelCount) .. " ("..tostring(count)..")", (levelCollected < levelCount) and CONSOLE_MESSAGE_WARNING or CONSOLE_MESSAGE_INFO)
+        end
     end
 
     -- Account for slide stars
