@@ -60,8 +60,9 @@ local function bhv_coin_carry_loop(o)
     if not obj_can_interact_with_mario(m, o.parentObj) then
         local total, curr = count_carrier_objects(m, o)
         o.oFaceAngleYaw = lerp_s16(o.oFaceAngleYaw, 0x10000*((curr - 1)/math.max(total, 1)) + get_global_timer()*0x200, 0.08)
-        targetPos.x = targetPos.x + sins(o.oFaceAngleYaw)*250
-        targetPos.z = targetPos.z + coss(o.oFaceAngleYaw)*250
+        local ray = collision_find_surface_on_ray(targetPos.x, targetPos.y, targetPos.z, sins(o.oFaceAngleYaw)*(250 + o.parentObj.hitboxRadius), 0, coss(o.oFaceAngleYaw)*(250 + o.parentObj.hitboxRadius), 128)
+        targetPos.x = ray.hitPos.x - sins(o.oFaceAngleYaw)*(o.parentObj.hitboxRadius)
+        targetPos.z = ray.hitPos.z - coss(o.oFaceAngleYaw)*(o.parentObj.hitboxRadius)
         o.oForwardVel = math.min(o.oForwardVel, carrierMax)
         o.parentObj.oTimer = o.parentObj.oTimer - 1
         o.oAction = 1
