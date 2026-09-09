@@ -1,5 +1,5 @@
 -- name: Better Coins
--- description: Overhauls the coin collecting expirience to make 100 coin stars fun and satisfying to work towards\n\nMade by: Squishy6094
+-- description: Overhauls coin collecting in Super Mario 64 to make it satisfying and rewarding rather than a chore.\n\nMade by: Squishy6094\n\nGithub:\n\\#6666FF\\Squishy6094/better-coins-coop
 
 gLevelValues.previewBlueCoins = 1
 gLevelValues.respawnBlueCoinsSwitch = 1

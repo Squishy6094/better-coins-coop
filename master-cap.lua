@@ -959,8 +959,10 @@ local function master_cap_music_update(levelData)
     end
 end
 
+local queueUnpause = false
 local prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
 local prevFileProgress = save_file_get_flags()
+local skyboxLight = 0
 local function master_cap_update()
     local levelIndex, levelData = master_cap_get_level()
     local m = gMarioStates[0] ---@type MarioState
@@ -969,6 +971,18 @@ local function master_cap_update()
     local runActive = levelData ~= nil and levelData.runState == 1
 
     p.starExitAct = (m.action == ACT_STAR_DANCE_EXIT or m.action == ACT_JUMBO_STAR_CUTSCENE)
+
+    if gNetworkPlayers[0].currLevelNum == LEVEL_MASTER_CAP_STAGE then
+        skyboxLight = math.lerp(skyboxLight, levelData.runState == 1 and 255 or 0, 0.03) 
+        set_skybox_color(0, skyboxLight)
+        set_skybox_color(1, skyboxLight)
+        set_skybox_color(2, skyboxLight)
+    end
+
+    if queueUnpause then
+        game_unpause()
+        queueUnpause = false
+    end
 
     -- Check for Defeating Final Bowser
     if m.action == ACT_JUMBO_STAR_CUTSCENE or np.currLevelNum == LEVEL_ENDING then
@@ -1310,6 +1324,9 @@ end
 
 local function check_late_entry()
     if not master_cap_allowed() then return end
+    set_skybox_color(0, 255)
+    set_skybox_color(1, 255)
+    set_skybox_color(2, 255)
     gLevelValues.disableActs = true
     set_ttc_speed_setting(TTC_SPEED_STOPPED)
 
@@ -1332,7 +1349,12 @@ local function on_mods_loaded()
 end
 
 local function on_pause_exit()
+    local levelIndex, levelData = master_cap_get_level()
     gPlayerSyncTable[0].diedInRun = true
+    if levelData.runState == 1 then
+        queueUnpause = true
+        return false
+    end
 end
 
 hook_event(HOOK_ON_SYNC_VALID, on_sync)

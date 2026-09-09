@@ -1,5 +1,5 @@
 # Better Coins
- Overhauls the coin collecting expirience to make 100 coins stars fun and satisfying to work towards
+Overhauls coin collecting in Super Mario 64 to make it satisfying and rewarding rather than a chore.
 
 ## Vanilla Modifications / Quality of Life
 
@@ -18,3 +18,27 @@ A majority of object behaviors have been modified to either:
 After collecting all the stars, you're able to run the Master Cap Challenge!
 
 An arcade mini-mode with the goal to collect as many coins as you can while your cap still lasts, putting your knowlage of new and existing mechanics to the test!
+
+## Credits
+- Squishy6094
+    - Lead Developer
+- Shell_x33 
+    - Design Concepting
+    - Boo Coin Sprites
+- Blocky.cmd 
+    - Master Cap Block Model
+    - Level Script Parsing Base
+- ItsMamaMoon
+    - Pink Clouds Skybox
+- Squishy Workshop Community
+    - Active Playtesting and Feedback
+
+
+
+## Tools
+
+**Compiling Skybox:**
+In `/textures` run
+```
+./venv/bin/python ./convert_skybox.py
+```

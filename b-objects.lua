@@ -410,6 +410,10 @@ local function bhv_scarecrow_loop(o)
             o.oAction = 2
         end
     elseif o.oAction == 2 then -- Bounce Away from Mario
+        if not m then
+            o.oAction = 1
+            return
+        end
         if o.oHealth > 0 then
             o.oFaceAngleYaw = atan2s(o.oPosZ - m.pos.z, o.oPosX - m.pos.x) + 0x8000
         end
