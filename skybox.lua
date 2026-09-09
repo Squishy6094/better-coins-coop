@@ -9,11 +9,18 @@ for i = 0, 63 do
     replace["ccm_skybox_texture_000" .. hex] = get_texture_info("pink_cloud_sky." .. string.format("%02d", i))
 end
 
+local wasMasterCap = false
 local function replace_skybox()
     if gNetworkPlayers[0].currLevelNum == LEVEL_MASTER_CAP_STAGE then
         for name, tex in pairs(replace) do
             texture_override_set(name, tex)
         end
+        wasMasterCap = true
+    elseif wasMasterCap then
+        for name, _ in pairs(replace) do
+            texture_override_reset(name)
+        end
+        wasMasterCap = false
     end
 end
 
