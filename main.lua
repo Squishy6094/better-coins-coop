@@ -27,7 +27,7 @@ end
 local function mario_update_coin_range(m)
     gMarioCoinRange[m.playerIndex] = 400 + math.sqrt(m.vel.x^2 + m.vel.y^2 + m.vel.z^2)
     if m.flags & MARIO_METAL_CAP ~= 0 then
-        gMarioCoinRange[m.playerIndex] = gMarioCoinRange[m.playerIndex] * 3
+        gMarioCoinRange[m.playerIndex] = gMarioCoinRange[m.playerIndex] * 2
     end
     if m.action & (ACT_FLAG_FLYING | ACT_FLAG_SWIMMING | ACT_FLAG_RIDING_SHELL) ~= 0 then
         gMarioCoinRange[m.playerIndex] = gMarioCoinRange[m.playerIndex] * 1.25
