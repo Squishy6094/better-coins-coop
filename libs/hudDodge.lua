@@ -321,15 +321,15 @@ local function find_open_hud_space(x, y, w, h, weightX, weightY)
             if id ~= #hitboxList + 1 and hitbox.behind == isRenderBehind and (math.ceil(x/(sW/screenSegments)) == math.ceil(hitbox.x/(sW/screenSegments)) and math.ceil(y/(sH/screenSegments)) == math.ceil(hitbox.y/(sH/screenSegments))) then
                 if not overlapFound and rects_overlap(newX, newY, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h) then
                     overlapFound = true
-                    newX = math.lerp(newX, math.max(x, hitbox.x + hitbox.w + hitboxMarginX), weightX)
-                    newY = math.lerp(newY, math.max(y, hitbox.y + hitbox.h + hitboxMarginY), weightY)
+                    newX = math.lerp(newX, x <= sW*0.5 and math.max(x, hitbox.x + hitbox.w + hitboxMarginX) or math.min(x, hitbox.x - w - hitboxMarginX), weightX)
+                    newY = math.lerp(newY, y <= sH*0.5 and math.max(y, hitbox.y + hitbox.h + hitboxMarginY) or math.min(y, hitbox.y - h - hitboxMarginY), weightY)
                     goto skip
                 end
             end
         end
         ::skip::
     until not overlapFound
-    if newX - x > newY - y then
+    if math.abs(newX - x) > math.abs(newY - y) then
         x = newX
     else
         y = newY

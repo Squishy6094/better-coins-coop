@@ -86,8 +86,8 @@ local function coin_counter()
     local m = gMarioStates[0]
     local l = gLakituState
     djui_hud_set_resolution(RESOLUTION_N64)
-    local screenWidth = djui_hud_get_screen_width()
-    local screenHeight = djui_hud_get_screen_height()
+    local sW = djui_hud_get_screen_width()
+    local sH = djui_hud_get_screen_height()
 
     customCoinHudValue = math.min(math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.1)), m.numCoins)
     hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
