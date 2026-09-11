@@ -1,12 +1,17 @@
 -- Library for Making sure HUD elements don't overlap each other
+-- Made by: Squishy6094
 
-local HUD_HITBOXES_RENDER = false
+-- Renders Debugging HUD
+local HUD_DODGE_HITBOXES_RENDER = false
+-- Make Default HUD Elements spaced based on thier max value
+local HUD_DODGE_SAFE_DEFAULT = false
 
+djui_hud_set_resolution(RESOLUTION_N64)
 local hitboxMarginX = 2
 local hitboxMarginY = 4
-local screenMarginLeft = 22
-local screenMarginTop = 15
-local screenSegments = 4
+local screenMarginLeft = djui_hud_get_screen_width()*0.5
+local screenMarginTop = djui_hud_get_screen_height()*0.5
+local screenSegments = 3
 
 local prevHitboxList = {}
 local hitboxList = {}
@@ -23,6 +28,7 @@ _G.hud_dodge_queue_in_mod = function(value)
         prev_hud_dodge_queue_in_mod(value)
     end
 end
+_G.hudDodgeDebugRendering = false
 
 local function ceil_power(x)
     local p = 1
@@ -51,6 +57,7 @@ local function table_get_common_entry(list)
 end
 
 local function add_hitbox(x, y, w, h, inMod)
+    if _G.hudDodgeDebugRendering then return end
     inMod = inMod or 0
     if queueInMod > 0 then
         inMod = queueInModInternal and 1 or 2
@@ -89,24 +96,21 @@ local function reset_hitbox_list()
         add_hitbox(22, 15, 16, 16, false)
         local xW, xH = djui_hud_measure_text("*")
         add_hitbox(38, 15, xW, xH, false)
-        local cW, cH = djui_hud_measure_text(tostring(gLevelValues.maxLives))
+        local cW, cH = djui_hud_measure_text(tostring(HUD_DODGE_SAFE_DEFAULT and gLevelValues.maxLives or hud_get_value(HUD_DISPLAY_LIVES)))
         add_hitbox(54, 15, cW, cH, false)
     end
 
     -- coop hud elements
     if (showHud) then
         if (gLevelValues.hudCapTimer ~= 0) then
-            
-            
             local capFlags = m.flags & MARIO_SPECIAL_CAPS;
             if (capFlags ~= 0) then
-                
                 local capTimer = m.capTimer;
                 if (capTimer > 0) then
                     add_hitbox(22, 35, 16, 16, false)
                     local xW, xH = djui_hud_measure_text("*")
                     add_hitbox(38, 35, xW, xH, false)
-                    local cW, cH = djui_hud_measure_text("9999")
+                    local cW, cH = djui_hud_measure_text(tostring(HUD_DODGE_SAFE_DEFAULT and math.max(0x10000 / 30) or math.max(m.capTimer/30)))
                     add_hitbox(54, 35, cW, cH, false)
                 end
             end
@@ -146,7 +150,7 @@ local function reset_hitbox_list()
         add_hitbox(coinX, 15, 16, 16, false)
         local xW, xH = djui_hud_measure_text("*")
         add_hitbox(coinX + 17, 15, xW, xH, false)
-        local cW, cH = djui_hud_measure_text(tostring(gLevelValues.maxCoins))
+        local cW, cH = djui_hud_measure_text(tostring(HUD_DODGE_SAFE_DEFAULT and gLevelValues.maxCoins or hud_get_value(HUD_DISPLAY_COINS)))
         add_hitbox(coinX + 32, 15, cW, cH, false)
     end
 
@@ -163,7 +167,7 @@ local function reset_hitbox_list()
             local xW, xH = djui_hud_measure_text("*")
             add_hitbox(x + 17, 15, xW, xH, false)
         end
-        local cW, cH = djui_hud_measure_text(showX == 0 and "999" or "99")
+        local cW, cH = djui_hud_measure_text(tostring(HUD_DODGE_SAFE_DEFAULT and (showX == 0 and 999 or 99) or hud_get_value(HUD_DISPLAY_STARS)))
         add_hitbox(x + 19 + showX*14, 15, cW, cH, false)
     end
 
@@ -227,6 +231,8 @@ end
 local og_djui_hud_render_rect = djui_hud_render_rect
 local og_djui_hud_print_text = djui_hud_print_text
 local og_djui_hud_render_texture = djui_hud_render_texture
+local og_hud_render_power_meter = hud_render_power_meter
+local og_hud_render_power_meter_interpolated = hud_render_power_meter_interpolated
 
 _G.djui_hud_render_rect = function (x, y, w, h)
     local sW = djui_hud_get_screen_width()
@@ -249,6 +255,16 @@ _G.djui_hud_render_texture = function (tex, x, y, w, h)
     og_djui_hud_render_texture(tex, x, y, w, h)
 end
 
+_G.hud_render_power_meter = function (health, x, y, width, height)
+    add_hitbox(x, y, width, height)
+    og_hud_render_power_meter(health, x, y, width, height)
+end
+
+_G.hud_render_power_meter_interpolated = function (health, prevX, prevY, prevWidth, prevHeight, x, y, width, height)
+    add_hitbox(x, y, width, height)
+    og_hud_render_power_meter_interpolated(health, prevX, prevY, prevWidth, prevHeight, x, y, width, height)
+end
+
 local function hud_render_behind()
     isRenderBehind = false
 end
@@ -257,30 +273,41 @@ local function hud_render()
     djui_hud_set_resolution(RESOLUTION_N64)
     local sW = djui_hud_get_screen_width()
     local sH = djui_hud_get_screen_height()
-    screenMarginLeft = 22
-    screenMarginTop = 15
-    if HUD_HITBOXES_RENDER then
+    screenMarginLeft = sW*0.5
+    screenMarginTop = sH*0.5
+    _G.hudDodgeDebugRendering = true
+    if HUD_DODGE_HITBOXES_RENDER then
         djui_hud_set_color(0, 0, 0, 150)
         for i = 1, screenSegments - 1 do
-            og_djui_hud_render_rect(sW*(i/screenSegments), 0, 1, sH)
-            og_djui_hud_render_rect(0, sH*(i/screenSegments), sW, 1)
+            djui_hud_render_rect(sW*(i/screenSegments), 0, 1, sH)
+            djui_hud_render_rect(0, sH*(i/screenSegments), sW, 1)
         end
     end
+    _G.hudDodgeDebugRendering = false
     
+    djui_hud_set_font(FONT_SPECIAL)
     for id, hitbox in pairs(hitboxList) do
-        if HUD_HITBOXES_RENDER then
+        _G.hudDodgeDebugRendering = true
+        if HUD_DODGE_HITBOXES_RENDER then
             djui_hud_set_color((id)/2*255, (id + 1)/2*255, (id + 2)/2*255, 100)
-            og_djui_hud_render_rect(hitbox.x, hitbox.y, hitbox.w, hitbox.h)
-            djui_hud_set_color(255, 255, 255, 100)
-            og_djui_hud_print_text(tostring(id), hitbox.x, hitbox.y, 1)
+            djui_hud_render_rect(hitbox.x, hitbox.y, hitbox.w, hitbox.h)
+            djui_hud_set_color(0, 0, 0, 255)
+            djui_hud_print_text(tostring(id), hitbox.x, hitbox.y, 0.3)
         end
+        _G.hudDodgeDebugRendering = false
 
-        if hitbox.inMod == 0 and hitbox.behind then
+        if hitbox.inMod == 0 and hitbox.behind and hitbox.w > 8 and hitbox.h > 8 then
             if 1 == math.ceil(hitbox.x/(sW/screenSegments)) then
                 screenMarginTop = math.min(hitbox.y, screenMarginTop)
             end
             if 1 == math.ceil(hitbox.y/(sH/screenSegments)) then
                 screenMarginLeft = math.min(hitbox.x, screenMarginLeft)
+            end
+            if screenSegments == math.ceil(hitbox.x/(sW/screenSegments)) then
+                screenMarginTop = math.abs(math.max(hitbox.y + hitbox.h, sH - screenMarginTop) - sH)
+            end
+            if screenSegments == math.ceil(hitbox.y/(sH/screenSegments)) then
+                screenMarginLeft = math.abs(math.max(hitbox.x + hitbox.w, sW - screenMarginLeft) - sW)
             end
         end
     end
