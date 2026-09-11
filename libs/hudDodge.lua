@@ -11,8 +11,18 @@ local screenSegments = 4
 local prevHitboxList = {}
 local hitboxList = {}
 local isRenderBehind = true
+local queueInModInternal = false
+local queueInMod = 0
 
-local currModIndex = get_active_mod().index
+-- Shared so all instances of hud dodge know what's being used in hud dodge
+local prev_hud_dodge_queue_in_mod = hud_dodge_queue_in_mod
+_G.hud_dodge_queue_in_mod = function(value)
+    queueInMod = value
+    queueInModInternal = false
+    if prev_hud_dodge_queue_in_mod then
+        prev_hud_dodge_queue_in_mod(value)
+    end
+end
 
 local function ceil_power(x)
     local p = 1
@@ -41,8 +51,10 @@ local function table_get_common_entry(list)
 end
 
 local function add_hitbox(x, y, w, h, inMod)
-    if inMod == nil then
-        inMod = get_active_mod().index == (currModIndex)
+    inMod = inMod or 0
+    if queueInMod > 0 then
+        inMod = queueInModInternal and 1 or 2
+        queueInMod = queueInMod - 1
     end
     table.insert(hitboxList, {
         x = x,
@@ -263,7 +275,7 @@ local function hud_render()
             og_djui_hud_print_text(tostring(id), hitbox.x, hitbox.y, 1)
         end
 
-        if not hitbox.inMod then
+        if hitbox.inMod == 0 and hitbox.behind then
             if 1 == math.ceil(hitbox.x/(sW/screenSegments)) then
                 screenMarginTop = math.min(hitbox.y, screenMarginTop)
             end
@@ -272,8 +284,8 @@ local function hud_render()
             end
         end
     end
-    reset_hitbox_list()
     isRenderBehind = true
+    reset_hitbox_list()
 end
 
 hook_event(HOOK_ON_MODS_LOADED, function ()
@@ -304,9 +316,13 @@ end
 ---@param h integer Height of Hitbox
 ---@param weightX integer How much the hitbox with prefer moving horozontally
 ---@param weightY integer How much the hitbox with prefer moving vertically
-local function find_open_hud_space(x, y, w, h, weightX, weightY)
+---@param ignoreRenders integer How many of the next render calls to ignore while finding open HUD space (Default 1)
+local function find_open_hud_space(x, y, w, h, weightX, weightY, ignoreRenders)
     weightX = weightX or 1
     weightY = weightY or 1
+    ignoreRenders = math.max(ignoreRenders) or 1
+    hud_dodge_queue_in_mod(ignoreRenders)
+    queueInModInternal = true
     local sW = djui_hud_get_screen_width()
     local sH = djui_hud_get_screen_height()
     x = math.clamp(x, screenMarginLeft, sW - screenMarginLeft - w)
@@ -318,18 +334,18 @@ local function find_open_hud_space(x, y, w, h, weightX, weightY)
         local overlapFound = false
         for id, hitbox in ipairs(prevHitboxList) do
             -- Avoid accounting for the next rendered and not relevent
-            if id ~= #hitboxList + 1 and hitbox.behind == isRenderBehind and (math.ceil(x/(sW/screenSegments)) == math.ceil(hitbox.x/(sW/screenSegments)) and math.ceil(y/(sH/screenSegments)) == math.ceil(hitbox.y/(sH/screenSegments))) then
-                if not overlapFound and rects_overlap(newX, newY, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h) then
-                    overlapFound = true
+            if hitbox.inMod ~= 1 and hitbox.behind == isRenderBehind and (math.ceil(x/(sW/screenSegments)) == math.ceil(hitbox.x/(sW/screenSegments)) and math.ceil(y/(sH/screenSegments)) == math.ceil(hitbox.y/(sH/screenSegments))) then
+                if rects_overlap(newX, newY, w, h, hitbox.x, hitbox.y, hitbox.w, hitbox.h) then
                     newX = math.lerp(newX, x <= sW*0.5 and math.max(x, hitbox.x + hitbox.w + hitboxMarginX) or math.min(x, hitbox.x - w - hitboxMarginX), weightX)
                     newY = math.lerp(newY, y <= sH*0.5 and math.max(y, hitbox.y + hitbox.h + hitboxMarginY) or math.min(y, hitbox.y - h - hitboxMarginY), weightY)
+                    overlapFound = true
                     goto skip
                 end
             end
         end
         ::skip::
     until not overlapFound
-    if math.abs(newX - x) > math.abs(newY - y) then
+    if math.abs(newX - x) >= math.abs(newY - y) then
         x = newX
     else
         y = newY
