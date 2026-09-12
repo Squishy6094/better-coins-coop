@@ -15,10 +15,11 @@ local screenSegments = 3
 
 local prevHitboxList = {}
 local hitboxList = {}
+local debugFindList = {}
 local isRenderBehind = true
 local queueInModInternal = false
 local queueInMod = 0
-local queueInModGroup = 1
+local queueInModGroup = 0
 
 -- Shared so all instances of hud dodge know what's being used in hud dodge
 local prev_hud_dodge_queue_in_mod = hud_dodge_queue_in_mod
@@ -63,7 +64,6 @@ local function add_hitbox(x, y, w, h, inMod)
     if queueInMod > 0 then
         if queueInModInternal then
             inMod = queueInModGroup
-            queueInModGroup = queueInModGroup + 1
         else
             inMod = -1
         end
@@ -75,7 +75,6 @@ local function add_hitbox(x, y, w, h, inMod)
         w = w,
         h = h,
         inMod = inMod,
-        group = 0,
         behind = isRenderBehind,
     })
 end
@@ -84,9 +83,10 @@ local function reset_hitbox_list()
     local m = gMarioStates[0];
     local sW = djui_hud_get_screen_width() + 1
     local sH = djui_hud_get_screen_height()
-    queueInModGroup = 1
+    queueInModGroup = 0
     prevHitboxList = hitboxList
     hitboxList = {}
+    debugFindList = {}
 
     local showHud = (not djui_hud_is_pause_menu_created() and not hud_is_hidden());
     local hudDisplayFlags = hud_get_value(HUD_DISPLAY_FLAGS)
@@ -118,7 +118,7 @@ local function reset_hitbox_list()
                     add_hitbox(22, 35, 16, 16, false)
                     local xW, xH = djui_hud_measure_text("*")
                     add_hitbox(38, 35, xW, xH, false)
-                    local cW, cH = djui_hud_measure_text(tostring(HUD_DODGE_SAFE_DEFAULT and math.max(0x10000 / 30) or math.max(m.capTimer/30)))
+                    local cW, cH = djui_hud_measure_text(tostring(HUD_DODGE_SAFE_DEFAULT and math.ceil(0x10000 / 30) or math.ceil(m.capTimer/30)))
                     add_hitbox(54, 35, cW, cH, false)
                 end
             end
@@ -239,6 +239,7 @@ end
 local og_djui_hud_render_rect = djui_hud_render_rect
 local og_djui_hud_print_text = djui_hud_print_text
 local og_djui_hud_render_texture = djui_hud_render_texture
+local og_djui_hud_render_texture_tile = djui_hud_render_texture_tile
 local og_hud_render_power_meter = hud_render_power_meter
 local og_hud_render_power_meter_interpolated = hud_render_power_meter_interpolated
 
@@ -259,8 +260,13 @@ _G.djui_hud_print_text = function (message, x, y, scaleX, scaleY)
 end
 
 _G.djui_hud_render_texture = function (tex, x, y, w, h)
-    add_hitbox(x, y, w*tex.width, h*tex.width)
+    add_hitbox(x, y, w*tex.width, h*tex.height)
     og_djui_hud_render_texture(tex, x, y, w, h)
+end
+
+_G.djui_hud_render_texture_tile = function (tex, x, y, w, h, tX, tY, tW, tH)
+    add_hitbox(x, y, tex.width*(tW/tex.width), tex.height*(tH/tex.height))
+    og_djui_hud_render_texture_tile(tex, x, y, w, h, tX, tY, tW, tH)
 end
 
 _G.hud_render_power_meter = function (health, x, y, width, height)
@@ -301,24 +307,40 @@ local function hud_render()
             djui_hud_render_rect(hitbox.x, hitbox.y, hitbox.w, hitbox.h)
             djui_hud_set_color(0, 0, 0, 255)
             djui_hud_print_text(tostring(id), hitbox.x, hitbox.y, 0.3)
+            if hitbox.inMod ~= 0 then
+                local inModW, inModH = djui_hud_measure_text(tostring(hitbox.inMod))
+                djui_hud_print_text(tostring(hitbox.inMod), hitbox.x + hitbox.w - inModW*0.3, hitbox.y + hitbox.h - inModH*0.3, 0.3)
+            end
         end
         _G.hudDodgeDebugRendering = false
 
         if hitbox.inMod == 0 and hitbox.behind and hitbox.w > 8 and hitbox.h > 8 then
             if 1 == math.ceil(hitbox.x/(sW/screenSegments)) then
-                screenMarginTop = math.min(hitbox.y, screenMarginTop)
+                screenMarginTop = math.min(screenMarginTop, math.min(hitbox.y, screenMarginTop))
             end
             if 1 == math.ceil(hitbox.y/(sH/screenSegments)) then
-                screenMarginLeft = math.min(hitbox.x, screenMarginLeft)
+                screenMarginLeft = math.min(screenMarginLeft, math.min(hitbox.x, screenMarginLeft))
             end
             if screenSegments == math.ceil(hitbox.x/(sW/screenSegments)) then
-                screenMarginTop = math.abs(math.max(hitbox.y + hitbox.h, sH - screenMarginTop) - sH)
+                screenMarginTop = math.min(screenMarginTop, math.abs(math.max(hitbox.y + hitbox.h, sH - screenMarginTop) - sH))
             end
             if screenSegments == math.ceil(hitbox.y/(sH/screenSegments)) then
-                screenMarginLeft = math.abs(math.max(hitbox.x + hitbox.w, sW - screenMarginLeft) - sW)
+                screenMarginLeft = math.min(screenMarginLeft, math.abs(math.max(hitbox.x + hitbox.w, sW - screenMarginLeft) - sW))
             end
         end
     end
+
+    _G.hudDodgeDebugRendering = true
+    if HUD_DODGE_HITBOXES_RENDER then
+        for _, hitbox in pairs(debugFindList) do
+            djui_hud_set_color(255, 0, 0, 100)
+            djui_hud_render_line(hitbox.x, hitbox.y, hitbox.newX, hitbox.newY, 2)
+            djui_hud_set_rotation(0, 0, 0)
+            djui_hud_set_color(255, 127, 0, 100)
+            djui_hud_render_rect(hitbox.newX, hitbox.newY, hitbox.w, hitbox.h)
+        end
+    end
+    _G.hudDodgeDebugRendering = false
     isRenderBehind = true
     reset_hitbox_list()
 end
@@ -358,6 +380,20 @@ local function find_open_hud_space(x, y, w, h, weightX, weightY, ignoreRenders)
     ignoreRenders = math.max(ignoreRenders) or 1
     hud_dodge_queue_in_mod(ignoreRenders)
     queueInModInternal = true
+    queueInModGroup = queueInModGroup + 1
+
+    local debugData = nil
+    if HUD_DODGE_HITBOXES_RENDER then
+        debugData = {
+            x = x,
+            y = y,
+            w = w,
+            h = h,
+            newX = x,
+            newY = y,
+        }
+    end
+
     local sW = djui_hud_get_screen_width()
     local sH = djui_hud_get_screen_height()
     x = math.clamp(x, screenMarginLeft, sW - screenMarginLeft - w)
@@ -384,6 +420,11 @@ local function find_open_hud_space(x, y, w, h, weightX, weightY, ignoreRenders)
         x = newX
     else
         y = newY
+    end
+    if HUD_DODGE_HITBOXES_RENDER then
+        debugData.newX = x
+        debugData.newY = y
+        table.insert(debugFindList, debugData)
     end
     return x, y
 end
