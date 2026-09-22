@@ -1,3 +1,5 @@
+LEVEL_MASTER_CAP_STAGE = level_register("level_master_cap_stage_entry", COURSE_MAX, "Master Cap in Paradise", "master_cap_stage", 28000, 0x28, 0x28, 0x28)
+
 CURR_ROMHACK = "sm64"
 GAMEMODE_ACTIVE = false
 
@@ -5,7 +7,7 @@ for i in pairs(gActiveMods) do
     local mod = gActiveMods[i]
     if mod.incompatible ~= nil then
         if mod.incompatible:find("romhack") then
-            CURR_ROMHACK = mod.relativePath
+            CURR_ROMHACK = mod.name
         end
         if mod.incompatible:find("gamemode") then
             GAMEMODE_ACTIVE = true
@@ -13,22 +15,27 @@ for i in pairs(gActiveMods) do
     end
     if mod.category ~= nil then
         if mod.category:find("romhack") then
-            CURR_ROMHACK = mod.relativePath
+            CURR_ROMHACK = mod.name
         end
         if mod.category:find("gamemode") then
             GAMEMODE_ACTIVE = true
         end
     end
-    CURR_ROMHACK = CURR_ROMHACK:gsub("[/\\]+$", "")
-    CURR_ROMHACK = CURR_ROMHACK:gsub(".*[/\\]", "")
+    CURR_ROMHACK = CURR_ROMHACK:gsub("\\(.-)\\", "")
     CURR_ROMHACK = CURR_ROMHACK:gsub(" ", "-")
     CURR_ROMHACK = string.lower(CURR_ROMHACK)
 end
 
 romhackData = {
+    ["better-coins"] = {
+        [LEVEL_MASTER_CAP_STAGE] = {
+            [1] = {
+                masterCap = {x = -6700, y = 400, z = -900, yaw = 0x4000}
+            }
+        }
+    },
     ["sm64"] = {
         starCount = 120,
-        areaBasedLevels = false,
         [LEVEL_CASTLE_GROUNDS] = {
             [1] = {
                 masterCap = 0,
@@ -182,9 +189,8 @@ romhackData = {
             levelMerge = LEVEL_BITS
         },
     },
-    ["sm74"] = {
+    ["super-mario-74-(+ee)"] = {
         starCount = 151,
-        areaBasedLevels = false,
         [LEVEL_CASTLE_COURTYARD] = {
             [1] = {
                 masterDoor = {x = 3708, y = -714, z = -1200, yaw = -0x2000},
@@ -199,7 +205,6 @@ romhackData = {
 if not romhackData[CURR_ROMHACK] then
     romhackData[CURR_ROMHACK] = {
         starCount = -1,
-        areaBasedLevels = false,
         [LEVEL_CASTLE_GROUNDS] = {},
         [LEVEL_CASTLE] = {},
         [LEVEL_CASTLE_COURTYARD] = {},
@@ -228,31 +233,40 @@ end
 
 function get_romhack_data(romhack)
     romhack = romhack or CURR_ROMHACK
-    return romhackData[romhack]
+    return romhack, romhackData[romhack]
 end
 
-function get_romhack_level_data(romhack, level, area)
-    local hackData = get_romhack_data(romhack)
-    local level = hackData.areaBasedLevels and level*7 + area or level
+---@param level integer
+---@param area integer
+---@return string, table, integer
+function get_romhack_level_data(level, area)
+    local hackName, hackData = get_romhack_data()
     repeat
         if hackData[level] then
             if hackData[level].levelMerge then
                 level = hackData[level].levelMerge
             end
         else
+            if level > LEVEL_COUNT then
+                for otherHackName, otherHackData in pairs(romhackData) do
+                    if otherHackData[level] then
+                        hackName = otherHackName
+                        hackData = otherHackData
+                    end
+                end
+            end
+
             hackData[level] = {}
             break
         end
     until hackData[level] == nil or hackData[level].levelMerge == nil
-    if not hackData.areaBasedLevels then
-        if not hackData[level] then
-            hackData[level] = {}
-        end
-        if not hackData[level][area] then
-            hackData[level][area] = {}
-        end
+    if not hackData[level] then
+        hackData[level] = {}
     end
-    return hackData.areaBasedLevels and hackData[level] or hackData[level][area], level
+    if not hackData[level][area] then
+        hackData[level][area] = {}
+    end
+    return hackName, hackData[level][area], level
 end
 
 --------------------------

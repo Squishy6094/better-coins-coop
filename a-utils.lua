@@ -352,3 +352,28 @@ function obj_get_nearest_object(o)
     end
     return closestObj;
 end
+
+---@param levelname string
+function string_abbriviate(levelname)
+	local s = ''
+	local space = true
+	-- Check for if levels actually have the 2d format like "1-2 Mushroom Caverns"
+	_, _, format_name = string.find(levelname, "^(%d-%d)")
+	if format_name then
+		return levelname:sub(1,3)
+	end
+	-- Otherwise abbriviate level name
+	for i = 1, #levelname do
+		local c = levelname:sub(i,i)
+		if space then
+			if i ~= 1 or string.lower(levelname:sub(1,4)) ~= "the " then
+				s = s..string.upper(c)
+			end
+			space = false
+		end
+		if c == " " or c == "-" then
+			space = true
+		end
+	end
+	return s
+end

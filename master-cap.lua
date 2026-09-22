@@ -1,5 +1,3 @@
-LEVEL_MASTER_CAP_STAGE = level_register("level_master_cap_stage_entry", COURSE_MAX, "Master Cap in Paradise", "master_cap_stage", 28000, 0x28, 0x28, 0x28)
-
 local MUSIC_MASTER_CAP = audio_stream_load("music-master-cap.ogg")
 local MUSIC_MASTER_CAP_END = audio_stream_load("music-master-cap-end.ogg")
 
@@ -53,14 +51,10 @@ function master_cap_allowed(ignoreSwitch)
     return reasons == "", string.sub(reasons, 1, -3)
 end
 
-local modLevelCount = {
-    [CURR_ROMHACK] = LEVEL_COUNT
-}
-
 function master_cap_get_merged_level_num(levelNum, areaNum)
     levelNum = levelNum or gNetworkPlayers[0].currLevelNum
     areaNum = areaNum or gNetworkPlayers[0].currAreaIndex
-    local levelData, mergedLevelNum = get_romhack_level_data(nil, levelNum, areaNum)
+    local _, levelData, mergedLevelNum = get_romhack_level_data(levelNum, areaNum)
     return levelData.masterCap ~= 0 and mergedLevelNum or -1
 end
 
@@ -73,21 +67,18 @@ end
 -- Gets the current Index and Level Data for the current area
 function master_cap_get_level(index)
     index = index or 0
-    local levelIndex = master_cap_get_merged_player_level_num(index) or -1
-    if not gMasterCapServerState[levelIndex] then
-        master_cap_init_level(levelIndex)
+    local levelNum = master_cap_get_merged_player_level_num(index)
+    if not gMasterCapServerState[levelNum] then
+        master_cap_init_level(levelNum)
     end
-    return levelIndex, gMasterCapServerState[levelIndex]
+    return levelNum, gMasterCapServerState[levelNum]
 end
-
-local recordPrefixCoins = "bestCoins"
-local recordPrefixTime = "bestTime"
 
 gMasterCapServerState = {
     [-1] = {
         levelName = "Dummy",
         romhack = CURR_ROMHACK,
-        saveLevelNum = -1,
+        save = "dummy",
         runState = 0,
         newRecord = false,
         capTimer = 0,
@@ -98,22 +89,14 @@ gMasterCapServerState = {
     }
 }
 
-function master_cap_init_level(levelIndex)
-    local hackData = get_romhack_data()
-    local romhack = CURR_ROMHACK
-    local saveLevelIndex = levelIndex
-    if levelIndex >= LEVEL_COUNT then
-        --romhack = get_active_mod().relativePath:gsub("[/\\]+$", ""):gsub(".*[/\\]", "")
-        modLevelCount[romhack] = (modLevelCount[romhack] or 0) + 1
-        saveLevelIndex = modLevelCount[romhack]
-    end
-    
-    local levelNum = hackData.areaIndexed and math.floor(levelIndex/7) or levelIndex
-    local areaNum = hackData.areaIndexed and levelIndex%7 + 1 or 1
-    gMasterCapServerState[levelIndex] = {
-        levelName = get_level_name(get_level_course_num(levelNum), levelNum, areaNum),
-        romhack = romhack,
-        saveLevelNum = saveLevelIndex,
+function master_cap_init_level(levelNum)
+    local hackName, hackData = get_romhack_level_data(levelNum, 1)
+    local levelName = get_level_name(get_level_course_num(levelNum), levelNum, 1)
+    local save = hackName..string_abbriviate(levelName)
+    gMasterCapServerState[levelNum] = {
+        levelName = levelName,
+        romhack = hackName,
+        save = save,
         runState = 0,
         newRecord = false,
         capTimer = 0,
@@ -124,30 +107,27 @@ function master_cap_init_level(levelIndex)
     }
     
     if network_is_server() then
-        local level = tostring(saveLevelIndex)
-        local coinSave = romhack .. recordPrefixCoins .. level
-        local timeSave = romhack .. recordPrefixTime .. level
+        local coinSave = save.."coins"
+        local timeSave = save.."time"
         gGlobalSyncTable[coinSave] = mod_storage_load_number(coinSave, 0)
         gGlobalSyncTable[timeSave] = mod_storage_load_number(timeSave, 0)
     end
 end
 
-function master_cap_data_exists(levelIndex)
-    return gMasterCapServerState[levelIndex] ~= nil
+function master_cap_data_exists(levelNum)
+    return gMasterCapServerState[levelNum] ~= nil
 end
 
-function master_cap_get_record(levelIndex)
-    levelIndex = levelIndex or master_cap_get_level()
-    local levelData = gMasterCapServerState[levelIndex]
-    local coinSave = levelData.romhack .. recordPrefixCoins .. tostring(levelData.saveLevelNum)
-    local timeSave = levelData.romhack .. recordPrefixTime .. tostring(levelData.saveLevelNum)
-    return gGlobalSyncTable[coinSave] or 0, gGlobalSyncTable[timeSave] or 0
+function master_cap_get_record(levelNum)
+    levelNum = levelNum or master_cap_get_level()
+    local levelData = gMasterCapServerState[levelNum]
+    return gGlobalSyncTable[levelData.save.."coins"] or 0, gGlobalSyncTable[levelData.save.."time"] or 0
 end
 
-function master_cap_set_record(levelIndex, coins, time)
-    local levelData = gMasterCapServerState[levelIndex]
-    local coinSave = levelData.romhack .. recordPrefixCoins .. tostring(levelData.saveLevelNum)
-    local timeSave = levelData.romhack .. recordPrefixTime .. tostring(levelData.saveLevelNum)
+function master_cap_set_record(levelNum, coins, time)
+    local levelData = gMasterCapServerState[levelNum]
+    local coinSave = levelData.save.."coins"
+    local timeSave = levelData.save.."time"
     gGlobalSyncTable[coinSave] = coins
     gGlobalSyncTable[timeSave] = time
     mod_storage_save(coinSave, tostring(math.round(coins)))
@@ -155,10 +135,10 @@ function master_cap_set_record(levelIndex, coins, time)
 end
 
 ---@param m MarioState
-function mario_master_cap_active(m, levelIndex)
-    levelIndex = levelIndex or master_cap_get_level()
-    local levelData = gMasterCapServerState[levelIndex]
-    if levelIndex ~= master_cap_get_level(m.playerIndex) then return false end
+function mario_master_cap_active(m, levelNum)
+    levelNum = levelNum or master_cap_get_level()
+    local levelData = gMasterCapServerState[levelNum]
+    if levelNum ~= master_cap_get_level(m.playerIndex) then return false end
     return levelData.runState == 1 and not gPlayerSyncTable[m.playerIndex].diedInRun
 end
 
@@ -181,9 +161,9 @@ local PACKET_TYPE_MASTER_CAP_UPDATE = 4
 local PACKET_TYPE_MASTER_CAP_SCARECROW = 5
 local PACKET_TYPE_MASTER_CAP_LEVEL_RESET = 6
 local PACKET_TYPE_MASTER_CAP_SWITCH_PRESS = 7
-function master_cap_start_course(levelIndex, noSync)
-    levelIndex = levelIndex or master_cap_get_level()
-    local levelData = gMasterCapServerState[levelIndex]
+function master_cap_start_course(levelNum, noSync)
+    levelNum = levelNum or master_cap_get_level()
+    local levelData = gMasterCapServerState[levelNum]
     masterCapMusicFreq = 1
 
     levelData.runState = 1
@@ -200,13 +180,13 @@ function master_cap_start_course(levelIndex, noSync)
     if not noSync then
         network_send(true, {
             packetType = PACKET_TYPE_MASTER_CAP_START,
-            levelIndex = levelIndex,
+            levelNum = levelNum,
         })
     end
 end
 
-function master_cap_stop_course(levelIndex, newRecord, coinTimer, noSync)
-    local levelData = gMasterCapServerState[levelIndex]
+function master_cap_stop_course(levelNum, newRecord, coinTimer, noSync)
+    local levelData = gMasterCapServerState[levelNum]
 
     levelData.capTimer = 0
     levelData.runState = 2
@@ -218,38 +198,38 @@ function master_cap_stop_course(levelIndex, newRecord, coinTimer, noSync)
     end
 
     if network_is_server() then
-        local saveCoins, saveTime = master_cap_get_record(levelIndex)
+        local saveCoins, saveTime = master_cap_get_record(levelNum)
         local currCoins = levelData.coins
         local currTime = levelData.coinTimer or 0
         if currCoins > 0 and
         currCoins > saveCoins or
         (currCoins == saveCoins and
         currTime < saveTime) then
-            master_cap_set_record(levelIndex, currCoins, currTime)
+            master_cap_set_record(levelNum, currCoins, currTime)
             levelData.newRecord = true
             newRecord = true
         end
     end
 
-    if levelIndex == master_cap_get_merged_level_num() then
+    if levelNum == master_cap_get_merged_level_num() then
         set_mario_finished_master_cap(gMarioStates[0])
     end
 
     if not noSync then
         network_send(true, {
             packetType = PACKET_TYPE_MASTER_CAP_STOP,
-            levelIndex = levelIndex,
+            levelNum = levelNum,
             newRecord = newRecord,
             coinTimer = levelData.coinTimer,
         })
     end
 end
 
-function master_cap_add_coin(levelIndex, value, index)
-    levelIndex = levelIndex or master_cap_get_level(index)
-    local levelData = gMasterCapServerState[levelIndex]
+function master_cap_add_coin(levelNum, value, index)
+    levelNum = levelNum or master_cap_get_level(index)
+    local levelData = gMasterCapServerState[levelNum]
 
-    levelData.capTimer = levelData.capTimer + value*30*(gPlayerSyncTable[index or 0].coinDensity)*(1/(network_player_master_cap_count(levelIndex)*0.5 + 0.5))
+    levelData.capTimer = levelData.capTimer + value*30*(gPlayerSyncTable[index or 0].coinDensity)*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5))
     levelData.coins = math.clamp(levelData.coins + value, 0, 999)
 
     if network_is_server() then
@@ -260,7 +240,7 @@ function master_cap_add_coin(levelIndex, value, index)
         network_send(true, {
             packetType = PACKET_TYPE_MASTER_CAP_COIN,
             index = network_global_index_from_local(0),
-            levelIndex = levelIndex,
+            levelNum = levelNum,
             coinsAdd = value,
         })
     end
@@ -312,14 +292,14 @@ end
 --local function update_master_cap_courses 
 
 local function on_packet_recieve(data)
-    local levelIndex = data.levelIndex 
-    local levelData = gMasterCapServerState[levelIndex]
+    local levelNum = data.levelNum 
+    local levelData = gMasterCapServerState[levelNum]
     if data.packetType == PACKET_TYPE_MASTER_CAP_START then
-        master_cap_start_course(levelIndex, true)
+        master_cap_start_course(levelNum, true)
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_STOP then
-        master_cap_stop_course(levelIndex, data.newRecord, data.coinTimer, true)
+        master_cap_stop_course(levelNum, data.newRecord, data.coinTimer, true)
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_COIN then
-        master_cap_add_coin(levelIndex, data.coinsAdd, network_local_index_from_global(data.index))
+        master_cap_add_coin(levelNum, data.coinsAdd, network_local_index_from_global(data.index))
     elseif data.packetType == PACKET_TYPE_MASTER_CAP_UPDATE then
         levelData.capTimer = data.capTimer
         levelData.runState = data.runState -- Hopefully fix Mel Bug
@@ -356,8 +336,8 @@ end
 local function act_master_cap_results(m)
     if not m then return end
     local pA = sPrevAct[m.playerIndex]
-    local levelIndex = master_cap_get_merged_player_level_num(m.playerIndex)
-    local levelData = gMasterCapServerState[levelIndex]
+    local levelNum = master_cap_get_merged_player_level_num(m.playerIndex)
+    local levelData = gMasterCapServerState[levelNum]
     local masterCapCoins = levelData.coins
     local masterCapCoinTimer = levelData.coinTimer
     m.marioObj.header.gfx.animInfo.animFrame = pA.prevActionAnimFrame or 0
@@ -418,8 +398,8 @@ local E_MODEL_MASTER_CAP = smlua_model_util_get_id("master_box_geo")
 
 local function act_master_cap_bubbled(m)
     if not m then return end
-    local levelIndex = master_cap_get_merged_player_level_num(m.playerIndex)
-    local levelData = gMasterCapServerState[levelIndex]
+    local levelNum = master_cap_get_merged_player_level_num(m.playerIndex)
+    local levelData = gMasterCapServerState[levelNum]
     if (m.playerIndex == 0 and m.area.camera.mode == CAMERA_MODE_WATER_SURFACE) then
         set_camera_mode(m.area.camera, CAMERA_MODE_FREE_ROAM, 1);
     end
@@ -452,8 +432,6 @@ local function act_master_cap_bubbled(m)
     m.heldByObj = nil;
     local nearestObj = obj_get_nearest_object(m.marioObj)
     m.marioObj.oIntangibleTimer = (nearestObj and nearestObj.oInteractType == INTERACT_WARP) and 0 or -1;
-    djui_chat_message_create(get_behavior_name_from_id(get_id_from_behavior(nearestObj.behavior)))
-    djui_chat_message_create(tostring(m.marioObj.oIntangibleTimer))
     m.visibleToObjects = false
     m.squishTimer = 0;
     m.bounceSquishTimer = 0;
@@ -645,18 +623,12 @@ end
 function master_cap_get_spawn(spawnName, spawnFunc, level, area)
     level = level or gNetworkPlayers[0].currLevelNum
     area = area or gNetworkPlayers[0].currAreaIndex
-    local levelData = get_romhack_level_data(nil, level, area)
+    local _, levelData = get_romhack_level_data(level, area)
     if not levelData[spawnName] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area and spawnFunc then
         levelData[spawnName] = spawnFunc()
     end
     return levelData[spawnName]
 end
-
-get_romhack_data()[LEVEL_MASTER_CAP_STAGE] = {
-    [1] = {
-        masterCap = {x = -6700, y = 400, z = -900, yaw = 0x4000}
-    }
-}
 
 local function find_master_door_spawn_position()
     local m = gMarioStates[0] ---@type MarioState
@@ -809,7 +781,7 @@ local prevCoinsBest = 0
 local prevTimeBest = 0
 local function on_sync()
     if not master_cap_allowed(true) then return end
-    local levelIndex, levelData = master_cap_get_level()
+    local levelNum, levelData = master_cap_get_level()
     local hackData = get_romhack_data()
 
     if master_cap_allowed() then
@@ -819,7 +791,7 @@ local function on_sync()
 
     local np = gNetworkPlayers[0]
 
-    prevCoinsBest, prevTimeBest = master_cap_get_record(levelIndex)
+    prevCoinsBest, prevTimeBest = master_cap_get_record(levelNum)
 
     -- Count Coin Density for area
     gPlayerSyncTable[0].coinDensity = 1
@@ -856,10 +828,11 @@ local function on_sync()
     local areaNum = gNetworkPlayers[0].currAreaIndex
 
     local doorSpawnsExist = false
-    for _, levelData in pairs(get_romhack_data()) do
-        if type(levelData) == "table" then
+    local _, hackData = get_romhack_data()
+    for _, hackLevelData in pairs(hackData) do
+        if type(hackLevelData) == "table" then
             for i = 1, 7 do
-                if levelData[i] and levelData[i].masterDoor then
+                if hackLevelData[i] and hackLevelData[i].masterDoor then
                     doorSpawnsExist = true
                     break
                 end
@@ -876,7 +849,8 @@ local function on_sync()
     end
 
     -- Spawn Door
-    if not doorCheck and not doorSpawnsExist or (get_romhack_level_data(nil, levelNum, areaNum).masterDoor) then
+    local _, hackLevelData, levelNum = get_romhack_level_data(levelNum, areaNum)
+    if not doorCheck and not doorSpawnsExist or (hackLevelData.masterDoor) then
         local masterDoorSpawn = master_cap_get_spawn("masterDoor", find_master_door_spawn_position, levelNum, areaNum)
         spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
             o.oFaceAnglePitch = 0
@@ -891,7 +865,7 @@ local function on_sync()
     end
     
     -- Spawn Cap
-    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelIndex ~= -1 or (get_romhack_level_data(nil, levelNum, areaNum).masterCap ~= 0)) then
+    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelNum ~= -1 and hackLevelData.masterCap ~= 0) then
         --if master_cap_data_exists(levelNum) then return end
         if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
         if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
@@ -964,7 +938,7 @@ local prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
 local prevFileProgress = save_file_get_flags()
 local skyboxLight = 0
 local function master_cap_update()
-    local levelIndex, levelData = master_cap_get_level()
+    local levelNum, levelData = master_cap_get_level()
     local m = gMarioStates[0] ---@type MarioState
     local p = gPlayerSyncTable[0]
     local np = gNetworkPlayers[0]
@@ -1102,24 +1076,25 @@ local function master_cap_update()
 
     -- Ensure there's a master cap table to push info to
     for pI = 0, MAX_PLAYERS - 1 do
-        local levelIndex, levelData = master_cap_get_level(pI)
-        if levelIndex ~= -1 and not levelData then
-            master_cap_init_level(levelIndex)
+        local levelNum, levelData = master_cap_get_level(pI)
+        if levelNum ~= -1 and not levelData then
+            master_cap_init_level(levelNum)
         end
     end
 
     if network_is_server() then
         -- Update All Levels' Runs
-        for levelIndex, levelData in pairs(gMasterCapServerState) do
+        for levelNum, levelData in pairs(gMasterCapServerState) do
+            --djui_chat_message_create(tostring(levelNum))
             if levelData.runState == 1 then
                 if levelData.coins >= 999 then
-                    master_cap_stop_course(levelIndex)
+                    master_cap_stop_course(levelNum)
                 end
                 if levelData.coins >= gLevelValues.coinsRequiredForCoinStar*1.5 then
                     if not levelData.spawnedScarecrow then
                         local targetIndex = 0
                         for pI = 0, MAX_PLAYERS - 1 do
-                            if levelIndex == master_cap_get_level(pI) then
+                            if levelNum == master_cap_get_level(pI) then
                                 targetIndex = pI
                                 break
                             end
@@ -1143,15 +1118,15 @@ local function master_cap_update()
                         levelData.capTimer = levelData.capTimer - 1
                     end
 
-                    if network_player_master_cap_count(levelIndex) == 0 then
+                    if network_player_master_cap_count(levelNum) == 0 then
                         levelData.stallNoPlayers = levelData.stallNoPlayers + 1
                         
                         if levelData.stallNoPlayers > 30 then
-                            master_cap_stop_course(levelIndex)
+                            master_cap_stop_course(levelNum)
                             local isRecord = levelData.newRecord
                             local noOneInLevel = true
                             for pI = 0, MAX_PLAYERS - 1 do
-                                if levelIndex == master_cap_get_level(pI) then
+                                if levelNum == master_cap_get_level(pI) then
                                     noOneInLevel = false
                                 end
                             end
@@ -1166,20 +1141,20 @@ local function master_cap_update()
                         levelData.stallNoPlayers = 0
                     end
                 else
-                    master_cap_stop_course(levelIndex)
+                    master_cap_stop_course(levelNum)
                 end
 
                 for pI = 0, MAX_PLAYERS - 1 do
                     local m = gMarioStates[pI]
-                    if mario_master_cap_active(m, levelIndex) and gPlayerSyncTable[pI].starExitAct then
-                        master_cap_stop_course(levelIndex)
+                    if mario_master_cap_active(m, levelNum) and gPlayerSyncTable[pI].starExitAct then
+                        master_cap_stop_course(levelNum)
                     end
                 end
 
                 if levelData.capTimer%30 == 0 then
                     network_send(false, {
                         packetType = PACKET_TYPE_MASTER_CAP_UPDATE,
-                        levelIndex = levelIndex,
+                        levelNum = levelNum,
                         capTimer = levelData.capTimer,
                         runState = levelData.runState,
                     })
@@ -1189,16 +1164,16 @@ local function master_cap_update()
             elseif levelData.runState == 2 then
                 local noOneInLevel = true
                 for pI = 0, MAX_PLAYERS - 1 do
-                    if levelIndex == master_cap_get_level(pI) then
+                    if levelNum == master_cap_get_level(pI) then
                         noOneInLevel = false
                     end
                 end
                 if noOneInLevel then
-                    log_to_console("Better Coins: Master Cap / Level" .. tostring(levelIndex) .. " - Setting Run State to 0")
+                    log_to_console("Better Coins: Master Cap / Level" .. tostring(levelNum) .. " - Setting Run State to 0")
                     levelData.runState = 0
                     network_send(true, {
                         packetType = PACKET_TYPE_MASTER_CAP_LEVEL_RESET,
-                        levelIndex = levelIndex,
+                        levelNum = levelNum,
                     })
                 end
             end
@@ -1221,7 +1196,7 @@ local TEXT_ENDING_RUN = "ENDING RUN EARLY..."
 local TEXT_GIVING_UP = "GIVING UP..."
 local function master_cap_render()
     local m = gMarioStates[0]
-    local levelIndex, levelData = master_cap_get_level()
+    local levelNum, levelData = master_cap_get_level()
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
@@ -1302,7 +1277,7 @@ end
 
 local function on_death()
     local m = gMarioStates[0]
-    local levelIndex, levelData = master_cap_get_level()
+    local levelNum, levelData = master_cap_get_level()
     if levelData.runState == 1 then
         set_mario_finished_master_cap(m)
         return false
@@ -1314,7 +1289,7 @@ local function allow_force_water_interaction(m, water)
 end
 
 local function easier_mario_viewing_expirience(m)
-    local levelIndex, levelData = master_cap_get_level()
+    local levelNum, levelData = master_cap_get_level()
     if levelData.runState == 1 then
         local bodyState = m.marioBodyState
         m.fadeWarpOpacity = 245
@@ -1342,14 +1317,14 @@ local function on_mods_loaded()
     -- Block Character Select from Opening Mid-Run
     if _G.charSelectExists then
         _G.charSelect.hook_allow_menu_open(function ()
-            local levelIndex, levelData = master_cap_get_level()
+            local levelNum, levelData = master_cap_get_level()
             return not levelData.runState ~= 1
         end)
     end
 end
 
 local function on_pause_exit()
-    local levelIndex, levelData = master_cap_get_level()
+    local levelNum, levelData = master_cap_get_level()
     gPlayerSyncTable[0].diedInRun = true
     if levelData.runState == 1 then
         queueUnpause = true
@@ -1357,6 +1332,34 @@ local function on_pause_exit()
     end
 end
 
+
+local skyboxReplace = {}
+
+for i = 0, 63 do
+    local hex = num_to_hex(i)
+    hex = string.sub(hex, 3, #hex)
+    if #hex < 2 then
+        hex = "0"..hex
+    end
+    skyboxReplace["ccm_skybox_texture_000" .. hex] = get_texture_info("pink_cloud_sky." .. string.format("%02d", i))
+end
+
+local wasMasterCap = false
+local function replace_skybox()
+    if gNetworkPlayers[0].currLevelNum == LEVEL_MASTER_CAP_STAGE then
+        for name, tex in pairs(skyboxReplace) do
+            texture_override_set(name, tex)
+        end
+        wasMasterCap = true
+    elseif wasMasterCap then
+        for name, _ in pairs(skyboxReplace) do
+            texture_override_reset(name)
+        end
+        wasMasterCap = false
+    end
+end
+
+hook_event(HOOK_ON_LEVEL_INIT, replace_skybox)
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)

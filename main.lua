@@ -269,17 +269,9 @@ hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
 hook_event(HOOK_ON_SYNC_VALID, courtyard_secret)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
 
-local commands = {
-    ["master-cap"] = {
-        desc = "Toggle if Master Cap is allowed to appear.",
-        function()
-        end,
-    },
-
-}
-
 local function chat_command(msg)
     local moderator = network_is_server() or network_is_moderator()
+    msg = string.lower(msg)
     local msgSplit = string_split(msg)
 
     if msgSplit[1] == "master-cap" then
