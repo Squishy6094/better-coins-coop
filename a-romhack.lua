@@ -269,11 +269,17 @@ function get_romhack_level_data(level, area)
     return hackName, hackData[level][area], level
 end
 
+function set_romhack_data(romhack, hackData)
+    romhack = romhack or CURR_ROMHACK
+    romhackData[romhack] = hackData
+    on_mods_loaded()
+end
+
 --------------------------
 -- Romhack Star Counter --
 --------------------------
 
-local function on_mods_loaded()
+function on_mods_loaded()
 
 local sLevelTable = {
     LEVEL_BBH,

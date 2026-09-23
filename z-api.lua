@@ -6,10 +6,12 @@ end
 
 _G.betterCoins = {
     get_romhack_data = get_romhack_data,
+    set_romhack_data = set_romhack_data,
 
     bhv_init_for_magnitize = bhv_init_for_magnitize,
     bhv_check_for_magnitize = bhv_check_for_magnitize,
     is_object_being_carried = is_object_being_carried,
+    hook_range_multiplier = hook_range_multiplier,
 
     -- Master Cap Funcs
     master_cap_init_level = master_cap_init_level,

@@ -587,10 +587,16 @@ end
 
 hook_coins_behavior(id_bhvWaterLevelPillar, false, bhv_water_pillar_init, bhv_water_pillar_loop)
 
+local singleCoinBhvs = {
+    id_bhvYellowCoin,
+    id_bhvCoinFormationSpawn,
+    id_bhvOneCoin,
+}
+
 ---@param o Object
 local function bhv_secret_follow_coin_init(o)
-    local oCoin = obj_get_nearest_object_with_behavior_id(o, id_bhvYellowCoin)
-    if oCoin ~= nil and obj_to_obj_dist(o, oCoin) < 100 then
+    local oCoin = obj_get_nearest_object(o)
+    if oCoin and obj_is_coin(oCoin) and obj_to_obj_dist(o, oCoin) < 100 then
         o.oBooParentBigBoo = oCoin
     end
 end
@@ -605,6 +611,12 @@ local function bhv_secret_follow_coin_loop(o)
         if o.oBooParentBigBoo.activeFlags == ACTIVE_FLAG_DEACTIVATED then
             o.oBooParentBigBoo = gMarioStates[0].marioObj
         end
+        if get_global_timer()%3 == 0 then
+            spawn_non_sync_object(id_bhvSparkleSpawn, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(o)
+            end)
+        end
+    else
+        bhv_secret_follow_coin_init(o)
     end
 end
 

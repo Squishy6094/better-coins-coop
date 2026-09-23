@@ -24,6 +24,7 @@ gMarioCoinRange = {}
 for i = 0, MAX_PLAYERS - 1 do
     gMarioCoinRange[i] = 0
 end
+local coinRangeHooks = {}
 local function mario_update_coin_range(m)
     gMarioCoinRange[m.playerIndex] = 400 + math.sqrt(m.vel.x^2 + m.vel.y^2 + m.vel.z^2)
     if m.flags & MARIO_METAL_CAP ~= 0 then
@@ -32,9 +33,21 @@ local function mario_update_coin_range(m)
     if m.action & (ACT_FLAG_FLYING | ACT_FLAG_SWIMMING | ACT_FLAG_RIDING_SHELL) ~= 0 then
         gMarioCoinRange[m.playerIndex] = gMarioCoinRange[m.playerIndex] * 1.25
     end
+    for _, func in pairs(coinRangeHooks) do
+        output = func(m)
+        if output then
+            gMarioCoinRange[m.playerIndex] = gMarioCoinRange[m.playerIndex] * output
+        end
+    end
 end
 
 hook_event(HOOK_MARIO_UPDATE, mario_update_coin_range)
+
+function hook_range_multiplier(func)
+    if type(func) == "function" then
+        table.insert(coinRangeHooks, func)
+    end
+end
 
 -- Updates / Hooks --
 
