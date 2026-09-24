@@ -4,6 +4,7 @@
 --- @param o Object
 --- @return boolean
 local function obj_can_interact_with_mario(m, o, strict)
+    if not gNetworkPlayers[m.playerIndex].connected then return false end
     if not o or o.activeFlags == ACTIVE_FLAG_DEACTIVATED then return true end
     if strict then
         if o.oIntangibleTimer ~= 0 then return false end

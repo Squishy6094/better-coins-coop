@@ -39,6 +39,9 @@ local function mario_update_coin_range(m)
             gMarioCoinRange[m.playerIndex] = gMarioCoinRange[m.playerIndex] * output
         end
     end
+    if not gNetworkPlayers[m.playerIndex].connected then
+        gMarioCoinRange[m.playerIndex] = 0
+    end
 end
 
 hook_event(HOOK_MARIO_UPDATE, mario_update_coin_range)
