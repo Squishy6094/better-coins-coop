@@ -3,10 +3,14 @@
 --- @param m MarioState
 --- @param o Object
 --- @return boolean
-local function obj_can_interact_with_mario(m, o)
+local function obj_can_interact_with_mario(m, o, strict)
     if not o or o.activeFlags == ACTIVE_FLAG_DEACTIVATED then return true end
-    if m.action & ACT_FLAG_INTANGIBLE ~= 0 then return false end
-    if o.oIntangibleTimer ~= 0 then return false end
+    if strict then
+        if o.oIntangibleTimer ~= 0 then return false end
+        if m.action & ACT_FLAG_INTANGIBLE ~= 0 then return false end
+    end
+    if m.health < 0x100 then return false end
+    if not m.visibleToObjects then return false end
     if master_cap_box_active() and get_level_timer() < 150 then return false end
     return true
 end
@@ -17,6 +21,7 @@ local function bhv_coin_carry_init(o)
     o.oBobombFuseTimer = 90
     o.oFaceAngleYaw = 0
     network_init_object(o, true, {
+        "usingObj",
         "parentObj",
         "globalPlayerIndex",
         "oForwardVel",
@@ -30,19 +35,34 @@ local carrierMax = 30
 
 --- @param o Object
 local function bhv_coin_carry_loop(o)
+    -- parent is target
+    -- using is held
+
+    local m = gMarioStates[network_local_index_from_global(o.globalPlayerIndex)]
+    if not o.parentObj then
+        o.usingObj.oIsCarried = 0
+    else
+        if (obj_has_behavior_id(o.parentObj, bhvOmmCappy) ~= 0 and o.parentObj.oSubAction == 0) then
+            o.parentObj = m.marioObj
+        end
+        if (m and not obj_can_interact_with_mario(m, o.usingObj)) then
+            o.usingObj.oIsCarried = 0
+        end
+    end
+
     cur_obj_hide()
-    if o.parentObj.oIsCarried == 0 then
+    if o.usingObj.oIsCarried == 0 then
         obj_mark_for_deletion(o)
         return
     end
     if o.globalPlayerIndex == MAX_PLAYERS then return end
-    if o.parentObj.activeFlags == ACTIVE_FLAG_DEACTIVATED then
-        network_send_object(o.parentObj, true)
+    if o.usingObj.activeFlags == ACTIVE_FLAG_DEACTIVATED then
+        network_send_object(o.usingObj, true)
         obj_mark_for_deletion(o)
         return
     end
-    local m = gMarioStates[network_local_index_from_global(o.globalPlayerIndex)]
-    if is_player_active(m) == 0 and o.parentObj.oSyncID ~= 0 then 
+    
+    if is_player_active(m) == 0 and o.usingObj.oSyncID ~= 0 then 
         m = nearest_mario_state_to_object(o)
         o.globalPlayerIndex = network_global_index_from_local(m.playerIndex)
         o.oForwardVel = 0
@@ -51,20 +71,20 @@ local function bhv_coin_carry_loop(o)
 
     local velLerp = math.clamp(o.oForwardVel/carrierMax, 0, 1)
     local targetPos = {
-        x = m.pos.x + m.vel.x*velLerp,
-        y = m.pos.y + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y*velLerp or 0) + 70,
-        z = m.pos.z + m.vel.z*velLerp,
+        x = o.parentObj.oPosX + velLerp,
+        y = o.parentObj.oPosY + (m.action & ACT_FLAG_AIR ~= 0 and velLerp or 0) + 70,
+        z = o.parentObj.oPosZ + velLerp,
     }
 
     -- Make objs circle mario when uninteractable
-    if not obj_can_interact_with_mario(m, o.parentObj) then
-        local total, curr = count_carrier_objects(m, o)
+    if not obj_can_interact_with_mario(m, o.usingObj, true) then
+        local total, curr = count_carrier_objects(o.parentObj, o)
         o.oFaceAngleYaw = lerp_s16(o.oFaceAngleYaw, 0x10000*((curr - 1)/math.max(total, 1)) + get_global_timer()*0x200, 0.08)
-        local ray = collision_find_surface_on_ray(targetPos.x, targetPos.y, targetPos.z, sins(o.oFaceAngleYaw)*(250 + o.parentObj.hitboxRadius), 0, coss(o.oFaceAngleYaw)*(250 + o.parentObj.hitboxRadius), 128)
-        targetPos.x = ray.hitPos.x - sins(o.oFaceAngleYaw)*(o.parentObj.hitboxRadius)
-        targetPos.z = ray.hitPos.z - coss(o.oFaceAngleYaw)*(o.parentObj.hitboxRadius)
+        local ray = collision_find_surface_on_ray(targetPos.x, targetPos.y, targetPos.z, sins(o.oFaceAngleYaw)*(250 + o.usingObj.hitboxRadius), 0, coss(o.oFaceAngleYaw)*(250 + o.usingObj.hitboxRadius), 128)
+        targetPos.x = ray.hitPos.x - sins(o.oFaceAngleYaw)*(o.usingObj.hitboxRadius)
+        targetPos.z = ray.hitPos.z - coss(o.oFaceAngleYaw)*(o.usingObj.hitboxRadius)
         o.oForwardVel = math.min(o.oForwardVel, carrierMax)
-        o.parentObj.oTimer = o.parentObj.oTimer - 1
+        o.usingObj.oTimer = o.usingObj.oTimer - 1
         o.oAction = 1
         velLerp = math.min(velLerp, 0.99)
     else
@@ -75,14 +95,14 @@ local function bhv_coin_carry_loop(o)
         end
     end
 
-    o.oPosX = math.lerp(o.oPosX + o.parentObj.oVelX, targetPos.x, velLerp)
-    o.oPosY = math.lerp(o.oPosY + o.parentObj.oVelY, targetPos.y, velLerp)
-    o.oPosZ = math.lerp(o.oPosZ + o.parentObj.oVelZ, targetPos.z, velLerp)
+    o.oPosX = math.lerp(o.oPosX + o.usingObj.oVelX, targetPos.x, velLerp)
+    o.oPosY = math.lerp(o.oPosY + o.usingObj.oVelY, targetPos.y, velLerp)
+    o.oPosZ = math.lerp(o.oPosZ + o.usingObj.oVelZ, targetPos.z, velLerp)
 
     -- Remove duplicate coins being stuck on other players
-    if m.playerIndex ~= 0 and obj_check_hitbox_overlap(o.parentObj, m.marioObj) then
-        if interact_coin(m, INTERACT_COIN, o.parentObj) == 0 then
-            obj_mark_for_deletion(o.parentObj)
+    if m.playerIndex ~= 0 and obj_check_hitbox_overlap(o.usingObj, o.parentObj) then
+        if interact_coin(m, INTERACT_COIN, o.usingObj) == 0 then
+            obj_mark_for_deletion(o.usingObj)
         end
     end
 
@@ -93,30 +113,33 @@ local function bhv_coin_carry_loop(o)
     end
 
     -- Update Parent Obj
-    o.parentObj.oPosX = o.oPosX
-    o.parentObj.oPosY = o.oPosY
-    o.parentObj.oPosZ = o.oPosZ
+    o.usingObj.oPosX = o.oPosX
+    o.usingObj.oPosY = o.oPosY
+    o.usingObj.oPosZ = o.oPosZ
     --o.parentObj.oHomeX = o.oPosX
     --o.parentObj.oHomeY = o.oPosY
     --o.parentObj.oHomeZ = o.oPosZ
-    o.parentObj.oVelX = approach_f32(o.oVelX, 0, 1, 1)
-    o.parentObj.oVelY = approach_f32(o.oVelY, -o.parentObj.oGravity, 1, 1)
-    o.parentObj.oVelZ = approach_f32(o.oVelZ, 0, 1, 1)
+    o.usingObj.oVelX = approach_f32(o.oVelX, 0, 1, 1)
+    o.usingObj.oVelY = approach_f32(o.oVelY, -o.parentObj.oGravity, 1, 1)
+    o.usingObj.oVelZ = approach_f32(o.oVelZ, 0, 1, 1)
 end
 
 local id_bhvCoinCarry = hook_behavior(nil, OBJ_LIST_LEVEL, true, bhv_coin_carry_init, bhv_coin_carry_loop, "bhvCoinCarry")
 
---- @param m MarioState
---- @param o Object
-function carry_object_to_mario(m, o)
-    if o.oIsCarried ~= 0 then return end
-    local gIndex = network_global_index_from_local(m.playerIndex)
-    local spawn_func = o.oSyncID ~= 0 and spawn_sync_object or spawn_non_sync_object
-    o.oIsCarried = 1
+--- @param o1 Object Object to carry (Such as Coin)
+--- @param o2 Object Object to carry to (Such as Mario)
+function obj_carry_to_obj(o1, o2)
+    if not o1 or not o2 then return end
+    if o1.oIsCarried ~= 0 then return end
+    local m = gMarioStates[network_local_index_from_global(o2.globalPlayerIndex)]
+    if m and not obj_can_interact_with_mario(m, o1) then return end
+    local spawn_func = o1.oSyncID ~= 0 and spawn_sync_object or spawn_non_sync_object
+    o1.oIsCarried = 1
     --- @param oCarry Object
-    return spawn_func(id_bhvCoinCarry, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(oCarry)
-        oCarry.globalPlayerIndex = gIndex
-        oCarry.parentObj = o
+    return spawn_func(id_bhvCoinCarry, E_MODEL_NONE, o1.oPosX, o1.oPosY, o1.oPosZ, function(oCarry)
+        oCarry.globalPlayerIndex = o2.globalPlayerIndex
+        oCarry.parentObj = o2
+        oCarry.usingObj = o1
     end)
 end
 
@@ -129,12 +152,15 @@ function is_object_being_carried(o)
     return o.oIsCarried ~= 0
 end
 
-function count_carrier_objects(marioTarget, oTarget)
+--- @param o Object Object that's carrying (Such as Mario)
+--- @param oTarget Object? Object that's being carried
+-- Counts how many objects an object is carrying, and which ca 
+function count_carrier_objects(o, oTarget)
     local totalCount = 0
     local objCount = 0
     local oCarry = obj_get_first_with_behavior_id(id_bhvCoinCarry)
     while oCarry ~= nil do
-        if oCarry.globalPlayerIndex == network_global_index_from_local(marioTarget.playerIndex)
+        if oCarry.parentObj == o
         and oCarry.oAction == 1 then
             totalCount = totalCount + 1
             if oTarget == oCarry then

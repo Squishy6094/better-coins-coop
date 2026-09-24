@@ -26,31 +26,52 @@ function bhv_init_for_magnitize(o)
     o.oIsCarried = 0
 end
 
+-- Targets to attract coins to
+local attractBhvs = {
+    id_bhvMario,
+}
+
+local initCappy = false
+local function on_mods_loaded()
+    if initCappy then return end
+    if bhvOmmCappy then
+        table.insert(attractBhvs, bhvOmmCappy)
+    end
+    initCappy = true
+end
+
+-- Replace with mods loaded on v1.6
+hook_event(HOOK_ON_SYNC_VALID, on_mods_loaded)
+
 ---@param o Object
 function bhv_check_for_magnitize(o)
-    local m = nearest_mario_state_to_object(o)
-    if not m or m.marioObj.oIntangibleTimer ~= 0 or m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
-    if not is_object_being_carried(o) and o.oIntangibleTimer == 0 then
-        -- Attract if coin is yours
-        local dist = obj_to_obj_dist(o, m.marioObj)
-        if (dist <= gMarioCoinRange[m.playerIndex] or o.oVelY < 0) then
-            local isWall = collision_find_surface_on_ray(m.pos.x, m.pos.y + 70, m.pos.z, o.oPosX - m.pos.x, o.oPosY - m.pos.y, o.oPosZ - m.pos.z, 128).surface ~= nil
-            if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
-                carry_object_to_mario(m, o)
+    for _, bhvId in pairs(attractBhvs) do
+            oA = obj_get_nearest_object_with_behavior_id(o, bhvId)
+        --if not m or m.marioObj.oIntangibleTimer ~= 0 or m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
+        if not oA then return end
+        local m = gMarioStates[network_local_index_from_global(oA.globalPlayerIndex)]
+        if not is_object_being_carried(o) and o.oIntangibleTimer == 0 then
+            -- Attract if coin is yours
+            local dist = obj_to_obj_dist(o, oA)
+            if (dist <= (m and gMarioCoinRange[m.playerIndex] or 400) or o.oVelY < 0) then
+                local isWall = collision_find_surface_on_ray(oA.oPosX, oA.oPosY + oA.hitboxHeight*0.5, oA.oPosZ, o.oPosX - oA.oPosX, (o.oPosY + o.hitboxHeight*0.5) - (oA.oPosY + oA.hitboxHeight*0.5), o.oPosZ - oA.oPosZ, 128).surface ~= nil
+                if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
+                    obj_carry_to_obj(o, oA)
+                end
             end
         end
+    end
 
-        -- Check Galaxy Controls
-        if gGlobalSyncTable.mouseGrab == true then
-            djui_hud_set_resolution(RESOLUTION_N64)
-            local out = {x = 0, y = 0, z = 0}
-            djui_hud_world_pos_to_screen_pos({x = o.oPosX, y = o.oPosY, z = o.oPosZ}, out)
-            local mouseDist = math.sqrt((out.x - gMousePosX)^2 + (out.y - gMousePosY)^2)
-            if mouseDist < 10 then
-                local isWall = collision_find_surface_on_ray(gLakituState.pos.x, gLakituState.pos.y, gLakituState.pos.z, o.oPosX - gLakituState.pos.x, (o.oPosY + 50) - gLakituState.pos.y, o.oPosZ - gLakituState.pos.z, 128).surface ~= nil
-                if not isWall then
-                    carry_object_to_mario(m, o)
-                end
+    -- Check Galaxy Controls
+    if gGlobalSyncTable.mouseGrab == true then
+        djui_hud_set_resolution(RESOLUTION_N64)
+        local out = {x = 0, y = 0, z = 0}
+        djui_hud_world_pos_to_screen_pos({x = o.oPosX, y = o.oPosY, z = o.oPosZ}, out)
+        local mouseDist = math.sqrt((out.x - gMousePosX)^2 + (out.y - gMousePosY)^2)
+        if mouseDist < 10 then
+            local isWall = collision_find_surface_on_ray(gLakituState.pos.x, gLakituState.pos.y, gLakituState.pos.z, o.oPosX - gLakituState.pos.x, (o.oPosY + 50) - gLakituState.pos.y, o.oPosZ - gLakituState.pos.z, 128).surface ~= nil
+            if not isWall then
+                obj_carry_to_obj(o, m.marioObj)
             end
         end
     end
@@ -587,12 +608,6 @@ end
 
 hook_coins_behavior(id_bhvWaterLevelPillar, false, bhv_water_pillar_init, bhv_water_pillar_loop)
 
-local singleCoinBhvs = {
-    id_bhvYellowCoin,
-    id_bhvCoinFormationSpawn,
-    id_bhvOneCoin,
-}
-
 ---@param o Object
 local function bhv_secret_follow_coin_init(o)
     local oCoin = obj_get_nearest_object(o)
@@ -611,12 +626,14 @@ local function bhv_secret_follow_coin_loop(o)
         if o.oBooParentBigBoo.activeFlags == ACTIVE_FLAG_DEACTIVATED then
             o.oBooParentBigBoo = gMarioStates[0].marioObj
         end
+    elseif o.oTimer <= 3 then
+        bhv_secret_follow_coin_init(o)
+    end
+    if o.oTimer > 3 then
         if get_global_timer()%3 == 0 then
             spawn_non_sync_object(id_bhvSparkleSpawn, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(o)
             end)
         end
-    else
-        bhv_secret_follow_coin_init(o)
     end
 end
 
@@ -852,9 +869,12 @@ local function bhv_ghost_coin_loop(o)
         local blueCoinSwitch = o.oHiddenBlueCoinSwitch;
 
         if not is_object_being_carried(o) then
-            if dist_between_objects(m.marioObj, o) < 400 then
-                carry_object_to_mario(m, o)
-                play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.9 + math.random()*0.3)
+            for _, bhvId in pairs(attractBhvs) do
+                oA = obj_get_nearest_object_with_behavior_id(o, bhvId)
+                if dist_between_objects(oA, o) < 400 then
+                    obj_carry_to_obj(o, oA)
+                    play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.9 + math.random()*0.3)
+                end
             end
         end
 
