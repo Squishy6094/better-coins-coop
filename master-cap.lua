@@ -344,6 +344,7 @@ local function act_master_cap_results(m)
     m.marioObj.header.gfx.animInfo.animAccel = 0
     m.flags = m.flags & ~(MARIO_WING_CAP | MARIO_VANISH_CAP | MARIO_METAL_CAP)
     m.visibleToObjects = false
+    m.capTimer = 0
     --camera_freeze()
     if m.playerIndex == 0 then
         game_unpause()
