@@ -1296,7 +1296,7 @@ end
 
 local function on_pause_exit()
     local levelNum, levelData = master_cap_get_level()
-    if levelNum == gLevelValues.exitCastleLevel then return true end
+    if levelNum == gLevelValues.exitCastleLevel or network_player_master_cap_count() > 1 then return true end
     if levelData.runState == 1 then
         gPlayerSyncTable[0].diedInRun = true
         queueUnpause = true

@@ -420,8 +420,8 @@ local function bhv_scarecrow_loop(o)
                 oHead.oVelY = floorDifVel + (deathPlaneKill and 0 or math.max(m.vel.y, 0))
                 oHead.oForwardVel = 30 + (deathPlaneKill and -1 or m.forwardVel)
             end)
+            network_send_object(o, true)
         end
-        network_send_object(o, true)
     end
 
     if o.oAction == 0 then -- Spawn Animation
@@ -781,8 +781,10 @@ local function bhv_master_cap_switch_init(o)
     obj_set_model_extended(o, E_MODEL_CAP_SWITCH)
 end
 
+local capSwitchForcePress = false
 ---@param o Object
 local function bhv_master_cap_switch_loop(o)
+    local m = nearest_mario_state_to_object(o)
     if o.oAction == 0 then
         o.oAnimState = o.oBehParams2ndByte;
         cur_obj_scale(masterCapScale)
@@ -795,20 +797,18 @@ local function bhv_master_cap_switch_loop(o)
             o.oAction = 1;
         end
     elseif o.oAction == 1 then
-        if (o.oDamageOrCoinValue ~= 0 or (cur_obj_is_mario_on_platform() ~= 0 and cur_obj_is_mario_ground_pounding_platform() ~= 0)) then
+        if (capSwitchForcePress or (cur_obj_is_mario_on_platform() ~= 0 and cur_obj_is_mario_ground_pounding_platform() ~= 0)) then
             --save_file_set_flags(BHV_ARR(D_8032F0C0, o->oBehParams2ndByte, s32));
             o.oAction = 2;
-            if sync_object_is_owned_locally(o.oSyncID) then
+            if not capSwitchForcePress then
+                capSwitchForcePress = true;
                 master_cap_switch_press(o.oHealth)
+                network_send_object(o, true);
             end
-            if (o.oDamageOrCoinValue == 0) then
-                o.oDamageOrCoinValue = 1;
-                network_send_object(o);
-            end
-            o.oDamageOrCoinValue = 0;
+            capSwitchForcePress = false;
         end
     elseif o.oAction == 2 then
-        o.oDamageOrCoinValue = 0
+        capSwitchForcePress = false;
         if (o.oTimer < 5) then
             cur_obj_scale_over_time(2, 4, masterCapScale*((o.oHealth + 1)/5), masterCapScale*((o.oHealth)/5));
             if (o.oTimer == 4) then
