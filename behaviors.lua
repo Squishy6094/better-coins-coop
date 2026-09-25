@@ -73,7 +73,7 @@ function bhv_check_for_magnitize(o)
 
     if not oA then return end
     local m = gMarioStates[network_local_index_from_global(oA.globalPlayerIndex)]
-    if not is_object_being_carried(o) and o.oIntangibleTimer == 0 then
+    if (o.oSyncID == 0 or sync_object_is_owned_locally(o.oSyncID)) and not is_object_being_carried(o) and o.oIntangibleTimer == 0 then
         -- Attract if coin is yours
         if (dist <= (m and gMarioCoinRange[m.playerIndex] or 400) or o.oVelY < 0) then
             local isWall = collision_find_surface_on_ray(oA.oPosX, oA.oPosY + oA.hitboxHeight*0.5, oA.oPosZ, o.oPosX - oA.oPosX, (o.oPosY + o.hitboxHeight*0.5) - (oA.oPosY + oA.hitboxHeight*0.5), o.oPosZ - oA.oPosZ, 128).surface ~= nil
