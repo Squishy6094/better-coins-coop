@@ -715,7 +715,7 @@ end
 hook_coins_behavior(id_bhvKingBobomb, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvWhompKingBoss, false, function (o)
     bhv_generic_boss_coins_init(o)
-    if obj_get_first_with_behavior_id(id_bhvTower) then
+    if CURR_ROMHACK == "sm64" then
         bhv_merged_acts_move(o, 400, 0, 1200)
     end
 end, bhv_coins_on_damage_at_mario_loop)
@@ -991,6 +991,7 @@ hook_coins_behavior(id_bhvSpawnedStarNoLevelExit, false, nil, coin_star_no_ceili
 local towerRelX = -300
 local towerRelZ = -400
 local function bhv_offset_tower(o, o2bhvID)
+    if CURR_ROMHACK ~= "sm64" then return end
     bhv_merged_acts_move(o, towerRelX, 0, towerRelZ)
     if o2bhvID then
         local o2 = obj_get_nearest_object_with_behavior_id(o, o2bhvID)
