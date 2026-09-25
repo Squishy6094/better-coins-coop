@@ -79,7 +79,7 @@ local function bhv_coin_carry_loop(o)
 
     -- Make objs circle mario when uninteractable
     if not obj_can_interact_with_mario(m, o.usingObj, true) then
-        local total, curr = count_carrier_objects(o.parentObj, o)
+        local total, curr = count_carrier_objects(o.parentObj, o.usingObj)
         o.oFaceAngleYaw = lerp_s16(o.oFaceAngleYaw, 0x10000*((curr - 1)/math.max(total, 1)) + get_global_timer()*0x200, 0.08)
         local ray = collision_find_surface_on_ray(targetPos.x, targetPos.y, targetPos.z, sins(o.oFaceAngleYaw)*(250 + o.usingObj.hitboxRadius), 0, coss(o.oFaceAngleYaw)*(250 + o.usingObj.hitboxRadius), 128)
         targetPos.x = ray.hitPos.x - sins(o.oFaceAngleYaw)*(o.usingObj.hitboxRadius)
@@ -164,7 +164,7 @@ function count_carrier_objects(o, oTarget)
         if oCarry.parentObj == o
         and oCarry.oAction == 1 then
             totalCount = totalCount + 1
-            if oTarget == oCarry then
+            if oTarget == oCarry.usingObj then
                 objCount = totalCount
             end
         end

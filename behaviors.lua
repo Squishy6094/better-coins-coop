@@ -935,11 +935,15 @@ local function bhv_ghost_coin_loop(o)
         ]]
     elseif o.oAction == HIDDEN_BLUE_COIN_ACT_CAUGHT then
         if o.oHealth <= 0 then
-            spawn_mist_particles()
-            spawn_coin_spawner(o, 5)
-            play_sound(SOUND_OBJ_DEFAULT_DEATH, o.header.gfx.cameraToObject)
-            
-            obj_mark_for_deletion(o)
+            local total, count = count_carrier_objects(m.marioObj, o)
+            djui_chat_message_create(tostring(count).."/"..total)
+            if count == total then
+                spawn_mist_particles()
+                spawn_coin_spawner(o, 5)
+                play_sound(SOUND_OBJ_DEFAULT_DEATH, o.header.gfx.cameraToObject)
+                
+                obj_mark_for_deletion(o)
+            end
         else
             o.oHealth = o.oHealth - 1
         end
