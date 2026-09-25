@@ -12,6 +12,7 @@ _G.betterCoins = {
     bhv_check_for_magnitize = bhv_check_for_magnitize,
     is_object_being_carried = is_object_being_carried,
     hook_range_multiplier = hook_range_multiplier,
+    hook_attract_object = hook_attract_object,
 
     -- Master Cap Funcs
     master_cap_init_level = master_cap_init_level,

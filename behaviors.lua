@@ -28,14 +28,29 @@ end
 
 -- Targets to attract coins to
 local attractBhvs = {
-    id_bhvMario,
+    -- id_bhvMario
+    function (o)
+        local m = nearest_interacting_mario_state_to_object(o)
+        if m then
+            return m.marioObj
+        end
+    end,
 }
+
+-- Hooks an attract object to get coins
+function hook_attract_object(func)
+    if type(func) == "function" then
+        table.insert(attractBhvs, func)
+    end
+end
 
 local initCappy = false
 local function on_mods_loaded()
     if initCappy then return end
     if bhvOmmCappy then
-        table.insert(attractBhvs, bhvOmmCappy)
+        table.insert(attractBhvs, function (o)
+            return obj_get_nearest_object_with_behavior_id(o, bhvOmmCappy)
+        end)
     end
     initCappy = true
 end
@@ -45,19 +60,25 @@ hook_event(HOOK_ON_SYNC_VALID, on_mods_loaded)
 
 ---@param o Object
 function bhv_check_for_magnitize(o)
-    for _, bhvId in pairs(attractBhvs) do
-            oA = obj_get_nearest_object_with_behavior_id(o, bhvId)
-        --if not m or m.marioObj.oIntangibleTimer ~= 0 or m.action == ACT_BUBBLED or m.action == ACT_MASTER_CAP_BUBBLED then return end
-        if not oA then return end
-        local m = gMarioStates[network_local_index_from_global(oA.globalPlayerIndex)]
-        if not is_object_being_carried(o) and o.oIntangibleTimer == 0 then
-            -- Attract if coin is yours
-            local dist = obj_to_obj_dist(o, oA)
-            if (dist <= (m and gMarioCoinRange[m.playerIndex] or 400) or o.oVelY < 0) then
-                local isWall = collision_find_surface_on_ray(oA.oPosX, oA.oPosY + oA.hitboxHeight*0.5, oA.oPosZ, o.oPosX - oA.oPosX, (o.oPosY + o.hitboxHeight*0.5) - (oA.oPosY + oA.hitboxHeight*0.5), o.oPosZ - oA.oPosZ, 128).surface ~= nil
-                if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
-                    obj_carry_to_obj(o, oA)
-                end
+    local oA = nil
+    local dist = 0x8000
+    for _, func in pairs(attractBhvs) do
+            currObj = func(o)
+            currDist = obj_to_obj_dist(o, currObj)
+        if currObj and (not oA or currDist < dist) then
+            oA = currObj
+            dist = currDist
+        end
+    end
+
+    if not oA then return end
+    local m = gMarioStates[network_local_index_from_global(oA.globalPlayerIndex)]
+    if not is_object_being_carried(o) and o.oIntangibleTimer == 0 then
+        -- Attract if coin is yours
+        if (dist <= (m and gMarioCoinRange[m.playerIndex] or 400) or o.oVelY < 0) then
+            local isWall = collision_find_surface_on_ray(oA.oPosX, oA.oPosY + oA.hitboxHeight*0.5, oA.oPosZ, o.oPosX - oA.oPosX, (o.oPosY + o.hitboxHeight*0.5) - (oA.oPosY + oA.hitboxHeight*0.5), o.oPosZ - oA.oPosZ, 128).surface ~= nil
+            if (not isWall and not obj_is_in_container(o)) or (m.flags & MARIO_VANISH_CAP ~= 0) then
+                obj_carry_to_obj(o, oA)
             end
         end
     end
