@@ -1063,21 +1063,35 @@ local function obj_is_star_collected(o)
     return (currentLevelStarFlags & (1 << (gLevelValues.useGlobalStarIds ~= 0 and starId % 7 or starId)) ~= 0)
 end
 
-local starBhvs = {
-    [id_bhvStar] = true,
-    [id_bhvSpawnedStar] = true,
-    [id_bhvSpawnedStarNoLevelExit] = true,
-    [id_bhvStarSpawnCoordinates] = true,
+local starDanceActs = {
+    [ACT_STAR_DANCE_EXIT] = 1,
+    [ACT_STAR_DANCE_NO_EXIT] = 1,
+    [ACT_STAR_DANCE_WATER] = 1,
+    [ACT_FALL_AFTER_STAR_GRAB] = 1,
 }
 
-local originalStayInLevel = gServerSettings.stayInLevelAfterStar
+---@param m MarioState
+local function prevent_star_dance(m, nextAct)
+    if starDanceActs[nextAct] then
+        local o = m.interactObj
+        if o and (o.oInteractType & INTERACT_STAR_OR_KEY) ~= 0 then
+            set_object_respawn_info_bits(o, 0xFF)
+            if o.oInteractionSubtype == INT_SUBTYPE_NO_EXIT then
+                spawn_coin_spawner(o, 10, true)
+                return 1
+            end
+        end
+    end
+end
+
 local function allow_interact(m, o, int)
     if o.oIntangibleTimer ~= 0 then return end
-    if starBhvs[coinBhvIds[get_id_from_behavior(o.behavior)]] and (int == INTERACT_STAR_OR_KEY) then
-        -- Make Transparent Stars turn on nonstop
-        if obj_is_star_collected(o) then
-            originalStayInLevel = gServerSettings.stayInLevelAfterStar
-            gServerSettings.stayInLevelAfterStar = 2
+    local nonStop = gServerSettings.stayInLevelAfterStar == STAR_NON_STOP
+    if int == INTERACT_STAR_OR_KEY and (obj_is_star_collected(o) or nonStop) then
+        o.oInteractionSubtype = INT_SUBTYPE_NO_EXIT
+        if nonStop then
+            m.interactObj = o
+            prevent_star_dance(m, ACT_FALL_AFTER_STAR_GRAB)
         end
     end
 end
@@ -1086,6 +1100,7 @@ local function bhv_stars_give_coins_init(o)
     obj_init_custom_coins(o, 10)
 end
 
+--[[
 local function bhv_stars_give_coins_loop(o)
     if o.activeFlags == ACTIVE_FLAG_DEACTIVATED then
         -- Spawn Coins and turn it back on
@@ -1097,6 +1112,7 @@ local function bhv_stars_give_coins_loop(o)
         gServerSettings.stayInLevelAfterStar = originalStayInLevel
     end
 end
+]]
 
 -- Handle Celebration Stars poofing into coins
 local function bhv_celebration_stars_give_coins_loop(o)
@@ -1108,9 +1124,7 @@ local function bhv_celebration_stars_give_coins_loop(o)
 end
 
 hook_event(HOOK_ALLOW_INTERACT, allow_interact)
-for bhvId, _ in pairs(starBhvs) do
-    local newBhv = hook_coins_behavior(bhvId, false, bhv_stars_give_coins_init, bhv_stars_give_coins_loop)
-end
+hook_event(HOOK_BEFORE_SET_MARIO_ACTION, prevent_star_dance)
 hook_coins_behavior(id_bhvCelebrationStar, false, bhv_stars_give_coins_init, bhv_celebration_stars_give_coins_loop)
 
 -- Prevent Red Coin Star Respawn
