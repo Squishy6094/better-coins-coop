@@ -379,7 +379,7 @@ end
 
 function mods_get_all_pausable()
     for _, mod in pairs(gActiveMods) do
-        if mod.pausable then
+        if not mod.pausable then
             return false
         end
     end
