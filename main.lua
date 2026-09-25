@@ -1,11 +1,6 @@
 -- name: Better Coins
 -- description: Overhauls coin collecting in Super Mario 64 to make it satisfying and rewarding rather than a chore.\n\nMade by: Squishy6094\n\nGithub:\n\\#6666FF\\Squishy6094/better-coins-coop
 
---[[
-    Todo Fixes:
-        Timer desyncs(?)
-]]
-
 gLevelValues.previewBlueCoins = 1
 gLevelValues.respawnBlueCoinsSwitch = 1
 
@@ -110,15 +105,20 @@ local function coin_counter()
     local sW = djui_hud_get_screen_width()
     local sH = djui_hud_get_screen_height()
 
-    customCoinHudValue = math.min(math.ceil(math.lerp(customCoinHudValue, m.numCoins, 0.1)), m.numCoins)
-    hud_set_value(HUD_DISPLAY_COINS, customCoinHudValue)
+    local levelNum, levelData = master_cap_get_level()
+    local activeRun = levelData.runState > 0
+    local coinTarget = activeRun and levelData.coins or m.numCoins
+    if customCoinHudValue ~= -1 then
+        customCoinHudValue = math.min(math.ceil(math.lerp(customCoinHudValue, coinTarget, 0.1)), coinTarget)
+    end
+    hud_set_value(HUD_DISPLAY_COINS, math.max(customCoinHudValue, 0))
     gLevelValues.hudCapTimer = 1
 
     gLevelValues.hudRedCoinsRadar = 0
     gLevelValues.hudSecretsRadar = 0
 
     -- Hud 
-    if gBetterCoinValues.numCoinsToLife > 0 then
+    if gBetterCoinValues.numCoinsToLife > 0 and not activeRun then
         if hud_get_value(HUD_DISPLAY_COINS) > (prevNumCoinsToLifeCount + gBetterCoinValues.numCoinsToLife) then
             m.numLives = m.numLives + 1
             play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
@@ -267,12 +267,25 @@ local function on_coin_sound(sound, pos)
 end
 
 local function courtyard_secret()
+    
     if CURR_ROMHACK ~= "sm64" then return end
     if gNetworkPlayers[0].currLevelNum == LEVEL_CASTLE_COURTYARD and gMarioStates[0].numStars >= 12 then
         if obj_get_first_with_behavior_id(id_bhvCourtyardCondition) == nil then
             spawn_sync_object(id_bhvCourtyardCondition, E_MODEL_NONE, 0, 425, -1735, function (o) end)
         end
     end
+end
+
+local function level_init()
+    customCoinHudValue = -1
+end
+
+local function on_sync()
+    if customCoinHudValue == -1 then
+        customCoinHudValue = hud_get_value(HUD_DISPLAY_COINS)
+        prevNumCoinsToLifeCount = math.floor(customCoinHudValue/gBetterCoinValues.numCoinsToLife)*gBetterCoinValues.numCoinsToLife
+    end
+    courtyard_secret()
 end
 
 ---@param m MarioState
@@ -287,7 +300,8 @@ end
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, coin_counter)
 hook_event(HOOK_ON_INTERACT, interact)
 hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
-hook_event(HOOK_ON_SYNC_VALID, courtyard_secret)
+hook_event(HOOK_ON_LEVEL_INIT, level_init)
+hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
 
 local function chat_command(msg)

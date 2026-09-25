@@ -272,6 +272,7 @@ end
 function set_romhack_data(romhack, hackData)
     romhack = romhack or CURR_ROMHACK
     romhackData[romhack] = hackData
+    romhackData[romhack].starCount = romhackData[romhack].starCount or -1
     on_mods_loaded()
 end
 
