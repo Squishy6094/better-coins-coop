@@ -787,7 +787,7 @@ local function on_sync()
 
     if master_cap_allowed() then
         gLevelValues.disableActs = true
-        set_ttc_speed_setting(TTC_SPEED_STOPPED)
+        --set_ttc_speed_setting(TTC_SPEED_STOPPED)
     end
 
     local np = gNetworkPlayers[0]
@@ -1091,7 +1091,7 @@ local function master_cap_update()
                 if levelData.coins >= 999 then
                     master_cap_stop_course(levelNum)
                 end
-                if levelData.coins >= gLevelValues.coinsRequiredForCoinStar*1.5 then
+                if levelData.coins >= gLevelValues.coinsRequiredForCoinStar*1.5 and levelNum ~= LEVEL_MASTER_CAP_STAGE then
                     if not levelData.spawnedScarecrow then
                         local targetIndex = 0
                         for pI = 0, MAX_PLAYERS - 1 do
@@ -1113,7 +1113,7 @@ local function master_cap_update()
                 end
 
                 if levelData.capTimer > 0 then
-                    if network_player_connected_count() <= 1 and (m.action & ACT_FLAG_INTANGIBLE ~= 0 or is_game_paused()) then
+                    if network_player_connected_count() <= 1 and (m.action & ACT_FLAG_INTANGIBLE ~= 0 or (is_game_paused() and mods_get_all_pausable())) then
                         -- Don't decrease
                     else
                         levelData.capTimer = levelData.capTimer - 1
@@ -1304,7 +1304,7 @@ local function check_late_entry()
     set_skybox_color(1, 255)
     set_skybox_color(2, 255)
     gLevelValues.disableActs = true
-    set_ttc_speed_setting(TTC_SPEED_STOPPED)
+    --set_ttc_speed_setting(TTC_SPEED_STOPPED)
 
     --[[
     local levelNum = gNetworkPlayers[0].currLevelNum

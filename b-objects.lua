@@ -43,7 +43,7 @@ local function bhv_coin_carry_loop(o)
     if not o.parentObj then
         o.usingObj.oIsCarried = 0
     else
-        if (obj_has_behavior_id(o.parentObj, bhvOmmCappy) ~= 0 and o.parentObj.oSubAction == 0) then
+        if (bhvOmmCappy and obj_has_behavior_id(o.parentObj, bhvOmmCappy) ~= 0 and o.parentObj.oSubAction == 0) then
             o.parentObj = m.marioObj
         end
         if (m and not obj_can_interact_with_mario(m, o.usingObj)) then

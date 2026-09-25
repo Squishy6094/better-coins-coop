@@ -342,7 +342,6 @@ function obj_get_nearest_object(o)
                         if (objDist < minDist) then
                             closestObj = obj;
                             minDist = objDist;
-                            djui_chat_message_create(tostring(objDist))
                         end
                     end
                     obj = obj_get_next(obj)
@@ -376,4 +375,14 @@ function string_abbriviate(levelname)
 		end
 	end
 	return s
+end
+
+function mods_get_all_pausable()
+    for _, mod in pairs(gActiveMods) do
+        if mod.pausable then
+            return false
+        end
+    end
+
+    return true;
 end
