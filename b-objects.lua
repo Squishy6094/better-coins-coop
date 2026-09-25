@@ -38,6 +38,10 @@ local carrierMax = 30
 local function bhv_coin_carry_loop(o)
     -- parent is target
     -- using is held
+    if not o.usingObj or o.usingObj.oIsCarried == 0 then
+        obj_mark_for_deletion(o)
+        return
+    end
 
     local m = gMarioStates[network_local_index_from_global(o.globalPlayerIndex)]
     if not o.parentObj then
@@ -52,10 +56,6 @@ local function bhv_coin_carry_loop(o)
     end
 
     cur_obj_hide()
-    if o.usingObj.oIsCarried == 0 then
-        obj_mark_for_deletion(o)
-        return
-    end
     if o.globalPlayerIndex == MAX_PLAYERS then return end
     if o.usingObj.activeFlags == ACTIVE_FLAG_DEACTIVATED then
         network_send_object(o.usingObj, true)

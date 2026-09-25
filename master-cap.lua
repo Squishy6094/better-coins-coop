@@ -33,7 +33,9 @@ update_save()
 function master_cap_allowed(ignoreSwitch)
     local reasons = ""
     if gGlobalSyncTable.allowMasterCapApi ~= nil then
-        reasons = reasons .. "API, "
+        if not gGlobalSyncTable.allowMasterCapApi then
+            reasons = reasons .. "API, "
+        end
     else
         if GAMEMODE_ACTIVE then
             reasons = reasons .. "Gamemode, "
@@ -173,9 +175,11 @@ function master_cap_start_course(levelNum, noSync)
     levelData.coinTimer = 0
     levelData.coins = 0
 
-    play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 10, 230, 230, 230)
-    play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
-    play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource)
+    if master_cap_get_merged_player_level_num(0) == levelNum then
+        play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 10, 230, 230, 230)
+        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
+        play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource)
+    end
 
     if not noSync then
         network_send(true, {
@@ -868,7 +872,6 @@ local function on_sync()
             o.oMoveAnglePitch = o.oFaceAnglePitch
             o.oMoveAngleYaw = o.oFaceAngleYaw
             o.oMoveAngleRoll = o.oFaceAngleRoll
-            oTagLib.obj_set_nametag(o, "WORK IN PROGRESS\n  DO NOT ENTER", {r = 255, g = 0, b = 0})
         end)
     end
     
@@ -1078,7 +1081,6 @@ local function master_cap_update()
     if network_is_server() then
         -- Update All Levels' Runs
         for levelNum, levelData in pairs(gMasterCapServerState) do
-            --djui_chat_message_create(tostring(levelNum))
             if levelData.runState == 1 then
                 if levelData.coins >= 999 then
                     master_cap_stop_course(levelNum)
@@ -1266,20 +1268,20 @@ local function easier_mario_viewing_expirience(m)
     end
 end
 
+local prevLevel = 0
 local function check_late_entry()
     if not master_cap_allowed() then return end
+    local levelNum, levelData = master_cap_get_level()
     set_skybox_color(0, 255)
     set_skybox_color(1, 255)
     set_skybox_color(2, 255)
     gLevelValues.disableActs = true
     --set_ttc_speed_setting(TTC_SPEED_STOPPED)
 
-    --[[
-    local levelNum = gNetworkPlayers[0].currLevelNum
-    if master_cap_data_get_field(nil, "runState") == 1 and levelNum == master_cap_get_merged_level_num() then
+    if levelNum == master_cap_get_merged_level_num() and levelData.runState == 1 and prevLevel ~= prevLevel then
         gPlayerSyncTable[0].diedInRun = true
     end
-    ]]
+    prevLevel = prevLevel
 end
 
 local function on_mods_loaded()
@@ -1294,8 +1296,9 @@ end
 
 local function on_pause_exit()
     local levelNum, levelData = master_cap_get_level()
-    gPlayerSyncTable[0].diedInRun = true
+    if levelNum == gLevelValues.exitCastleLevel then return true end
     if levelData.runState == 1 then
+        gPlayerSyncTable[0].diedInRun = true
         queueUnpause = true
         return false
     end

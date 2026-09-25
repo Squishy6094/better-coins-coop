@@ -156,7 +156,9 @@ local function bhv_moneybag_squirt_jump(o)
     if o.oCustomCoins > 5 and o.oMoneybagJumpState == MONEYBAG_JUMP_PREPARE and o.header.gfx.animInfo.animFrame == 5 then
         obj_spawn_yellow_coins(o, 1);
         o.oCustomCoins = o.oCustomCoins - 1
-        network_send_object(o, true)
+        if sync_object_is_owned_locally(o.oSyncID) then
+            network_send_object(o, true)
+        end
     end
 
     -- Spawn coins that haven't been given
