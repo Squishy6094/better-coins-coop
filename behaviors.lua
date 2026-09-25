@@ -30,7 +30,7 @@ end
 local attractBhvs = {
     -- id_bhvMario
     function (o)
-        local m = nearest_interacting_mario_state_to_object(o)
+        local m = nearest_mario_state_to_object(o)
         if m then
             return m.marioObj
         end
