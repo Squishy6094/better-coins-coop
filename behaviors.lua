@@ -63,8 +63,8 @@ function bhv_check_for_magnitize(o)
     local oA = nil
     local dist = 0x8000
     for _, func in pairs(attractBhvs) do
-            currObj = func(o)
-            currDist = obj_to_obj_dist(o, currObj)
+        currObj = func(o)
+        currDist = obj_to_obj_dist(o, currObj)
         if currObj and (not oA or currDist < dist) then
             oA = currObj
             dist = currDist
@@ -890,12 +890,20 @@ local function bhv_ghost_coin_loop(o)
         local blueCoinSwitch = o.oHiddenBlueCoinSwitch;
 
         if not is_object_being_carried(o) then
-            for _, bhvId in pairs(attractBhvs) do
-                oA = obj_get_nearest_object_with_behavior_id(o, bhvId)
-                if dist_between_objects(oA, o) < 400 then
-                    obj_carry_to_obj(o, oA)
-                    play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.9 + math.random()*0.3)
+            local oA = nil
+            local dist = 0x8000
+            for _, func in pairs(attractBhvs) do
+                currObj = func(o)
+                currDist = obj_to_obj_dist(o, currObj)
+                if currObj and (not oA or currDist < dist) then
+                    oA = currObj
+                    dist = currDist
                 end
+            end
+
+            if oA and dist < 400 then
+                obj_carry_to_obj(o, oA)
+                play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.9 + math.random()*0.3)
             end
         end
 

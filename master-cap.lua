@@ -510,8 +510,15 @@ hook_mario_action(ACT_MASTER_CAP_BUBBLED, {every_frame = act_master_cap_bubbled,
 function set_mario_finished_master_cap(m)
     gPlayerSyncTable[m.playerIndex].diedInRun = true
     if network_player_master_cap_count() <= 0 then
-        if m.action ~= ACT_MASTER_CAP_RESULTS then
-            set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
+        if not master_cap_allowed() then
+            if warpToHubTimer < 0 then
+                warpToHubTimer = 20
+                play_transition(WARP_TRANSITION_FADE_INTO_CIRCLE, 20, 0, 0, 0)
+            end
+        else
+            if m.action ~= ACT_MASTER_CAP_RESULTS then
+                set_mario_action(m, ACT_MASTER_CAP_RESULTS, 0)
+            end
         end
     else
         if m.action ~= ACT_DISAPPEARED then
@@ -887,7 +894,6 @@ local function on_sync()
 end
 
 local prevRunState = 0
-local runCrouchTimer = 0
 local function master_cap_music_update(levelData)
     local m = gMarioStates[0]
     local runState = levelData and levelData.runState or 0
@@ -911,8 +917,7 @@ local function master_cap_music_update(levelData)
             play_secondary_music(0, 0, 0, 50)
         end
         local freqTargetTime = 1 + (math.max(450 - levelData.capTimer, 0)/450)*0.3
-        local freqTargetEnd = 1 + (runCrouchTimer/90)*0.3
-        local freqTarget = runState == 2 and 0.7 or math.max(freqTargetTime, freqTargetEnd)
+        local freqTarget = runState == 2 and 0.7 or freqTargetTime
 
         masterCapMusicFreq = math.lerp(masterCapMusicFreq, freqTarget, 0.02) or 1
         audio_stream_set_frequency(MUSIC_MASTER_CAP, masterCapMusicFreq)
@@ -976,21 +981,18 @@ local function master_cap_update()
             update_save()
         end
     end
-
-    --[[
-    if m.controller.buttonPressed & Y_BUTTON ~= 0 then
-        spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, m.pos.x, m.pos.y, m.pos.z - 300, function(o)
-            
-        end)
-    end
-    ]]
-
+    
     -- Actual Master Cap Stuffs
     if warpToHubTimer > 0 then
         warpToHubTimer = warpToHubTimer - 1
         if warpToHubTimer <= 0 then
             warp_to_start_level()
-            play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
+            if not master_cap_allowed() then
+                -- used for master cap exit pre-unlock
+                --play_transition(WARP_TRANSITION_FADE_FROM_CIRCLE, 30, 0, 0, 0)
+            else
+                play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 30, 230, 230, 230)
+            end
             warpToHubTimer = -1
         end
     end
@@ -1056,16 +1058,6 @@ local function master_cap_update()
             sPrevAct[m.playerIndex].prevActionTimer = m.actionTimer
             sPrevAct[m.playerIndex].prevActionState = m.actionState
             sPrevAct[m.playerIndex].prevActionArg = m.actionArg
-        end
-
-        if (m.action & ACT_FLAG_AIR == 0 and (m.forwardVel == 0 and m.vel.y <= 0) and m.controller.buttonDown & Z_TRIG ~= 0) and not p.diedInRun then
-            runCrouchTimer = runCrouchTimer + 1
-            if runCrouchTimer > 90 then
-                set_mario_finished_master_cap(m)
-                runCrouchTimer = 0
-            end
-        else
-            runCrouchTimer = math.max(runCrouchTimer - 3, 0)
         end
 
         if p.diedInRun then
@@ -1188,42 +1180,18 @@ local function master_cap_update()
     end
 end
 
-local TEXT_MASTER_CAP = "Collect as many coins as possible!"
 local TEXT_RESULT_COINS = "Coins Collected:"
 local TEXT_RESULT_PB = "Personal Best: "
 local TEXT_RESULT_TIME = "Time Spent:"
 local TEXT_RECORD = "HI SCORE"
-local TEXT_ENDING_RUN = "ENDING RUN EARLY..."
-local TEXT_GIVING_UP = "GIVING UP..."
 local function master_cap_render()
     local m = gMarioStates[0]
     local levelNum, levelData = master_cap_get_level()
     djui_hud_set_resolution(RESOLUTION_N64)
     local sWidth = djui_hud_get_screen_width() + 1
     local sHeight = djui_hud_get_screen_height()
-    local runState = levelData ~= nil and levelData.runState == 1
-    if runState then
-        djui_hud_set_font(FONT_HUD)
-        local textW, textH = djui_hud_measure_text(TEXT_MASTER_CAP)
-        local textScale = math.min(sWidth/(textW + 32), 1)
-        --djui_hud_print_text(TEXT_MASTER_CAP, sWidth*0.5 - textW*textScale*0.5, sHeight - (32 + math.abs(math.sin(e.masterCapTotalTimer/30))*8)*textScale, textScale)
 
-        if runCrouchTimer > 15 then
-            local untilCancelInterp = math.max(runCrouchTimer + (m.action == ACT_CROUCHING and -1 or 3) - 15, 0)/75
-            local untilCancel = math.max(runCrouchTimer - 15, 0)/75
-            local cancelColor = 127 - 127*untilCancel
-            djui_hud_set_color(255, cancelColor, cancelColor, 255)
-            djui_hud_render_rect_interpolated(0, 0, sWidth*untilCancelInterp, 2, 0, 0, sWidth*untilCancel, 2)
-            djui_hud_set_color(255, cancelColor, cancelColor, 255*untilCancel)
-            djui_hud_set_font(FONT_RECOLOR_HUD)
-            local xShake = math.random(-2, 2)*untilCancel
-            local yShake = math.random(-2, 2)*untilCancel
-            local text = network_player_master_cap_count() > 1 and TEXT_GIVING_UP or TEXT_ENDING_RUN
-            djui_hud_print_text(text, sWidth*0.5 - djui_hud_measure_text(text)*0.5 + xShake, sHeight*0.5 - 8 + yShake, 1)
-        end
-    end
-
-    if m.action == ACT_MASTER_CAP_RESULTS then
+    if m.action == ACT_MASTER_CAP_RESULTS and master_cap_allowed() then
         local record = levelData.newRecord and m.actionState > 3
         local recordFlash = record and sins(m.actionTimer*0x1000) * 50.0 + 200.0 or 255
         djui_hud_set_color(0, 0, 0, 150)
