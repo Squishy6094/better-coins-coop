@@ -277,12 +277,15 @@ local function courtyard_secret()
 end
 
 local function level_init()
+    if gNetworkPlayers[0].currCourseNum == 0 then
+        gMarioStates[0].numCoins = 0
+    end
     customCoinHudValue = -1
 end
 
 local function on_sync()
     if customCoinHudValue == -1 then
-        customCoinHudValue = hud_get_value(HUD_DISPLAY_COINS)
+        customCoinHudValue = gMarioStates[0].numCoins
         prevNumCoinsToLifeCount = math.floor(customCoinHudValue/gBetterCoinValues.numCoinsToLife)*gBetterCoinValues.numCoinsToLife
     end
     courtyard_secret()
