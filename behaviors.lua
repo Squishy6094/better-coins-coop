@@ -955,6 +955,18 @@ end
 
 hook_coins_behavior(id_bhvHiddenBlueCoin, true, bhv_ghost_coin_init, bhv_ghost_coin_loop)
 
+local function update_dynos(name, enabled)
+    E_MODEL_BOO_COIN = smlua_model_util_get_id("boo_coin_geo")
+    log_to_console(tostring(E_MODEL_BOO_COIN))
+    local o = obj_get_first_with_behavior_id(id_bhvHiddenBlueCoin)
+    while o ~= nil do
+        obj_set_model_extended(o, E_MODEL_BOO_COIN)
+        o = obj_get_next_with_same_behavior_id(o)
+    end
+end
+
+hook_event(HOOK_ON_DYNOS_PACK_TOGGLED, update_dynos)
+
 local function bhv_boo_coin_switch_delete(o)
 
     if o.oAction == BLUE_COIN_SWITCH_ACT_TICKING then

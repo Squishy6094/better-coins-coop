@@ -86,6 +86,33 @@ local sBooCoinTextures = {
     get_texture_info("Boo-Coins-Joyous3"),
 }
 
+local function update_dynos(name, enabled)
+    sRedCoinTextures = {
+        [0] = get_texture_info("coin_seg3_texture_03005780"),
+        get_texture_info("coin_seg3_texture_03005F80"),
+        get_texture_info("coin_seg3_texture_03006780"),
+        get_texture_info("coin_seg3_texture_03006F80"),
+    }
+
+    sSecretTextures = {
+        [0] = get_texture_info("sparkles_seg4_texture_04027490"),
+        get_texture_info("sparkles_seg4_texture_04027C90"),
+        get_texture_info("sparkles_seg4_texture_04028490"),
+        get_texture_info("sparkles_seg4_texture_04028C90"),
+        get_texture_info("sparkles_seg4_texture_04029490"),
+        get_texture_info("sparkles_seg4_texture_04029C90"),
+    }
+
+    sBooCoinTextures = {
+        [0] = get_texture_info("Boo-Coins-Side"),
+        get_texture_info("Boo-Coins-Joyous1"),
+        get_texture_info("Boo-Coins-Joyous2"),
+        get_texture_info("Boo-Coins-Joyous3"),
+    }
+end
+
+hook_event(HOOK_ON_DYNOS_PACK_TOGGLED, update_dynos)
+
 local customCoinHudValue = 0
 local coinAnim = 0
 local coinSpeed = 0
