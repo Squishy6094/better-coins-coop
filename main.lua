@@ -1,6 +1,13 @@
 -- name: Better Coins
 -- description: Overhauls coin collecting in Super Mario 64 to make it satisfying and rewarding rather than a chore.\n\nMade by: Squishy6094\n\nGithub:\n\\#6666FF\\Squishy6094/better-coins-coop
 
+savedCoinCount = mod_storage_load_integer("coins", 0)
+log_to_console("Better Coins Count: " .. tostring(savedCoinCount))
+
+function save_coin_count()
+    mod_storage_save_integer("coins", savedCoinCount)
+end
+
 gLevelValues.previewBlueCoins = 1
 gLevelValues.respawnBlueCoinsSwitch = 1
 
@@ -237,6 +244,7 @@ local function interact(m, o, int)
     if o.oIntangibleTimer ~= 0 then return end
     if int == INTERACT_COIN then
         -- Make Coin Sound
+        savedCoinCount = savedCoinCount + o.oDamageOrCoinValue
         if get_global_timer() > coinSoundComboEnd then
             coinSoundCombo = 0
         else
@@ -277,6 +285,7 @@ local function courtyard_secret()
 end
 
 local function level_init()
+    save_coin_count()
     if gNetworkPlayers[0].currCourseNum == 0 then
         gMarioStates[0].numCoins = 0
     end
@@ -306,6 +315,7 @@ hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
 hook_event(HOOK_ON_LEVEL_INIT, level_init)
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
+hook_event(HOOK_ON_EXIT, save_coin_count)
 
 local function chat_command(msg)
     local moderator = network_is_server() or network_is_moderator()
