@@ -9,10 +9,6 @@ audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
 gGlobalSyncTable.allowMasterCap = true
 gGlobalSyncTable.allowMasterCapApi = nil
 
-local function save_file_prefix(str)
-    return "saveFile"..tostring(get_current_save_file_num())..(save_file_get_using_backup_slot() and "B" or "")..str
-end
-
 local function update_save()
     if not network_is_server() then return end
     if save_file_get_flags() < mod_storage_load_number(save_file_prefix("progress"), 0) then

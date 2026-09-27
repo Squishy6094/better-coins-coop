@@ -386,3 +386,15 @@ function mods_get_all_pausable()
 
     return true;
 end
+
+function run_func_or_get_var(x, ...)
+    if type(x) == "function" then
+        return x(...)
+    else
+        return x
+    end
+end
+
+function save_file_prefix(str)
+    return "saveFile"..tostring(get_current_save_file_num())..(save_file_get_using_backup_slot() and "B" or "")..str
+end
