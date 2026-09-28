@@ -9,6 +9,63 @@ audio_stream_set_looping(MUSIC_MASTER_CAP_END, true)
 gGlobalSyncTable.allowMasterCap = true
 gGlobalSyncTable.allowMasterCapApi = nil
 
+-- Surface List
+
+local surfaceList = {}
+local surfaceListDynamic = {}
+
+---@param list table
+---@param surface Surface
+local function add_surface_to_list(list, surface)
+    if surface and not evilFloorTypes[surface.type] and surface.normal.y > 0.9 then
+        local surfaceX = (surface.vertex1.x + surface.vertex2.x + surface.vertex3.x)/3
+        local surfaceY = (surface.vertex1.y + surface.vertex2.y + surface.vertex3.y)/3
+        local surfaceZ = (surface.vertex1.z + surface.vertex2.z + surface.vertex3.z)/3
+
+        local smallestEdge = nil
+        for i = 0, 2 do
+            local currNum = (i%3) + 1
+            local nextNum = ((i+1)%3) + 1
+            local currPos = surface["vertex"..tostring(currNum)]
+            local nextPos = surface["vertex"..tostring(nextNum)]
+            local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.z - nextPos.z)^2)
+            if not smallestEdge or smallestEdge > edgeDist then
+                smallestEdge = edgeDist
+            end
+        end
+        table.insert(list, {
+            x = surfaceX,
+            y = surfaceY,
+            z = surfaceZ,
+            smallEdge = smallestEdge,
+        })
+    end
+end
+
+local prevLevel = 0
+local function add_surface(surface, dynamic)
+    if surface.normal.y < 0.1 then return end
+    if dynamic then
+        add_surface_to_list(surfaceListDynamic, surface)
+    else
+        local currLevel = gNetworkPlayers[0].currLevelNum*7 + gNetworkPlayers[0].currAreaIndex
+        if prevLevel ~= currLevel then
+            surfaceList = {}
+            prevLevel = currLevel
+        end
+        add_surface_to_list(surfaceList, surface)
+    end
+end
+
+local function find_surface_from_list(list, func)
+    repeat
+        local surfInfo = list[mul_random(1, #list)]
+        if not func or func(surfInfo) then
+            return surfInfo
+        end
+    until false
+end
+
 local function update_save()
     if not network_is_server() then return end
     if save_file_get_flags() < mod_storage_load_number(save_file_prefix("progress"), 0) then
@@ -534,245 +591,43 @@ function master_cap_box_active()
     return true, o
 end
 
-
-local capSpawnRadius = 400
-local function find_master_cap_spawn_position()
-    local m = gMarioStates[0] ---@type MarioState
-    local spawnPos = nil
-    math.randomseed(hash(CURR_ROMHACK))
-    local startPos = m.spawnInfo.startPos
-    local startYaw = m.spawnInfo.startAngle.y
-    local startFloorHeight, startFloor = find_floor(startPos.x, startPos.y, startPos.z)
-    local minX = startPos.x - 1000
-    local maxX = startPos.x + 1000
-    local minZ = startPos.z - 1000
-    local maxZ = startPos.z + 1000
-    local spawnStart = get_time()
-    local spawnIteration = 0
-    while spawnPos == nil do
-        local spawnStep = 0
-        spawnIteration = spawnIteration + 1
-        local findFloorX = math.random(minX, maxX)
-        local findFloorZ = math.random(minZ, maxZ)
-        local findFloorHeight, findFloor = find_floor(findFloorX, 0x4000, findFloorZ)
-        if findFloor and findFloor ~= startFloor and not evilFloorTypes[findFloor.type] and math.ceil(findFloor.normal.y*50) == 50 then
-            spawnStep = spawnStep + 1
-            local surfaceX = (findFloor.vertex1.x + findFloor.vertex2.x + findFloor.vertex3.x)/3
-            local surfaceY = (findFloor.vertex1.y + findFloor.vertex2.y + findFloor.vertex3.y)/3
-            local surfaceZ = (findFloor.vertex1.z + findFloor.vertex2.z + findFloor.vertex3.z)/3
-            local surfaceDist = math.sqrt((surfaceX - startPos.x)^2 + (surfaceZ - startPos.z)^2)
-
-            local smallestEdge = nil
-            for i = 0, 2 do
-                local currNum = (i%3) + 1
-                local nextNum = ((i+1)%3) + 1
-                local currPos = findFloor["vertex"..tostring(currNum)]
-                local nextPos = findFloor["vertex"..tostring(nextNum)]
-                local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.z - nextPos.z)^2)
-                if not smallestEdge or smallestEdge > edgeDist then
-                    smallestEdge = edgeDist
-                end
-            end
-
-            if smallestEdge > math.max(1500 - math.floor(spawnIteration/250)*100, 100) then --- math.floor(spawnIteration/100)*100 then
-                spawnStep = spawnStep + 1
-                -- Be in eye-shot of mario without being too close
-                local marioPos = {
-                    x = startPos.x + sins(startYaw)*10*math.floor(spawnIteration/50),
-                    y = startFloorHeight + 160,
-                    z = startPos.z + coss(startYaw)*10*math.floor(spawnIteration/50),
-                }
-                local rayMario = collision_find_surface_on_ray(marioPos.x, marioPos.y, marioPos.z, surfaceX - marioPos.x, (surfaceY + 200) - marioPos.y, surfaceZ - marioPos.z, 64)
-                if (not rayMario.surface --[[and surfaceDist > 500]]) then --or (spawnIteration > 500 and surfaceDist < 10000) then
-                    spawnStep = spawnStep + 1
-                    -- Avoid spawning close to trees
-                    local nTree, nTreeDist = nearest_object_with_behavior_id_to_pos(surfaceX, surfaceY, surfaceZ, id_bhvTree)
-                    if true then --not nTree or nTreeDist > 300 then
-                        spawnStep = spawnStep + 1
-
-                        -- Colc Angle
-                        local doorWallAngle = atan2s(surfaceZ - startPos.z, surfaceX - startPos.x)
-                        local doorWallDist = nil
-                        for i = 0, 7 do
-                            local ray = collision_find_surface_on_ray(surfaceX, surfaceY + 200, surfaceZ, sins(i*0x2000)*1000, 0, coss(i*0x2000)*1000, 1)
-                            if ray.surface then
-                                rayDist = math.sqrt((ray.hitPos.x - surfaceX)^2 + (ray.hitPos.z - surfaceZ)^2)
-                                if not doorWallDist or doorWallDist > rayDist then
-                                    doorWallAngle = i*0x2000
-                                    doorWallDist = rayDist
-                                end
-                            end
-                        end
-                        spawnPos = {
-                            x = surfaceX,
-                            y = math.max(find_water_level(findFloorX, findFloorZ) - 100, surfaceY) + 300,
-                            z = surfaceZ,
-                            yaw = doorWallAngle + 0x8000,
-                        }
-                    end
-                end
-            end
-        end 
-
-        if m.action & ACT_FLAG_SWIMMING_OR_FLYING ~= 0 then
-            return {x = 0, y = 0, z = 0, yaw = 0}
-        end
-
-        if get_time() - spawnStart > 10 then
-            log_to_console(tostring("Better Coins: Master Cap took 10 Seconds after "..tostring(spawnIteration).." iterations, got stuck on Step "..tostring(spawnStep)..", giving up."), CONSOLE_MESSAGE_ERROR)
-            return {x = 0, y = 0, z = 0, yaw = 0}
-        end
-    end
-
-    log_to_console(tostring("Better Coins: Master Cap Spawned at ("..math.round(spawnPos.x)..", "..math.round(spawnPos.y)..", "..math.round(spawnPos.z)..") in [Level "..gNetworkPlayers[0].currLevelNum.." / Area "..gNetworkPlayers[0].currAreaIndex.."] on iteration "..tostring(spawnIteration)..", Took "..tostring(get_time() - spawnStart).." Seconds."))
-    return spawnPos
-end
-
-function master_cap_get_spawn(spawnName, spawnFunc, level, area)
+function master_cap_get_spawn(spawnName, spawnFunc, level, area, offsetY)
     level = level or gNetworkPlayers[0].currLevelNum
     area = area or gNetworkPlayers[0].currAreaIndex
+    mul_random_seed(hash(spawnName)*level*area)
     local _, levelData = get_romhack_level_data(level, area)
     if not levelData[spawnName] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area and spawnFunc then
-        levelData[spawnName] = spawnFunc()
+        local surfData = find_surface_from_list(surfaceList, spawnFunc)
+        levelData[spawnName] = {
+            x = surfData.x,
+            y = surfData.y + (offsetY or 0),
+            z = surfData.z,
+        }
     end
     return levelData[spawnName]
 end
 
-local function find_master_door_spawn_position()
+local capSpawnRadius = 400
+local function spawn_req_master_cap(surfInfo)
     local m = gMarioStates[0] ---@type MarioState
-    local spawnPos = nil
-    math.randomseed(hash(CURR_ROMHACK))
-    local startPos = m.spawnInfo.startPos
-    local startYaw = m.spawnInfo.startAngle.y
-    local minX = startPos.x - 0x1000
-    local maxX = startPos.x + 0x1000
-    local minZ = startPos.z - 0x1000
-    local maxZ = startPos.z + 0x1000
-    local spawnStart = get_time()
-    local spawnIteration = 0
-    while spawnPos == nil do
-        local spawnStep = 0
-        spawnIteration = spawnIteration + 1
-        local rayFloor = collision_find_surface_on_ray(math.random(minX, maxX), 0x4000, math.random(minZ, maxZ), 0, -0x8000, 0, 1)
-        if rayFloor.surface and not evilFloorTypes[rayFloor.surface.type] and math.ceil(rayFloor.surface.normal.y*50) == 50 and rayFloor.hitPos.y > find_water_level(rayFloor.hitPos.x, rayFloor.hitPos.z) then
-            spawnStep = spawnStep + 1
-            local surfaceX = (rayFloor.surface.vertex1.x + rayFloor.surface.vertex2.x + rayFloor.surface.vertex3.x)/3
-            local surfaceY = (rayFloor.surface.vertex1.y + rayFloor.surface.vertex2.y + rayFloor.surface.vertex3.y)/3
-            local surfaceZ = (rayFloor.surface.vertex1.z + rayFloor.surface.vertex2.z + rayFloor.surface.vertex3.z)/3
-            local surfaceDist = math.sqrt((surfaceX - startPos.x)^2 + (surfaceZ - startPos.z)^2)
-
-            local smallestEdge = nil
-            for i = 0, 2 do
-                local currNum = (i%3) + 1
-                local nextNum = ((i+1)%3) + 1
-                local currPos = rayFloor.surface["vertex"..tostring(currNum)]
-                local nextPos = rayFloor.surface["vertex"..tostring(nextNum)]
-                local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.z - nextPos.z)^2)
-                if not smallestEdge or smallestEdge > edgeDist then
-                    smallestEdge = edgeDist
-                end
-            end
-
-            if smallestEdge > math.max(1500 - math.floor(spawnIteration/250)*100, 100) then --- math.floor(spawnIteration/100)*100 then
-                spawnStep = spawnStep + 1
-                -- Be in eye-shot of mario without being too close
-                local marioPos = {
-                    x = startPos.x + sins(startYaw)*10*math.floor(spawnIteration/50),
-                    y = find_floor(startPos.x, startPos.y, startPos.z) + 160, --+ 50*math.floor(spawnIteration/50),
-                    z = startPos.z + coss(startYaw)*10*math.floor(spawnIteration/50),
-                }
-                local rayMario = collision_find_surface_on_ray(marioPos.x, marioPos.y + 160, marioPos.z, surfaceX - marioPos.x, (surfaceY + 200) - marioPos.y, surfaceZ - marioPos.z, 64)
-                if (not rayMario.surface and surfaceDist > 1000) then --or (spawnIteration > 500 and surfaceDist < 10000) then
-                    spawnStep = spawnStep + 1
-                    -- Avoid spawning close to trees
-                    local nTree, nTreeDist = nearest_object_with_behavior_id_to_pos(surfaceX, surfaceY, surfaceZ, id_bhvTree)
-                    if not nTree or nTreeDist > 300 then
-                        spawnStep = spawnStep + 1
-
-                        -- Colc Angle
-                        local doorWallAngle = atan2s(surfaceZ - startPos.z, surfaceX - startPos.x)
-                        local doorWallDist = nil
-                        for i = 0, 7 do
-                            local ray = collision_find_surface_on_ray(surfaceX, surfaceY + 200, surfaceZ, sins(i*0x2000)*1000, 0, coss(i*0x2000)*1000, 1)
-                            if ray.surface then
-                                rayDist = math.sqrt((ray.hitPos.x - surfaceX)^2 + (ray.hitPos.z - surfaceZ)^2)
-                                if not doorWallDist or doorWallDist > rayDist then
-                                    doorWallAngle = i*0x2000
-                                    doorWallDist = rayDist
-                                end
-                            end
-                        end
-                        spawnPos = {
-                            x = surfaceX,
-                            y = surfaceY,
-                            z = surfaceZ,
-                            yaw = doorWallAngle + 0x8000,
-                        }
-                    end
-                end
-            end
-        end 
-
-        if get_time() - spawnStart > 10 then
-            log_to_console(tostring("Better Coins: Master Door took 10 Seconds after "..tostring(spawnIteration).." iterations, got stuck on Step "..tostring(spawnStep)..", giving up."), CONSOLE_MESSAGE_ERROR)
-            return {x = 0, y = 0, z = 0, yaw = 0}
-        end
+    local startFloorHeight, startFloor = find_floor(m.spawnInfo.startPos.x, m.spawnInfo.startPos.y, m.spawnInfo.startPos.z)
+    local dist = math.sqrt((surfInfo.x - m.spawnInfo.startPos.x)^2 + (surfInfo.y - startFloorHeight)^2 + (surfInfo.z - m.spawnInfo.startPos.z)^2)
+    if dist < 1000 and dist > 300 then
+        return true
     end
-
-    log_to_console(tostring("Better Coins: Master Door Spawned at ("..math.round(spawnPos.x)..", "..math.round(spawnPos.y)..", "..math.round(spawnPos.z)..") in [Level "..gNetworkPlayers[0].currLevelNum.." / Area "..gNetworkPlayers[0].currAreaIndex.."] on iteration "..tostring(spawnIteration)..", Took "..tostring(get_time() - spawnStart).." Seconds."))
-    return spawnPos
 end
 
-local function find_scarecrow_spawn_position()
-    local spawnPos = nil
-    math.randomseed(hash(CURR_ROMHACK))
-    local minX = -0x2000
-    local maxX = 0x2000
-    local minZ = -0x2000
-    local maxZ = 0x2000
-    local spawnStart = get_time()
-    local spawnIteration = 0
-    while spawnPos == nil do
-        local spawnStep = 0
-        spawnIteration = spawnIteration + 1
-        local rayFloor = collision_find_surface_on_ray(math.random(minX, maxX), 0x4000, math.random(minZ, maxZ), 0, -0x8000, 0, 1)
-        if rayFloor.surface and not evilFloorTypes[rayFloor.surface.type] and rayFloor.surface.normal.y > 0.95 and rayFloor.hitPos.y > find_water_level(rayFloor.hitPos.x, rayFloor.hitPos.z) then
-            spawnStep = spawnStep + 1
-            local surfaceX = (rayFloor.surface.vertex1.x + rayFloor.surface.vertex2.x + rayFloor.surface.vertex3.x)/3
-            local surfaceY = (rayFloor.surface.vertex1.y + rayFloor.surface.vertex2.y + rayFloor.surface.vertex3.y)/3
-            local surfaceZ = (rayFloor.surface.vertex1.z + rayFloor.surface.vertex2.z + rayFloor.surface.vertex3.z)/3
+local function spawn_req_master_door(surfData)
+    local m = gMarioStates[0] ---@type MarioState
 
-            local smallestEdge = nil
-            for i = 0, 2 do
-                local currNum = (i%3) + 1
-                local nextNum = ((i+1)%3) + 1
-                local currPos = rayFloor.surface["vertex"..tostring(currNum)]
-                local nextPos = rayFloor.surface["vertex"..tostring(nextNum)]
-                local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.z - nextPos.z)^2)
-                if not smallestEdge or smallestEdge > edgeDist then
-                    smallestEdge = edgeDist
-                end
-            end
-
-            if smallestEdge > math.max(1500 - math.floor(spawnIteration/250)*100, 100) then --- math.floor(spawnIteration/100)*100 then
-                spawnStep = spawnStep + 1
-                spawnPos = {
-                    x = surfaceX,
-                    y = surfaceY,
-                    z = surfaceZ,
-                    yaw = 0,
-                }
-            end
-        end 
-
-        if get_time() - spawnStart > 10 then
-            log_to_console(tostring("Better Coins: Scarecrow took 10 Seconds after "..tostring(spawnIteration).." iterations, got stuck on Step "..tostring(spawnStep)..", giving up."), CONSOLE_MESSAGE_ERROR)
-            return {x = 0, y = 0, z = 0, yaw = 0}
-        end
+    local nTree, nTreeDist = nearest_object_with_behavior_id_to_pos(surfData.x, surfData.y, surfData.z, id_bhvTree)
+    if (not nTree or nTreeDist > 300) and surfData.smallEdge > 500 then
+        return true
     end
+end
 
-    log_to_console(tostring("Better Coins: Scarecrow Spawned at ("..math.round(spawnPos.x)..", "..math.round(spawnPos.y)..", "..math.round(spawnPos.z)..") in [Level "..gNetworkPlayers[0].currLevelNum.." / Area "..gNetworkPlayers[0].currAreaIndex.."] on iteration "..tostring(spawnIteration)..", Took "..tostring(get_time() - spawnStart).." Seconds."))
-    return spawnPos
+local function spawn_req_scarecrow()
+    return true
 end
 
 -- Handles only spawning one scarecrow
@@ -858,9 +713,9 @@ local function on_sync()
 
     -- Spawn Door
     local _, hackLevelData, levelNum = get_romhack_level_data(levelNum, areaNum)
-    if not doorCheck and not doorSpawnsExist or (hackLevelData.masterDoor) then
-        local masterDoorSpawn = master_cap_get_spawn("masterDoor", find_master_door_spawn_position, levelNum, areaNum)
-        spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
+    if (not doorCheck and not doorSpawnsExist or (hackLevelData.masterDoor)) then
+        local masterDoorSpawn = master_cap_get_spawn("masterDoor", spawn_req_master_door, levelNum, areaNum)
+        spawn_sync_object_if_not_exist(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
             o.oFaceAnglePitch = 0
             o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
             o.oFaceAngleRoll = 0
@@ -875,11 +730,10 @@ local function on_sync()
     if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelNum ~= -1 and hackLevelData.masterCap ~= 0) then
         --if master_cap_data_exists(levelNum) then return end
         if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
-        if obj_get_first_with_behavior_id(id_bhvMasterCapBox) ~= nil then return end
 
-        local masterCapSpawn = master_cap_get_spawn("masterCap", find_master_cap_spawn_position, levelNum, areaNum)
+        local masterCapSpawn = master_cap_get_spawn("masterCap", spawn_req_master_cap, levelNum, areaNum, 400)
         if levelData ~= nil and levelData.runState == 0 then
-            spawn_sync_object(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)
+            spawn_sync_object_if_not_exist(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)
                 o.oFaceAnglePitch = 0
                 o.oFaceAngleYaw = masterCapSpawn.yaw or 0
                 o.oFaceAngleRoll = 0
@@ -1337,3 +1191,4 @@ hook_event(HOOK_ALLOW_FORCE_WATER_ACTION, allow_force_water_interaction)
 hook_event(HOOK_ON_LEVEL_INIT, check_late_entry)
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
 hook_event(HOOK_ON_PAUSE_EXIT, on_pause_exit)
+hook_event(HOOK_ON_ADD_SURFACE, add_surface)

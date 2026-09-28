@@ -398,3 +398,44 @@ end
 function save_file_prefix(str)
     return "saveFile"..tostring(get_current_save_file_num())..(save_file_get_using_backup_slot() and "B" or "")..str
 end
+
+function imul(a, b)
+    return math.u32(a * b)
+end
+
+function mulberry32(a)
+    a = math.u32(a + 0x6D2B79F5)
+    local t = a;
+    t = imul(t ~ (t >> 15), t | 1);
+    t = math.u32(t ~ (t + imul(t ~ (t >> 7), t | 61)))
+    return math.u32(t ~ (t >> 14)) / 4294967296;
+end
+
+local mulberrySeed = 1
+function mul_random_seed(seed)
+    mulberrySeed = seed
+end
+
+function mul_random(a, b)
+    local num = mulberry32(mulberrySeed)
+    mulberrySeed = math.round(num*4294967296)
+    if a then
+        if b then
+            return math.round(num*(b - a)) + a
+        else
+            return math.round(num*(a-1)) + 1
+        end
+    else
+        return num
+    end
+end
+
+
+function spawn_sync_object_if_not_exist(behaviorId, modelId, x, y, z, objSetupFunction)
+    local o = obj_get_first_with_behavior_id(behaviorId)
+    if o then
+        return o
+    else
+        return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction)
+    end
+end

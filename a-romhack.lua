@@ -255,9 +255,6 @@ function get_romhack_level_data(level, area)
                     end
                 end
             end
-
-            hackData[level] = {}
-            break
         end
     until hackData[level] == nil or hackData[level].levelMerge == nil
     if not hackData[level] then

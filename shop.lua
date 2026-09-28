@@ -275,5 +275,5 @@ local function hud_render()
     end
 end
 
-hook_event(HOOK_UPDATE, update)
+--hook_event(HOOK_UPDATE, update)
 hook_event(HOOK_ON_HUD_RENDER, hud_render)

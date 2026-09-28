@@ -851,7 +851,7 @@ local function bhv_ghost_coin_init(o)
     o.oHomeZ = o.oPosZ
 
     o.oIsCarried = 0
-    o.oBooCoinFace = math.random(0, 4)
+    o.oBooCoinFace = mul_random(0, 4)
 
     obj_set_model_extended(o, E_MODEL_BOO_COIN)
     obj_scale(o, 1.3)
@@ -905,14 +905,14 @@ local function bhv_ghost_coin_loop(o)
 
             if oA and dist < 400 then
                 obj_carry_to_obj(o, oA)
-                play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.9 + math.random()*0.3)
+                play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.cameraToObject, 0.9 + mul_random()*0.3)
             end
         end
 
         o.oOpacity = math.clamp(o.oOpacity + 15, 0, 255)
 
         if blueCoinSwitch and blueCoinSwitch.activeFlags == ACTIVE_FLAG_DEACTIVATED then
-            play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_SHORT, o.header.gfx.cameraToObject, 0.9 + math.random()*0.3)
+            play_sound_with_freq_scale(SOUND_OBJ_BOO_LAUGH_SHORT, o.header.gfx.cameraToObject, 0.9 + mul_random()*0.3)
             o.oAction = o.oAction + 1
         end
 
