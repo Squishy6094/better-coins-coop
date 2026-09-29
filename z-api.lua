@@ -18,4 +18,5 @@ _G.betterCoins = {
     master_cap_init_level = master_cap_init_level,
     master_cap_get_merged_level_num = master_cap_get_merged_level_num,
     master_cap_allow_spawn = master_cap_allow_spawn,
+    add_shop_item = add_shop_item,
 }

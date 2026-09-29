@@ -69,6 +69,10 @@ local shopItems = {
     },
 }
 
+function add_shop_item(item)
+    table.insert(shopItems, item)
+end
+
 local inShop = false
 
 local function update()
@@ -275,5 +279,5 @@ local function hud_render()
     end
 end
 
---hook_event(HOOK_UPDATE, update)
+hook_event(HOOK_UPDATE, update)
 hook_event(HOOK_ON_HUD_RENDER, hud_render)
