@@ -74,19 +74,6 @@ function add_shop_item(item)
     table.insert(shopItems, item)
 end
 
-local function update()
-    if m.controller.buttonPressed & D_JPAD ~= 0 then
-        spawn_non_sync_object(id_bhvShopkeeper, E_MODEL_STAR, m.pos.x, m.pos.y, m.pos.z, function(o)
-        
-        end)
-    end
-
-    if obj_has_behavior_id(m.interactObj, id_bhvShopkeeper) ~= 0 then
-        --djui_chat_message_create(tostring(get_dialog_id()))
-        
-    end
-end
-
 local TEX_HAND_CLOSED = get_texture_info("gd_texture_hand_closed")
 local TEX_HAND_OPEN = get_texture_info("gd_texture_hand_open")
 
@@ -208,14 +195,15 @@ local function hud_render()
                     cursorX = math.lerp(cursorX, x + 8, 0.1)
                     cursorY = math.lerp(cursorY, y + 8, 0.1)
                 end
-                local x = shopX + shopW*0.6 + 10
+                local x = shopX + shopW*0.6 + 7
                 local y = shopY + shopH*0.1
 
                 -- Name
                 djui_hud_set_font(FONT_NORMAL)
-                djui_hud_print_text(item.name, x, y, 0.5*s, 0.5*s)
                 local tW, tH = djui_hud_measure_text(item.name)
-                y = y + tH*0.5
+                local tS = math.min((shopW*0.6 + 7)/tW, 1)*0.5*s
+                djui_hud_print_text(item.name, x, y, tS, tS)
+                y = y + tH*tS
 
                 -- Cost
                 y = y + 2
@@ -246,7 +234,7 @@ local function hud_render()
                 -- Line
                 djui_hud_set_color(255, 255, 255, 255)
                 y = y + 3
-                djui_hud_render_rect(x - 5, y, shopW*0.4 - 10, 1)
+                djui_hud_render_rect(x - 2, y, shopW*0.4 - 9, 1)
                 y = y + 4
 
                 -- Description
@@ -310,5 +298,4 @@ local function hud_render()
     end
 end
 
-hook_event(HOOK_UPDATE, update)
 hook_event(HOOK_ON_HUD_RENDER, hud_render)
