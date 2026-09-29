@@ -48,7 +48,7 @@ local initCappy = false
 local function on_mods_loaded()
     if initCappy then return end
     if bhvOmmCappy then
-        table.insert(attractBhvs, function (o)
+        hook_attract_object(function (o)
             return obj_get_nearest_object_with_behavior_id(o, bhvOmmCappy)
         end)
     end

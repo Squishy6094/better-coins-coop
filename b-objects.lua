@@ -47,7 +47,7 @@ local function bhv_coin_carry_loop(o)
     if not o.parentObj then
         o.usingObj.oIsCarried = 0
     else
-        if (bhvOmmCappy and obj_has_behavior_id(o.parentObj, bhvOmmCappy) ~= 0 and o.parentObj.oSubAction == 0) then
+        if (obj_has_behavior_id(o.parentObj, id_bhvMario) == 0 and (obj_is_hidden(o.parentObj) ~= 0) or o.parentObj.activeFlags == ACTIVE_FLAG_DEACTIVATED) then
             o.parentObj = m.marioObj
         end
         if (m and not obj_can_interact_with_mario(m, o.usingObj)) then
@@ -72,9 +72,9 @@ local function bhv_coin_carry_loop(o)
 
     local velLerp = math.clamp(o.oForwardVel/carrierMax, 0, 1)
     local targetPos = {
-        x = o.parentObj.oPosX + velLerp,
-        y = o.parentObj.oPosY + (m.action & ACT_FLAG_AIR ~= 0 and velLerp or 0) + 70,
-        z = o.parentObj.oPosZ + velLerp,
+        x = o.parentObj.oPosX + o.parentObj.oVelX + velLerp,
+        y = o.parentObj.oPosY + o.parentObj.oVelY + (m.action & ACT_FLAG_AIR ~= 0 and velLerp or 0) + 70,
+        z = o.parentObj.oPosZ + o.parentObj.oVelZ + velLerp,
     }
 
     -- Make objs circle mario when uninteractable

@@ -596,7 +596,7 @@ function master_cap_get_spawn(spawnName, spawnFunc, level, area, offsetY)
     area = area or gNetworkPlayers[0].currAreaIndex
     mul_random_seed(hash(spawnName)*level*area)
     local _, levelData = get_romhack_level_data(level, area)
-    if not levelData[spawnName] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
+    if not levelData[spawnName] and level < LEVEL_COUNT and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
         local surfData = find_surface_from_list(surfaceList, spawnFunc)
         levelData[spawnName] = {
             x = surfData.x,
@@ -607,7 +607,6 @@ function master_cap_get_spawn(spawnName, spawnFunc, level, area, offsetY)
     return levelData[spawnName]
 end
 
-local capSpawnRadius = 400
 local function spawn_req_master_cap(surfInfo)
     local m = gMarioStates[0] ---@type MarioState
     local startFloorHeight, startFloor = find_floor(m.spawnInfo.startPos.x, m.spawnInfo.startPos.y, m.spawnInfo.startPos.z)
@@ -633,22 +632,27 @@ end
 -- Handles only spawning one scarecrow
 function master_cap_request_scarecrow_spawn()
     local scarecrowSpawnPos = master_cap_get_spawn("scarecrow")
-    spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, scarecrowSpawnPos.x, scarecrowSpawnPos.y, scarecrowSpawnPos.z, function(o)
-        
-    end)
+    if scarecrowSpawnPos then
+        spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, scarecrowSpawnPos.x, scarecrowSpawnPos.y, scarecrowSpawnPos.z, function(o)
+            
+        end)
+    end
 end
 
 local prevCoinDensity = {}
 
 local prevCoinsBest = 0
 local prevTimeBest = 0
+local entranceAreaNum = 1
 local function on_sync()
     local np = gNetworkPlayers[0]
     if np.currLevelNum == gLevelValues.entryLevel then
         local shopSpawn = master_cap_get_spawn("shop", nil)
-        spawn_sync_object_if_not_exist(id_bhvShopkeeper, E_MODEL_STAR, shopSpawn.x, shopSpawn.y, shopSpawn.z, function (o)
-            
-        end)
+        if shopSpawn then
+            spawn_sync_object_if_not_exist(id_bhvShopkeeper, E_MODEL_STAR, shopSpawn.x, shopSpawn.y, shopSpawn.z, function (o)
+                
+            end)
+        end
     end
 
     if not master_cap_allowed(true) then return end
@@ -722,21 +726,23 @@ local function on_sync()
     local _, hackLevelData, levelNum = get_romhack_level_data(levelNum, areaNum)
     if (not doorCheck and not doorSpawnsExist or (hackLevelData.masterDoor)) then
         local masterDoorSpawn = master_cap_get_spawn("masterDoor", spawn_req_master_door, levelNum, areaNum)
-        spawn_sync_object_if_not_exist(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
-            o.oFaceAnglePitch = 0
-            o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
-            o.oFaceAngleRoll = 0
+        if masterDoorSpawn then
+            spawn_sync_object_if_not_exist(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
+                o.oFaceAnglePitch = 0
+                o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
+                o.oFaceAngleRoll = 0
 
-            o.oMoveAnglePitch = o.oFaceAnglePitch
-            o.oMoveAngleYaw = o.oFaceAngleYaw
-            o.oMoveAngleRoll = o.oFaceAngleRoll
-        end)
+                o.oMoveAnglePitch = o.oFaceAnglePitch
+                o.oMoveAngleYaw = o.oFaceAngleYaw
+                o.oMoveAngleRoll = o.oFaceAngleRoll
+            end)
+        end
     end
     
     -- Spawn Cap
-    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelNum ~= -1 and hackLevelData.masterCap ~= 0) and hud_get_value(HUD_DISPLAY_COINS) > 0 then
+    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelNum ~= -1 and hackLevelData.masterCap ~= 0) and np.currAreaIndex == entranceAreaNum and hud_get_value(HUD_DISPLAY_COINS) == 0 then
         local masterCapSpawn = master_cap_get_spawn("masterCap", spawn_req_master_cap, levelNum, areaNum, 400)
-        if levelData ~= nil and levelData.runState == 0 then
+        if masterCapSpawn and levelData ~= nil and levelData.runState == 0 then
             spawn_sync_object_if_not_exist(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)
                 o.oFaceAnglePitch = 0
                 o.oFaceAngleYaw = masterCapSpawn.yaw or 0
@@ -1172,6 +1178,8 @@ end
 
 local wasMasterCap = false
 local function replace_skybox()
+    entranceAreaNum = gNetworkPlayers[0].currAreaIndex
+
     if gNetworkPlayers[0].currLevelNum == LEVEL_MASTER_CAP_STAGE then
         for name, tex in pairs(skyboxReplace) do
             texture_override_set(name, tex)

@@ -77,6 +77,42 @@ end
 local TEX_HAND_CLOSED = get_texture_info("gd_texture_hand_closed")
 local TEX_HAND_OPEN = get_texture_info("gd_texture_hand_open")
 
+
+-- override dialog color funcs for shop screen
+og_set_dialog_override_color = set_dialog_override_color
+og_reset_dialog_override_color = reset_dialog_override_color
+
+local dialogBgR = 0
+local dialogBgG = 0
+local dialogBgB = 0
+local dialogBgA = 150
+local dialogTextR = 255
+local dialogTextG = 255
+local dialogTextB = 255
+local dialogTextA = 255
+_G.set_dialog_override_color = function(bgR, bgG, bgB, bgA, textR, textG, textB, textA)
+    dialogBgR = bgR
+    dialogBgG = bgG
+    dialogBgB = bgB
+    dialogBgA = bgA
+    dialogTextR = textR
+    dialogTextG = textG
+    dialogTextB = textB
+    dialogTextA = textA
+    return og_set_dialog_override_color(bgR, bgG, bgB, bgA, textR, textG, textB, textA)
+end
+_G.reset_dialog_override_color = function()
+    dialogBgR = 0
+    dialogBgG = 0
+    dialogBgB = 0
+    dialogBgA = 150
+    dialogTextR = 255
+    dialogTextG = 255
+    dialogTextB = 255
+    dialogTextA = 255
+    return og_reset_dialog_override_color()
+end
+
 local cursorX = 0
 local cursorY = 0
 local itemSpacing = 20
@@ -137,7 +173,7 @@ local function hud_render()
         cursorY = math.clamp(cursorY - c.stickY/8, shopY + shopH*0.1, shopY + shopH*0.9)
     end
 
-    djui_hud_set_color(0, 0, 0, 150)
+    djui_hud_set_color(dialogBgR, dialogBgG, dialogBgB, dialogBgA)
     djui_hud_render_rect(shopX, shopY, shopW, shopH)
 
     djui_hud_set_color(255, 255, 255, 255)
@@ -189,7 +225,7 @@ local function hud_render()
             djui_hud_set_color(color, color, color, 255)
             local tex = type(item.texture) == "table" and item.texture[math.round(get_global_timer()*0.5)%(#item.texture + 1)] or item.texture
             djui_hud_render_texture(tex, x, y, 16/tex.width*s, 16/tex.height*s)
-            djui_hud_set_color(255, 255, 255, 255)
+            djui_hud_set_color(dialogTextR, dialogTextG, dialogTextB, dialogTextA)
             if gShopBoxState == 1 and cursorX > x and cursorX < x + 16 and cursorY > y and cursorY < y + 16 then
                 if cursorMag < 0.1 then
                     cursorX = math.lerp(cursorX, x + 8, 0.1)
@@ -219,7 +255,7 @@ local function hud_render()
                     djui_hud_render_texture(gTextures.no_camera, x, y, 0.5, 0.5)
                 end
                 y = y + tH*0.5
-                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_set_color(dialogTextR, dialogTextG, dialogTextB, dialogTextA)
 
                 -- Stock
                 if item.stock ~= -1 then
@@ -232,7 +268,7 @@ local function hud_render()
                 end
 
                 -- Line
-                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_set_color(dialogTextR, dialogTextG, dialogTextB, dialogTextA)
                 y = y + 3
                 djui_hud_render_rect(x - 2, y, shopW*0.4 - 9, 1)
                 y = y + 4
