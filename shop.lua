@@ -1,3 +1,4 @@
+local m = gMarioStates[0] ---@type MarioState
 local testToggle = false
 gPlayerSyncTable[0].pinkCoin = false
 
@@ -73,18 +74,16 @@ function add_shop_item(item)
     table.insert(shopItems, item)
 end
 
-local inShop = false
-
 local function update()
-    if gMarioStates[0].controller.buttonPressed & D_JPAD ~= 0 then
-        djui_chat_message_create("set")
-        if inShop then
-            set_mario_action(gMarioStates[0], ACT_IDLE, 0)
-            inShop = false
-        else
-            set_mario_action(gMarioStates[0], ACT_WAITING_FOR_DIALOG, 0)
-            inShop = true
-        end
+    if m.controller.buttonPressed & D_JPAD ~= 0 then
+        spawn_non_sync_object(id_bhvShopkeeper, E_MODEL_STAR, m.pos.x, m.pos.y, m.pos.z, function(o)
+        
+        end)
+    end
+
+    if obj_has_behavior_id(m.interactObj, id_bhvShopkeeper) ~= 0 then
+        --djui_chat_message_create(tostring(get_dialog_id()))
+        
     end
 end
 
@@ -99,38 +98,67 @@ local prevCoinAmount = 1000
 local arrowSize = 10
 local perColumn = 8
 local shakeTimer = 0
+
+-- Vanilla anim vars
+gShopBoxState = 3
+gShopBoxScale = 0.1
+gShopBoxOpenTimer = 90
+
 local function hud_render()
-    if not inShop then
+    if gShopBoxState == 3 then
         coinCountLerp = savedCoinCount
         return
     end
-    local c = gMarioStates[0].controller
+    local c = m.controller
     djui_hud_set_resolution(RESOLUTION_N64)
     local sW = djui_hud_get_screen_width()
     local sH = djui_hud_get_screen_height()
 
-    local shopX = sW*0.1
-    local shopY = sH*0.1
-    local shopW = sW*0.8
-    local shopH = sH*0.8
 
-    local perRow = math.round((shopW*0.6 - shopH*0.2)/itemSpacing)
+    -- anim logic
+    if (gShopBoxState == 0 or gShopBoxState == 2) then
+        sShopScalePrev = gShopBoxScale;
+        if (gShopBoxState == 0) then
+            gShopBoxScale = gShopBoxScale*1.5;
+            if gShopBoxScale >= 1 then
+                gShopBoxScale = 1
+                gShopBoxState = 1
+            end
+        else
+            gShopBoxScale = gShopBoxScale/1.5;
+            if gShopBoxScale <= 0.05 then
+                gShopBoxScale = 0.05
+                gShopBoxState = 3
+                set_mario_action(gMarioStates[0], ACT_IDLE, 0)
+            end
+        end
+    end
+    
+    local s = gShopBoxScale
+    local shopX = sW*0.5 - sW*0.4*s
+    local shopY = sH*0.5 - sH*0.4*s
+    local shopW = sW*0.8*s
+    local shopH = sH*0.8*s
+
+    local perRow = math.round((shopW*0.6 - shopH*0.2)/s/itemSpacing)
     local perPage = perColumn*perRow
     local pageCount = math.floor(#shopItems/perPage)
-    local perRowSize = perRow*itemSpacing
-    cursorMag = math.sqrt(c.stickX^2 + c.stickY^2)
-    cursorX = math.clamp(cursorX + c.stickX/8, shopX + shopW*0.3 - perRowSize*0.5 - 10, shopX + shopW*0.3 + perRowSize*0.5 + 10)
-    cursorY = math.clamp(cursorY - c.stickY/8, shopY + shopH*0.1, shopY + shopH*0.9)
+    local perRowSize = perRow*itemSpacing*s
+    if gShopBoxState == 1 then
+        cursorMag = math.sqrt(c.stickX^2 + c.stickY^2)
+        cursorX = math.clamp(cursorX + c.stickX/8, shopX + shopW*0.3 - perRowSize*0.5 - 10, shopX + shopW*0.3 + perRowSize*0.5 + 10)
+        cursorY = math.clamp(cursorY - c.stickY/8, shopY + shopH*0.1, shopY + shopH*0.9)
+    end
 
     djui_hud_set_color(0, 0, 0, 150)
     djui_hud_render_rect(shopX, shopY, shopW, shopH)
 
     djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_render_rect(shopX + shopW*0.6, shopY + shopH*0.1, 1, shopH*0.8)
+    djui_hud_render_rect(shopX + shopW*0.6, shopY + shopH*0.1, s, shopH*0.8)
 
     local pageString = "Page "..tostring(currShopPage+1).."/"..tostring(pageCount+1)
     local tW, tH = djui_hud_measure_text(pageString)
-    djui_hud_print_text(pageString, shopX + shopW*0.3 - tW*0.15, shopY + shopH - 14, 0.3, 0.3)
+    djui_hud_print_text(pageString, shopX + shopW*0.3 - tW*0.15*s, shopY + shopH - 14, 0.3*s, 0.3*s)
 
     if currShopPage > 0 then
         if cursorX < shopX + shopW*0.3 - perRowSize*0.5 then
@@ -168,14 +196,14 @@ local function hud_render()
 
     for id, item in pairs(shopItems) do
         if id > perPage*currShopPage and id <= perPage*(currShopPage + 1) then
-            local x = shopX + shopW*0.3 - perRowSize*0.5 + itemSpacing*((id-1-perPage*currShopPage)%perRow)
-            local y = shopY + shopH*0.1 + itemSpacing*math.floor((id-1-perPage*currShopPage)/perRow)
+            local x = shopX + shopW*0.3 - perRowSize*0.5 + itemSpacing*((id-1-perPage*currShopPage)%perRow)*s
+            local y = shopY + shopH*0.1 + itemSpacing*math.floor((id-1-perPage*currShopPage)/perRow)*s
             local color = (item.stock ~= 0 or item.interact) and 255 or 150
             djui_hud_set_color(color, color, color, 255)
             local tex = type(item.texture) == "table" and item.texture[math.round(get_global_timer()*0.5)%(#item.texture + 1)] or item.texture
-            djui_hud_render_texture(tex, x, y, 16/tex.width, 16/tex.height)
+            djui_hud_render_texture(tex, x, y, 16/tex.width*s, 16/tex.height*s)
             djui_hud_set_color(255, 255, 255, 255)
-            if cursorX > x and cursorX < x + 16 and cursorY > y and cursorY < y + 16 then
+            if gShopBoxState == 1 and cursorX > x and cursorX < x + 16 and cursorY > y and cursorY < y + 16 then
                 if cursorMag < 0.1 then
                     cursorX = math.lerp(cursorX, x + 8, 0.1)
                     cursorY = math.lerp(cursorY, y + 8, 0.1)
@@ -185,7 +213,7 @@ local function hud_render()
 
                 -- Name
                 djui_hud_set_font(FONT_NORMAL)
-                djui_hud_print_text(item.name, x, y, 0.5, 0.5)
+                djui_hud_print_text(item.name, x, y, 0.5*s, 0.5*s)
                 local tW, tH = djui_hud_measure_text(item.name)
                 y = y + tH*0.5
 
@@ -196,7 +224,7 @@ local function hud_render()
                 djui_hud_set_color(color, color, color, 255)
                 local coinText = tostring(item.coins):gsub("-", "M")
                 djui_hud_render_texture(gTextures.coin, x, y, 0.5, 0.5)
-                djui_hud_print_text(coinText, x + 8, y, 0.5, 0.5)
+                djui_hud_print_text(coinText, x + 8, y, 0.5*s, 0.5*s)
                 tW, tH = djui_hud_measure_text(coinText)
                 if item.stock == 0 then
                     djui_hud_set_color(255, 255, 255, 255)
@@ -210,7 +238,7 @@ local function hud_render()
                     y = y + 2
                     djui_hud_set_font(FONT_NORMAL)
                     local stockText = item.stock > 0 and "Stock: "..item.stock or "Out of Stock!"
-                    djui_hud_print_text(stockText, x, y, 0.25, 0.25)
+                    djui_hud_print_text(stockText, x, y, 0.25*s, 0.25*s)
                     tW, tH = djui_hud_measure_text(stockText)
                     y = y + tH*0.25
                 end
@@ -224,7 +252,7 @@ local function hud_render()
                 -- Description
                 djui_hud_set_font(FONT_NORMAL)
                 local descText = run_func_or_get_var(item.description, item)
-                djui_hud_print_text(descText, x, y, 0.25, 0.25)
+                djui_hud_print_text(descText, x, y, 0.25*s, 0.25*s)
                 tW, tH = djui_hud_measure_text(descText)
                 y = y + tH*0.25
 
@@ -248,20 +276,23 @@ local function hud_render()
         end
     end
 
-    djui_hud_render_texture(c.buttonDown & A_BUTTON ~= 0 and TEX_HAND_CLOSED or TEX_HAND_OPEN, cursorX - 4, cursorY - 10, 1, 1)
+    if gShopBoxState == 1 then
+        djui_hud_render_texture(c.buttonDown & A_BUTTON ~= 0 and TEX_HAND_CLOSED or TEX_HAND_OPEN, cursorX - 4, cursorY - 10, 1, 1)
+    end
     --djui_hud_render_rect(cursorX, cursorY, 1, 1)
     djui_hud_set_font(FONT_HUD)
     local shake = shakeTimer*math.sin(shakeTimer)*0.1
     local coinString = tostring(coinCountLerp):gsub("-", "M")
     local tW, tH = djui_hud_measure_text(coinString)
-    djui_hud_render_texture(gTextures.coin, sW*0.5 - tW*0.5 - 16 - shake, shopY + shopH + 3, 1, 1)
-    djui_hud_print_text("@", sW*0.5 - tW*0.5 - shake, shopY + shopH + 3, 1, 1)
-    djui_hud_print_text(coinString, sW*0.5 - tW*0.5 + 16 - shake, shopY + shopH + 3, 1, 1)
+    tW = tW * s
+    djui_hud_render_texture(gTextures.coin, sW*0.5 - tW*0.5 - 16*s - shake, shopY + shopH + 3, 1*s, 1*s)
+    djui_hud_print_text("@", sW*0.5 - tW*0.5 - shake, shopY + shopH + 3, 1*s, 1*s)
+    djui_hud_print_text(coinString, sW*0.5 - tW*0.5 + 16*s - shake, shopY + shopH + 3, 1*s, 1*s)
     shakeTimer = math.max(shakeTimer - 1, 0)
 
     if c.buttonDown & B_BUTTON ~= 0 then
-        set_mario_action(gMarioStates[0], ACT_IDLE, 0)
-        inShop = false
+        gShopBoxState = 2
+        play_sound(SOUND_MENU_MESSAGE_DISAPPEAR, gGlobalSoundSource)
     end
 
     coinCountLerp = math.lerp(coinCountLerp, savedCoinCount, 0.1)

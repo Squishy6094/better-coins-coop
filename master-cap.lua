@@ -596,7 +596,7 @@ function master_cap_get_spawn(spawnName, spawnFunc, level, area, offsetY)
     area = area or gNetworkPlayers[0].currAreaIndex
     mul_random_seed(hash(spawnName)*level*area)
     local _, levelData = get_romhack_level_data(level, area)
-    if not levelData[spawnName] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area and spawnFunc then
+    if not levelData[spawnName] and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
         local surfData = find_surface_from_list(surfaceList, spawnFunc)
         levelData[spawnName] = {
             x = surfData.x,
@@ -632,7 +632,7 @@ end
 
 -- Handles only spawning one scarecrow
 function master_cap_request_scarecrow_spawn()
-    local scarecrowSpawnPos = master_cap_get_spawn("scarecrow", find_scarecrow_spawn_position)
+    local scarecrowSpawnPos = master_cap_get_spawn("scarecrow")
     spawn_sync_object(id_bhvMasterCapScarecrow, E_MODEL_SCARECROW, scarecrowSpawnPos.x, scarecrowSpawnPos.y, scarecrowSpawnPos.z, function(o)
         
     end)
@@ -643,6 +643,14 @@ local prevCoinDensity = {}
 local prevCoinsBest = 0
 local prevTimeBest = 0
 local function on_sync()
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum == gLevelValues.entryLevel then
+        local shopSpawn = master_cap_get_spawn("shop", nil)
+        spawn_sync_object_if_not_exist(id_bhvShopkeeper, E_MODEL_STAR, shopSpawn.x, shopSpawn.y, shopSpawn.z, function (o)
+            
+        end)
+    end
+
     if not master_cap_allowed(true) then return end
     local levelNum, levelData = master_cap_get_level()
     local hackData = get_romhack_data()
@@ -652,7 +660,6 @@ local function on_sync()
         --set_ttc_speed_setting(TTC_SPEED_STOPPED)
     end
 
-    local np = gNetworkPlayers[0]
 
     prevCoinsBest, prevTimeBest = master_cap_get_record(levelNum)
 
@@ -727,10 +734,7 @@ local function on_sync()
     end
     
     -- Spawn Cap
-    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelNum ~= -1 and hackLevelData.masterCap ~= 0) then
-        --if master_cap_data_exists(levelNum) then return end
-        if hud_get_value(HUD_DISPLAY_COINS) > 0 then return end
-
+    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelNum ~= -1 and hackLevelData.masterCap ~= 0) and hud_get_value(HUD_DISPLAY_COINS) > 0 then
         local masterCapSpawn = master_cap_get_spawn("masterCap", spawn_req_master_cap, levelNum, areaNum, 400)
         if levelData ~= nil and levelData.runState == 0 then
             spawn_sync_object_if_not_exist(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)

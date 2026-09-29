@@ -827,3 +827,66 @@ local function bhv_master_cap_switch_loop(o)
 end
 
 id_bhvMasterCapSwitch = hook_behavior(id_bhvMasterCapSwitch, OBJ_LIST_SURFACE, true, bhv_master_cap_switch_init, bhv_master_cap_switch_loop, "bhvMasterCapSwitch")
+
+local function on_mods_loaded()
+
+DIALOG_SHOPKEEPER_1 = smlua_text_utils_allocate_dialog()
+smlua_text_utils_dialog_replace(DIALOG_SHOPKEEPER_1, 1, 4, 30, 200, "Come look at our stock\
+today! We have lots of\
+fun trinkets for you\
+to browse!")
+
+end
+
+hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
+
+---@param o Object 
+local function bhv_shopkeeper_init(o)
+    o.oFlags = (OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_HOLDABLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
+    o.oInteractType = INTERACT_TEXT
+    o.hitboxRadius = 100
+    o.hitboxHeight = 60
+    
+
+    o.oGravity = 2.5;
+    o.oFriction = 0.8;
+    o.oBuoyancy = 1.3;
+    o.oInteractionSubtype = INT_SUBTYPE_NPC;
+
+    network_init_object(o, true, {
+        "oBobombBuddyHasTalkedToMario",
+        "oBobombBuddyCannonStatus"
+    })
+end
+
+local function bhv_shopkeeper_loop(o)
+    o.oIntangibleTimer = 0
+    if o.oAction == 0 then
+        local animFrame = o.header.gfx.animInfo.animFrame;
+
+        o.oBobombBuddyPosXCopy = o.oPosX;
+        o.oBobombBuddyPosYCopy = o.oPosY;
+        o.oBobombBuddyPosZCopy = o.oPosZ;
+
+        object_step();
+
+        local player = nearest_player_to_object(o);
+        if (player and dist_between_objects(o, player) < 1000.0) then
+            o.oMoveAngleYaw = approach_s16_symmetric(o.oMoveAngleYaw, obj_angle_to_object(o, player), 0x140);
+        end
+
+        if (o.oInteractStatus == INT_STATUS_INTERACTED) then
+            o.oAction = 1;
+        end
+    elseif o.oAction == 1 then
+        if cutscene_object_with_dialog(CUTSCENE_DIALOG, o, DIALOG_SHOPKEEPER_1) ~= BOBOMB_BUDDY_BP_STYPE_GENERIC then
+            gShopBoxState = 0
+            play_sound(SOUND_MENU_MESSAGE_APPEAR, gGlobalSoundSource)
+            o.oAction = 0
+        end
+    end
+
+    o.oInteractStatus = 0;
+end
+
+id_bhvShopkeeper = hook_behavior(id_bhvShopkeeper, OBJ_LIST_GENACTOR, true, bhv_shopkeeper_init, bhv_shopkeeper_loop, "id_bhvShopkeeper")
