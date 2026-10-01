@@ -727,7 +727,7 @@ local function on_sync()
     if (not doorCheck and not doorSpawnsExist or (hackLevelData.masterDoor)) then
         local masterDoorSpawn = master_cap_get_spawn("masterDoor", spawn_req_master_door, levelNum, areaNum)
         if masterDoorSpawn then
-            spawn_sync_object_if_not_exist(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
+            spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
                 o.oFaceAnglePitch = 0
                 o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
                 o.oFaceAngleRoll = 0
