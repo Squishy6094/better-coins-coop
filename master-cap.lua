@@ -58,12 +58,21 @@ local function add_surface(surface, dynamic)
 end
 
 local function find_surface_from_list(list, func)
+    local failsafe = 1000
     repeat
         local surfInfo = list[mul_random(1, #list)]
         if not func or func(surfInfo) then
             return surfInfo
         end
-    until false
+        failsafe = failsafe - 1
+    until failsafe < 0
+    local m = gMarioStates[0]
+    return {
+        x = m.pos.x + sins(m.faceAngle.y)*500,
+        y = m.floorHeight,
+        z = m.pos.z + coss(m.faceAngle.y)*500,
+        smallEdge = 1000,
+    }
 end
 
 local function update_save()
