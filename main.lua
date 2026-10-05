@@ -253,7 +253,6 @@ local function coin_counter()
     end
 end
 
-local coinSoundCount = 0
 local coinSoundCombo = 0
 local coinSoundComboEnd = 0
 --[[
@@ -264,6 +263,7 @@ local coinsSounds = {
     [3] = audio_stream_load("coin4.ogg"),
 }
 ]]
+
 customCoinSound = false
 ---@param m MarioState
 local function interact(m, o, int)
@@ -278,9 +278,9 @@ local function interact(m, o, int)
             coinSoundCombo = coinSoundCombo + 1
         end
         local freqScale = math.lerp(0.95, 1.5, math.clamp(coinSoundCombo/50, 0, 1))
+        local l = gLakituState
         customCoinSound = true
-        play_sound_with_freq_scale(SOUND_GENERAL_COIN, gGlobalSoundSource, freqScale)
-        coinSoundCount = (coinSoundCount + 1)%4
+        play_sound_with_freq_scale((l.pos.y > find_water_level(l.pos.x, l.pos.z) - 10) and SOUND_GENERAL_COIN or SOUND_GENERAL_COIN_WATER, gGlobalSoundSource, freqScale)
         coinSoundComboEnd = get_global_timer() + 90
 
         if mario_master_cap_active(m) then
@@ -295,7 +295,7 @@ local function interact(m, o, int)
 end
 
 local function on_coin_sound(sound, pos)
-    if sound == SOUND_GENERAL_COIN and not customCoinSound then
+    if (sound == SOUND_GENERAL_COIN or sound == SOUND_GENERAL_COIN_WATER) and not customCoinSound then
         return NO_SOUND
     end
     customCoinSound = false
