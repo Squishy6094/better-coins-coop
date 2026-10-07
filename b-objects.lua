@@ -889,4 +889,13 @@ local function bhv_shopkeeper_loop(o)
     o.oInteractStatus = 0;
 end
 
-id_bhvShopkeeper = hook_behavior(id_bhvShopkeeper, OBJ_LIST_GENACTOR, true, bhv_shopkeeper_init, bhv_shopkeeper_loop, "id_bhvShopkeeper")
+id_bhvShopkeeper = hook_behavior(id_bhvShopkeeper, OBJ_LIST_GENACTOR, true, bhv_shopkeeper_init, bhv_shopkeeper_loop, "bhvShopkeeper")
+
+local function bhv_howling_wind(o)
+    local levelNum, levelData = master_cap_get_level()
+    if levelData.runState ~= 1 then
+        play_sound(SOUND_AIR_HOWLING_WIND, gGlobalSoundSource);
+    end
+end
+
+id_bhvHowlingWind = hook_behavior(id_bhvHowlingWind, OBJ_LIST_GENACTOR, true, nil, bhv_howling_wind, "bhvHowlingWind")
