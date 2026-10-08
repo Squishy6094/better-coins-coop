@@ -64,14 +64,14 @@ end
 gLevelValues.maxCoins = 9999
 
 local sRedCoinTextures = {
-    [0] = get_texture_info("coin_seg3_texture_03005780"),
+    get_texture_info("coin_seg3_texture_03005780"),
     get_texture_info("coin_seg3_texture_03005F80"),
     get_texture_info("coin_seg3_texture_03006780"),
     get_texture_info("coin_seg3_texture_03006F80"),
 }
 
 local sSecretTextures = {
-    [0] = get_texture_info("sparkles_seg4_texture_04027490"),
+    get_texture_info("sparkles_seg4_texture_04027490"),
     get_texture_info("sparkles_seg4_texture_04027C90"),
     get_texture_info("sparkles_seg4_texture_04028490"),
     get_texture_info("sparkles_seg4_texture_04028C90"),
@@ -80,55 +80,68 @@ local sSecretTextures = {
 }
 
 local sBooCoinTextures = {
-    [0] = get_texture_info("Boo-Coins-Side"),
+    get_texture_info("Boo-Coins-Side"),
     get_texture_info("Boo-Coins-Joyous1"),
     get_texture_info("Boo-Coins-Joyous2"),
     get_texture_info("Boo-Coins-Joyous3"),
 }
 
-local function update_dynos(name, enabled)
-    sRedCoinTextures = {
-        [0] = get_texture_info("coin_seg3_texture_03005780"),
-        get_texture_info("coin_seg3_texture_03005F80"),
-        get_texture_info("coin_seg3_texture_03006780"),
-        get_texture_info("coin_seg3_texture_03006F80"),
-    }
+local sRedStarTextures = {
+    func = function(o, dist)
+        local oMarker = obj_get_nearest_object_with_behavior_id(o, id_bhvRedCoinStarMarker)
+        if oMarker ~= nil then
+            if o == obj_get_nearest_object_with_behavior_id(oMarker, id_bhvStarSpawnCoordinates) then
+                return 
+            end
+        end
+        return 0x8000
+    end,
+    get_texture_info("gd_texture_red_star_0"),
+    get_texture_info("gd_texture_red_star_1"),
+    get_texture_info("gd_texture_red_star_2"),
+    get_texture_info("gd_texture_red_star_3"),
+    get_texture_info("gd_texture_red_star_4"),
+    get_texture_info("gd_texture_red_star_5"),
+    get_texture_info("gd_texture_red_star_6"),
+    get_texture_info("gd_texture_red_star_7"),
+}
 
-    sSecretTextures = {
-        [0] = get_texture_info("sparkles_seg4_texture_04027490"),
-        get_texture_info("sparkles_seg4_texture_04027C90"),
-        get_texture_info("sparkles_seg4_texture_04028490"),
-        get_texture_info("sparkles_seg4_texture_04028C90"),
-        get_texture_info("sparkles_seg4_texture_04029490"),
-        get_texture_info("sparkles_seg4_texture_04029C90"),
-    }
-
-    sBooCoinTextures = {
-        [0] = get_texture_info("Boo-Coins-Side"),
-        get_texture_info("Boo-Coins-Joyous1"),
-        get_texture_info("Boo-Coins-Joyous2"),
-        get_texture_info("Boo-Coins-Joyous3"),
-    }
-end
-
-hook_event(HOOK_ON_DYNOS_PACK_TOGGLED, update_dynos)
+local radarBhvs = {
+    [id_bhvRedCoin] = sRedCoinTextures,
+    [id_bhvHiddenStarTrigger] = sSecretTextures,
+    [id_bhvBlueCoinSwitch] = sBooCoinTextures,
+    [id_bhvStarSpawnCoordinates] = sRedStarTextures,
+}
 
 local customCoinHudValue = 0
 local coinAnim = 0
 local coinSpeed = 0
 local prevNumCoinsToLifeCount = 0
 
----@param o Object Mario Object
+---@param m MarioState Mario Object
 ---@param bhvId BehaviorId|integer
----@return integer?
-local function obj_get_radar_dist_nearest_object_with_behavior_id(o, bhvId)
-    local oTarget = obj_get_nearest_object_with_behavior_id(o, bhvId);
-    if (oTarget) then
-        local visableMario = collision_find_surface_on_ray(o.oPosX, (o.oPosY + o.hitboxHeight*0.5), o.oPosZ, oTarget.oPosX - o.oPosX, (oTarget.oPosY + oTarget.hitboxHeight*0.5) - (o.oPosY + o.hitboxHeight*0.5), oTarget.oPosZ - o.oPosZ, 1).surface == nil
-        local dist = math.sqrt((oTarget.oPosX - o.oPosX)^2 + (oTarget.oPosY - o.oPosY)^2 + (oTarget.oPosZ - o.oPosZ)^2)*(visableMario and 1 or 2)
-        return dist
+---@return integer
+local function mario_get_radar_dist_nearest_object_with_behavior_id(m, bhvId)
+    local oTarget = obj_get_nearest_object_with_behavior_id(m.marioObj, bhvId);
+    if not oTarget or obj_is_hidden(oTarget) ~= 0 or not obj_is_valid_for_interaction(oTarget) then return 0x8000 end
+    local rotDiff = 1 + math.abs(math.s16(m.faceAngle.y - atan2s((oTarget.oPosZ - m.pos.z), (oTarget.oPosX - m.pos.x)))/0x8000)*0.4
+    local visableMario = collision_find_surface_on_ray(m.pos.x, (m.pos.y + m.marioObj.hitboxHeight*0.5), m.pos.z, oTarget.oPosX - m.pos.x, (oTarget.oPosY + oTarget.hitboxHeight*0.5) - (m.pos.y + m.marioObj.hitboxHeight*0.5), oTarget.oPosZ - m.pos.z, 1).surface == nil
+    local dist = math.sqrt((oTarget.oPosX - m.pos.x)^2 + (oTarget.oPosY*2 - m.pos.y*2)^2 + (oTarget.oPosZ - m.pos.z)^2)
+    dist = dist*(visableMario and 1 or 2)*rotDiff
+    return radarBhvs[bhvId].func and radarBhvs[bhvId].func(oTarget, dist) or dist
+end
+
+local function update_dynos(name, enabled)
+    for _, texTable in pairs(radarBhvs) do
+        for id, tex in pairs(texTable) do
+            if type(tex) == "userdata" then
+                texTable[id] = get_texture_info(tex.name)
+            end
+        end
     end
 end
+
+hook_event(HOOK_ON_DYNOS_PACK_TOGGLED, update_dynos)
 
 local prevTex = nil
 local transOpacity = 1
@@ -163,34 +176,24 @@ local function coin_counter()
 
     if (m.marioObj) then
         local currTex = nil
-        local currDist = nil
-        local dist = obj_get_radar_dist_nearest_object_with_behavior_id(m.marioObj, id_bhvRedCoin);
-        if not currDist or (dist and currDist > dist) then
-            currTex = sRedCoinTextures
-            currDist = dist
-        end
-
-        local dist = obj_get_radar_dist_nearest_object_with_behavior_id(m.marioObj, id_bhvHiddenStarTrigger);
-        if not currDist or (dist and currDist > dist) then
-            currTex = sSecretTextures
-            currDist = dist
-        end
-
-        local dist = obj_get_radar_dist_nearest_object_with_behavior_id(m.marioObj, id_bhvBlueCoinSwitch);
-        if not currDist or (dist and currDist > dist) then
-            currTex = sBooCoinTextures
-            currDist = dist
+        local currDist = 0x8000
+        for bhvId, texTable in pairs(radarBhvs) do
+            local dist = mario_get_radar_dist_nearest_object_with_behavior_id(m, bhvId);
+            if currDist > dist then
+                currTex = texTable
+                currDist = dist
+            end
         end
 
         if currDist and prevTex then
             local hudScale = hudDodge.find_average_hud_scale(0, 0)
             local targetCoinSpeed = math.clamp((500*5 / currDist), 0, 1)
             coinSpeed = math.lerp(coinSpeed, targetCoinSpeed, 0.1)
-            coinAnim = (coinAnim + coinSpeed*0.5) % (#prevTex + 1)
+            coinAnim = (coinAnim + coinSpeed*0.5) % (#prevTex)
             local colorRed = (prevTex == sRedCoinTextures) and 0 or 255
             djui_hud_set_color(255, colorRed, colorRed, 255*coinSpeed*transOpacity)
             local dX, dY = hudDodge.find_open_hud_space(0, 0, 16*hudScale, 16*hudScale, 0, 1)
-            djui_hud_render_texture(prevTex[math.floor(coinAnim)], dX, dY, 0.5*hudScale, 0.5*hudScale)
+            djui_hud_render_texture(prevTex[math.floor(coinAnim) + 1], dX, dY, 0.5*hudScale, 0.5*hudScale)
         else
             coinSpeed = math.lerp(coinSpeed, 0, 0.1)
         end
@@ -255,15 +258,6 @@ end
 
 local coinSoundCombo = 0
 local coinSoundComboEnd = 0
---[[
-local coinsSounds = {
-    [0] = audio_stream_load("coin1.ogg"),
-    [1] = audio_stream_load("coin2.ogg"),
-    [2] = audio_stream_load("coin3.ogg"),
-    [3] = audio_stream_load("coin4.ogg"),
-}
-]]
-
 customCoinSound = false
 ---@param m MarioState
 local function interact(m, o, int)
