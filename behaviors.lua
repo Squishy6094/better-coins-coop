@@ -24,6 +24,9 @@ end
 ---@param o Object
 function bhv_init_for_magnitize(o)
     o.oIsCarried = 0
+    network_init_object(o, true, {
+        "oIsCarried"
+    })
 end
 
 -- Targets to attract coins to

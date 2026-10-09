@@ -32,6 +32,8 @@ _G.hud_dodge_queue_in_mod = function(value)
 end
 _G.hudDodgeDebugRendering = false
 
+-- Utils
+
 local function ceil_power(x)
     local p = 1
     while p < x do p = p * 2 end
@@ -58,6 +60,13 @@ local function table_get_common_entry(list)
     return maxEntry or 0
 end
 
+local function rects_overlap(x1, y1, w1, h1, x2, y2, w2, h2)
+    return x1 <= x2 + w2 and
+           x1 + w1 >= x2 and
+           y1 <= y2 + h2 and
+           y1 + h1 >= y2
+end
+
 local function add_hitbox(x, y, w, h, inMod)
     if _G.hudDodgeDebugRendering then return end
     inMod = inMod or 0
@@ -69,14 +78,25 @@ local function add_hitbox(x, y, w, h, inMod)
         end
         queueInMod = queueInMod - 1
     end
-    table.insert(hitboxList, {
-        x = x,
-        y = y,
-        w = w,
-        h = h,
-        inMod = inMod,
-        behind = isRenderBehind,
-    })
+
+    local overlap = false
+    for _, hitbox in pairs(hitboxList) do
+        if rects_overlap(x, y, w, h, hitbox.x + 1, hitbox.y + 1, hitbox.w - 2, hitbox.h - 2) then
+            overlap = true
+            break
+        end
+    end
+
+    if not overlap then
+        table.insert(hitboxList, {
+            x = x,
+            y = y,
+            w = w,
+            h = h,
+            inMod = inMod,
+            behind = isRenderBehind,
+        })
+    end
 end
 
 local function reset_hitbox_list()
@@ -358,13 +378,6 @@ end
 local function set_screen_margin(x, y)
     screenMarginLeft = x
     screenMarginTop = y
-end
-
-local function rects_overlap(x1, y1, w1, h1, x2, y2, w2, h2)
-    return x1 <= x2 + w2 and
-           x1 + w1 >= x2 and
-           y1 <= y2 + h2 and
-           y1 + h1 >= y2
 end
 
 ---@param x integer X Posistion of Hitbox

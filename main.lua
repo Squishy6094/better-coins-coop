@@ -88,6 +88,7 @@ local sBooCoinTextures = {
 
 local sRedStarTextures = {
     func = function(o, dist)
+        if not obj_is_valid_for_interaction(o) then return end
         local oMarker = obj_get_nearest_object_with_behavior_id(o, id_bhvRedCoinStarMarker)
         if oMarker ~= nil then
             if o == obj_get_nearest_object_with_behavior_id(oMarker, id_bhvStarSpawnCoordinates) then
@@ -107,9 +108,9 @@ local sRedStarTextures = {
 }
 
 local radarBhvs = {
+    [id_bhvBlueCoinSwitch] = sBooCoinTextures,
     [id_bhvRedCoin] = sRedCoinTextures,
     [id_bhvHiddenStarTrigger] = sSecretTextures,
-    [id_bhvBlueCoinSwitch] = sBooCoinTextures,
     [id_bhvStarSpawnCoordinates] = sRedStarTextures,
 }
 
@@ -123,7 +124,7 @@ local prevNumCoinsToLifeCount = 0
 ---@return integer
 local function mario_get_radar_dist_nearest_object_with_behavior_id(m, bhvId)
     local oTarget = obj_get_nearest_object_with_behavior_id(m.marioObj, bhvId);
-    if not oTarget or obj_is_hidden(oTarget) ~= 0 or not obj_is_valid_for_interaction(oTarget) then return 0x8000 end
+    if not oTarget or obj_is_hidden(oTarget) ~= 0 then return 0x8000 end
     local rotDiff = 1 + math.abs(math.s16(m.faceAngle.y - atan2s((oTarget.oPosZ - m.pos.z), (oTarget.oPosX - m.pos.x)))/0x8000)*0.4
     local visableMario = collision_find_surface_on_ray(m.pos.x, (m.pos.y + m.marioObj.hitboxHeight*0.5), m.pos.z, oTarget.oPosX - m.pos.x, (oTarget.oPosY + oTarget.hitboxHeight*0.5) - (m.pos.y + m.marioObj.hitboxHeight*0.5), oTarget.oPosZ - m.pos.z, 1).surface == nil
     local dist = math.sqrt((oTarget.oPosX - m.pos.x)^2 + (oTarget.oPosY*2 - m.pos.y*2)^2 + (oTarget.oPosZ - m.pos.z)^2)
