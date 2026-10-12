@@ -12,7 +12,6 @@ gGlobalSyncTable.allowMasterCapApi = nil
 -- Surface List
 
 local surfaceList = {}
-local surfaceListDynamic = {}
 
 ---@param list table
 ---@param surface Surface
@@ -44,17 +43,14 @@ end
 
 local prevLevel = 0
 local function add_surface(surface, dynamic)
+    if dynamic then return end
     if surface.normal.y < 0.1 then return end
-    if dynamic then
-        add_surface_to_list(surfaceListDynamic, surface)
-    else
-        local currLevel = gNetworkPlayers[0].currLevelNum*7 + gNetworkPlayers[0].currAreaIndex
-        if prevLevel ~= currLevel then
-            surfaceList = {}
-            prevLevel = currLevel
-        end
-        add_surface_to_list(surfaceList, surface)
+    local currLevel = gNetworkPlayers[0].currLevelNum*7 + gNetworkPlayers[0].currAreaIndex
+    if prevLevel ~= currLevel then
+        surfaceList = {}
+        prevLevel = currLevel
     end
+    add_surface_to_list(surfaceList, surface)
 end
 
 local function find_surface_from_list(list, func)
