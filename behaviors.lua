@@ -1114,7 +1114,8 @@ local function prevent_star_dance(m, nextAct)
         local o = m.interactObj
         if o and (o.oInteractType & INTERACT_STAR_OR_KEY) ~= 0 then
             set_object_respawn_info_bits(o, 0xFF)
-            if o.oInteractionSubtype == INT_SUBTYPE_NO_EXIT then
+            local _, levelData = master_cap_get_level()
+            if o.oInteractionSubtype == INT_SUBTYPE_NO_EXIT or levelData.runState == 1 then
                 spawn_coin_spawner(o, 10, true)
                 return 1
             end
@@ -1124,8 +1125,7 @@ end
 
 local function allow_interact(m, o, int)
     if o.oIntangibleTimer ~= 0 then return end
-    local _, levelData = master_cap_get_level()
-    local nonStop = gServerSettings.stayInLevelAfterStar == STAR_NON_STOP or levelData.runState == 1
+    local nonStop = gServerSettings.stayInLevelAfterStar == STAR_NON_STOP
     if int == INTERACT_STAR_OR_KEY and (obj_is_star_collected(o) or nonStop) then
         o.oInteractionSubtype = INT_SUBTYPE_NO_EXIT
         if nonStop then
