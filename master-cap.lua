@@ -668,7 +668,7 @@ local function on_sync()
 
     if master_cap_allowed() then
         gLevelValues.disableActs = true
-        --set_ttc_speed_setting(TTC_SPEED_STOPPED)
+        set_ttc_speed_setting(TTC_SPEED_STOPPED)
     end
 
 
@@ -1112,7 +1112,7 @@ local function check_late_entry()
     set_skybox_color(1, 255)
     set_skybox_color(2, 255)
     gLevelValues.disableActs = true
-    --set_ttc_speed_setting(TTC_SPEED_STOPPED)
+    set_ttc_speed_setting(TTC_SPEED_STOPPED)
 
     if levelNum == master_cap_get_merged_level_num() and levelData.runState == 1 and prevLevel ~= prevLevel then
         gPlayerSyncTable[0].diedInRun = true
