@@ -534,6 +534,26 @@ hook_coins_behavior(id_bhvFloorSwitchAnimatesObject, false, bhv_purple_switch_co
 hook_coins_behavior(id_bhvFloorSwitchHiddenObjects, false, bhv_purple_switch_coins_init, bhv_purple_switch_coins_loop)
 hook_coins_behavior(id_bhvFloorSwitchGrills, false, bhv_purple_switch_coins_init, bhv_purple_switch_coins_loop)
 
+local function bhv_bowser_bomb_explode_master_cap(o)
+    local _, levelData = master_cap_get_level()
+    if levelData.runState == 1 then
+        o.usingObj = obj_get_nearest_object_with_behavior_id(o, id_bhvBowser) or o.usingObj
+        if o.usingObj and o.usingObj.oAction == 4 then -- Bowser is dying
+            if o == obj_get_first_with_behavior_id(id_bhvBowserBomb) then
+                if o.oTimer > 10 then
+                    o.oInteractStatus = INT_STATUS_HIT_MINE
+                end
+            else
+                o.oTimer = 0
+            end
+        else
+            o.oTimer = 0
+        end
+    end
+end
+
+hook_coins_behavior(id_bhvBowserBomb, false, nil, bhv_bowser_bomb_explode_master_cap)
+
 ---@param o Object
 local function bhv_bowser_bomb_explosion_coins_loop(o)
     if o.oTimer == 4 then
@@ -1104,7 +1124,8 @@ end
 
 local function allow_interact(m, o, int)
     if o.oIntangibleTimer ~= 0 then return end
-    local nonStop = gServerSettings.stayInLevelAfterStar == STAR_NON_STOP
+    local _, levelData = master_cap_get_level()
+    local nonStop = gServerSettings.stayInLevelAfterStar == STAR_NON_STOP or levelData.runState == 1
     if int == INTERACT_STAR_OR_KEY and (obj_is_star_collected(o) or nonStop) then
         o.oInteractionSubtype = INT_SUBTYPE_NO_EXIT
         if nonStop then

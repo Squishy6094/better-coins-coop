@@ -295,7 +295,7 @@ function master_cap_add_coin(levelNum, value, index)
     levelNum = levelNum or master_cap_get_level(index)
     local levelData = gMasterCapServerState[levelNum]
 
-    levelData.capTimer = levelData.capTimer + value*30*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5))
+    levelData.capTimer = levelData.capTimer + value*20*(1/(network_player_master_cap_count(levelNum)*0.5 + 0.5))
     levelData.coins = math.clamp(levelData.coins + value, 0, 999)
 
     if network_is_server() then
