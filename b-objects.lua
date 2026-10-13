@@ -72,10 +72,13 @@ local function bhv_coin_carry_loop(o)
 
     local velLerp = math.clamp(o.oForwardVel/carrierMax, 0, 1)
     local targetPos = {
-        x = o.parentObj.oPosX + o.parentObj.oVelX*2 + velLerp,
-        y = o.parentObj.oPosY + o.parentObj.oVelY*2 + (m.action & ACT_FLAG_AIR ~= 0 and velLerp or 0) + 70,
-        z = o.parentObj.oPosZ + o.parentObj.oVelZ*2 + velLerp,
+        x = o.parentObj.oPosX + o.parentObj.oVelX*2,
+        y = o.parentObj.oPosY + o.parentObj.hitboxHeight*0.5,
+        z = o.parentObj.oPosZ + o.parentObj.oVelZ*2,
     }
+    if o.parentObj.oPosY > find_floor(o.parentObj.oPosX, o.parentObj.oPosY + 10, o.parentObj.oPosZ) + 10 then
+        targetPos.y = targetPos.y + o.parentObj.oVelY*2
+    end
 
     -- Make objs circle mario when uninteractable
     if not obj_can_interact_with_mario(m, o.usingObj, true) then

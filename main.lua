@@ -346,6 +346,13 @@ local function mario_update(m)
         m.marioObj.header.gfx.animInfo.animID = -1
         set_mario_action(m, m.heldObj == nil and ACT_METAL_WATER_JUMP or ACT_HOLD_METAL_WATER_JUMP, 0)
     end
+
+    -- Remove star dance dialog
+    if m.action == ACT_STAR_DANCE_WATER or m.action == ACT_STAR_DANCE_NO_EXIT then
+        if m.actionState == 0 and m.actionTimer > 70 then 
+           m.actionState = 2 
+        end
+    end
 end
 
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, coin_counter)

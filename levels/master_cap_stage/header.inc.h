@@ -14,7 +14,7 @@ extern Vtx master_cap_stage_dl_Death_Plane_mesh_layer_5_vtx_cull[8];
 extern Vtx master_cap_stage_dl_Death_Plane_mesh_layer_5_vtx_0[4];
 extern Gfx master_cap_stage_dl_Death_Plane_mesh_layer_5_tri_0[];
 extern Vtx master_cap_stage_dl_Level_mesh_layer_1_vtx_cull[8];
-extern Vtx master_cap_stage_dl_Level_mesh_layer_1_vtx_0[3002];
+extern Vtx master_cap_stage_dl_Level_mesh_layer_1_vtx_0[3033];
 extern Gfx master_cap_stage_dl_Level_mesh_layer_1_tri_0[];
 extern Vtx master_cap_stage_dl_Level_mesh_layer_1_vtx_1[88];
 extern Gfx master_cap_stage_dl_Level_mesh_layer_1_tri_1[];
