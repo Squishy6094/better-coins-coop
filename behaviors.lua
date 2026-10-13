@@ -822,6 +822,9 @@ hook_coins_behavior(id_bhvWoodenPost, false, nil, bhv_wooden_post_loop)
 ---@param o Object
 local function bhv_exclamation_box_edit_contents(o)
     local m = nearest_mario_state_to_object(o)
+    if o.oBehParams2ndByte == 4 then
+        o.oBehParams2ndByte = 1
+    end
     if m and mario_master_cap_active(m) then
         -- Edit cap boxes to be 10 coins
         if o.oBehParams2ndByte < 3 and o.oAction > 2 then
