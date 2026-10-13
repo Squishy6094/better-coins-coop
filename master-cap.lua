@@ -946,26 +946,20 @@ local function master_cap_update()
                     end
 
                     if network_player_master_cap_count(levelNum) == 0 then
-                        levelData.stallNoPlayers = levelData.stallNoPlayers + 1
-                        
-                        if levelData.stallNoPlayers > 30 then
-                            master_cap_stop_course(levelNum)
-                            local isRecord = levelData.newRecord
-                            local noOneInLevel = true
-                            for pI = 0, MAX_PLAYERS - 1 do
-                                if levelNum == master_cap_get_level(pI) then
-                                    noOneInLevel = false
-                                end
-                            end
-
-                            -- Check if no one is in the level to report "ditched"
-                            if noOneInLevel then
-                                djui_popup_create_global(levelData.levelName..(levelData.levelName:sub(-1):lower() == "s" and "'" or "'s").."\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(levelData.coins) .. " | Time: " .. timestamp(levelData.coinTimer), isRecord and 6 or 5)
-                                levelData.runState = 2
+                        master_cap_stop_course(levelNum)
+                        local isRecord = levelData.newRecord
+                        local noOneInLevel = true
+                        for pI = 0, MAX_PLAYERS - 1 do
+                            if levelNum == master_cap_get_level(pI) then
+                                noOneInLevel = false
                             end
                         end
-                    else
-                        levelData.stallNoPlayers = 0
+
+                        -- Check if no one is in the level to report "ditched"
+                        if noOneInLevel then
+                            djui_popup_create_global(levelData.levelName..(levelData.levelName:sub(-1):lower() == "s" and "'" or "'s").."\nMaster Cap Challenge\nwas Ditched...\n\n" .. (isRecord and "\\#ffff00\\New Record!\n" or "") .. "Coins: " .. tostring(levelData.coins) .. " | Time: " .. timestamp(levelData.coinTimer), isRecord and 6 or 5)
+                            levelData.runState = 2
+                        end
                     end
                 else
                     master_cap_stop_course(levelNum)

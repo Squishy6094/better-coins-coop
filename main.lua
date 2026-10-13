@@ -1,6 +1,11 @@
 -- name: Better Coins
 -- description: Overhauls coin collecting in Super Mario 64 to make it satisfying and rewarding rather than a chore.\n\nMade by: Squishy6094\n\nGithub:\n\\#6666FF\\Squishy6094/better-coins-coop
 
+--[[
+    - Fix Cap sticking for 30 frames after exit quit
+    - run end hud logic outside outside of action 
+]]
+
 savedCoinCount = mod_storage_load_integer("coins", 0)
 log_to_console("Better Coins Count: " .. tostring(savedCoinCount))
 

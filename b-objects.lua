@@ -355,6 +355,8 @@ local function bhv_scarecrow_init(o)
     o.oHomeY = o.oPosY
     o.oHomeZ = o.oPosZ
     o.oScarecrowLastY = o.oPosY
+    o.oFaceAnglePitch = 0
+    o.oFaceAngleRoll = 0
 
     o.header.gfx.animInfo.animFrame = 0
     o.header.gfx.animInfo.animTimer = 0

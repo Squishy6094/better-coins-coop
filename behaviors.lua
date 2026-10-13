@@ -122,13 +122,13 @@ hook_coin_magnitize_behavior(id_bhv1Up)
 hook_coin_magnitize_behavior(id_bhv1upSliding)
 
 local function bhv_merged_acts_delete(o)
-    if gLevelValues.disableActs == 1 then
+    if CURR_ROMHACK == "sm64" and gLevelValues.disableActs == 1 then
         obj_mark_for_deletion(o)
     end
 end
 
 local function bhv_merged_acts_move(o, relX, relY, relZ)
-    if gLevelValues.disableActs == 1 then
+    if CURR_ROMHACK == "sm64" and gLevelValues.disableActs == 1 then
         o.oPosX = o.oPosX + relX
         o.oPosY = o.oPosY + relY
         o.oPosZ = o.oPosZ + relZ
@@ -738,9 +738,7 @@ end
 hook_coins_behavior(id_bhvKingBobomb, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvWhompKingBoss, false, function (o)
     bhv_generic_boss_coins_init(o)
-    if CURR_ROMHACK == "sm64" then
-        bhv_merged_acts_move(o, 400, 0, 1200)
-    end
+    bhv_merged_acts_move(o, 400, 0, 1200)
 end, bhv_coins_on_damage_at_mario_loop)
 hook_coins_behavior(id_bhvBalconyBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
 hook_coins_behavior(id_bhvGhostHuntBigBoo, false, bhv_generic_boss_coins_init, bhv_coins_on_damage_loop)
@@ -1178,3 +1176,19 @@ end
 
 hook_coins_behavior(id_bhvHiddenRedCoinStar, false, nil, bhv_red_coin_star_no_respawn)
 hook_coins_behavior(id_bhvBowserCourseRedCoinStar, false, nil, bhv_red_coin_star_no_respawn)
+
+hook_coins_behavior(id_bhvSunkenShipPart, false, nil, bhv_merged_acts_delete)
+hook_coins_behavior(id_bhvSunkenShipPart2, false, nil, bhv_merged_acts_delete)
+hook_coins_behavior(id_bhvSunkenShipSetRotation, false, nil, bhv_merged_acts_delete)
+hook_coins_behavior(id_bhvInSunkenShip, false, nil, bhv_merged_acts_delete)
+hook_coins_behavior(id_bhvInSunkenShip2, false, nil, bhv_merged_acts_delete)
+
+local function bhv_unagi_delete_merged(o)
+    djui_chat_message_create(tostring(o.oAction))
+    if o.oAction < 2 or o.oAction > 4 then -- range of acts cave unagi uses
+        bhv_merged_acts_delete(o)
+    end
+end
+
+hook_coins_behavior(id_bhvUnagi, false, nil, bhv_unagi_delete_merged)
+
