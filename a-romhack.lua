@@ -182,7 +182,7 @@ romhackData = {
 
         [LEVEL_BITS] = {
             [1] = {
-                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0x4000}
+                masterCap = {x = -5900, y = -4300, z = 0, yaw = 0x4000}
             }
         },
         [LEVEL_BOWSER_3] = {
