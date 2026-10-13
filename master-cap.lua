@@ -1115,7 +1115,6 @@ local function on_mods_loaded()
     if _G.charSelectExists then
         _G.charSelect.hook_allow_menu_open(function ()
             local levelNum, levelData = master_cap_get_level()
-            djui_chat_message_create(tostring(levelData.runState))
             return levelData.runState ~= 1, "Currently in Master Cap Run"
         end)
     end
