@@ -368,7 +368,7 @@ hook_coins_behavior(id_bhvGrindel, false, thwomp_break_init, thwomp_break_loop)
 
 ---@param o Object
 local function bhv_small_box_kickable_init(o)
-    o.oInteractionSubtype = INT_SUBTYPE_KICKABLE;
+    o.oInteractionSubtype = o.oInteractionSubtype | INT_SUBTYPE_KICKABLE;
 end
 
 ---@param o Object
@@ -383,6 +383,26 @@ local function bhv_small_box_kickable_loop(o)
 end
 
 hook_coins_behavior(id_bhvBreakableBoxSmall, false, bhv_small_box_kickable_init, bhv_small_box_kickable_loop)
+
+---@param o Object
+local function bhv_chuckya_kickable_init(o)
+    o.oInteractionSubtype = o.oInteractionSubtype | INT_SUBTYPE_KICKABLE;
+end
+
+---@param o Object
+local function bhv_chuckya_kickable_loop(o)
+    local m = nearest_mario_state_to_object(o);
+    if not m then return end
+    if obj_check_hitbox_overlap(o, m.marioObj) and determine_interaction(m,o) == INT_KICK then
+        cur_obj_init_animation_with_sound(2)
+        o.oAction = 2
+        o.oMoveAngleYaw = m.marioObj.header.gfx.angle.y;
+        o.oForwardVel = math.max(m.forwardVel, 25.0);
+        o.oVelY = 40.0;
+    end
+end
+
+hook_coins_behavior(id_bhvChuckya, false, bhv_chuckya_kickable_init, bhv_chuckya_kickable_loop)
 
 ---@param o Object
 local function bhv_bowser_init_loot(o)
