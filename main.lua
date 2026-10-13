@@ -294,7 +294,19 @@ local function interact(m, o, int)
     end
 end
 
+local configJPReds = mod_storage_load_integer("configJPReds", 0)
+local SOUND_JP_RED_COIN = audio_stream_load("sm64_red_coin_jp.ogg")
+audio_stream_set_volume_channel(SOUND_JP_RED_COIN, MOD_AUDIO_CHANNEL_SFX)
 local function on_coin_sound(sound, pos)
+    if configJPReds ~= 0 then
+        for i = 0, 7 do
+            if sound == SOUND_MENU_COLLECT_RED_COIN + ((7 - i) << 16) then
+                audio_stream_set_frequency(SOUND_JP_RED_COIN, configJPReds == 1 and 1 or 1.2 - i/8*0.2)
+                audio_stream_play(SOUND_JP_RED_COIN, true, 1)
+                return NO_SOUND
+            end
+        end
+    end
     if (sound == SOUND_GENERAL_COIN or sound == SOUND_GENERAL_COIN_WATER) and not customCoinSound then
         return NO_SOUND
     end
@@ -363,6 +375,23 @@ local function chat_command(msg)
         return true
     end
 
+    if msgSplit[1] == "jp-red-coins" then
+        if msgSplit[2] == "off" or tonumber(msgSplit[2]) == 0 then
+            configJPReds = 0
+            djui_chat_message_create("Japanese Red Coin Sounds set to Off")
+        elseif msgSplit[2] == "original" or tonumber(msgSplit[2]) == 1 then
+            configJPReds = 1
+            djui_chat_message_create("Japanese Red Coin Sounds set to Original")
+        elseif msgSplit[2] == "pitched" or tonumber(msgSplit[2]) == 2 then
+            configJPReds = 2
+            djui_chat_message_create("Japanese Red Coin Sounds set to Pitched")
+        else
+            djui_chat_message_create("Input must be one of the following:\n- (0) Off\n- (1) Original\n- (2) Pitched")
+        end
+
+        return true
+    end
+
     local askedForHelp = false
     if msgSplit[1] == "?" or msgSplit[1] == "help" then
         askedForHelp = true
@@ -372,7 +401,7 @@ local function chat_command(msg)
         djui_chat_message_create("Invalid Command (/better-coins help)")
     end
 
-    return askedForHelp
+    return true
 end
 
 hook_chat_command("better-coins", "- Toggle options for Better Coins\nUse \\#00ff00\\/better-coins help\\#ffffff\\ for command info!", chat_command)
