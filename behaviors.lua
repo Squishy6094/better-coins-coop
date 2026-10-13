@@ -1207,7 +1207,6 @@ hook_coins_behavior(id_bhvInSunkenShip, false, nil, bhv_merged_acts_delete)
 hook_coins_behavior(id_bhvInSunkenShip2, false, nil, bhv_merged_acts_delete)
 
 local function bhv_unagi_delete_merged(o)
-    djui_chat_message_create(tostring(o.oAction))
     if o.oAction < 2 or o.oAction > 4 then -- range of acts cave unagi uses
         bhv_merged_acts_delete(o)
     end
