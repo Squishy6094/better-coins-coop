@@ -198,27 +198,121 @@ hook_coins_behavior(id_bhvMessagePanel, false, bhv_message_panel_set_coins, bhv_
 hook_coins_behavior(id_bhvSignOnWall, false, bhv_message_panel_set_coins, bhv_message_panel_reward)
 ]]
 
-local sYoshiShouldExplode = false
----@param o Object
-local function bhv_yoshi_blew_up(o)
-    if sYoshiShouldExplode then
-        obj_mark_for_deletion(o)
-    end
-end
+gPlayerSyncTable[0].blewUpYoshi = mod_storage_load_bool("blewUpYoshi", false)
 
 ---@param o Object
-local function bhv_yoshi_reward(o)
+local function bhv_coins_yoshi_init(o)
+    --sYoshiShouldExplode = false
+end
+
+local blowUpYoshi = false
+---@param o Object
+local function bhv_coins_yoshi_loop(o)
+    local m = nearest_interacting_mario_state_to_object(o)
+    if not m then return end
+    local p = gPlayerSyncTable[m.playerIndex]
     if o.oToadMessageState ~= 0 then return end
     if o.oAction == YOSHI_ACT_TALK then
-        sYoshiShouldExplode = true
-    elseif sYoshiShouldExplode then
-        spawn_coin_spawner(o, 100 * (gBetterCoinValues.numCoinsToLife or 50), false)
-        spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
-        obj_mark_for_deletion(o)
+        if not p.blewUpYoshi and m.action == ACT_READING_NPC_DIALOG then
+            smlua_text_utils_dialog_replace(DIALOG_161, 1, 4, 30, 200, DIALOG_YOSHI_INSURANCE)
+            blowUpYoshi = true
+        else
+            smlua_text_utils_dialog_replace(DIALOG_161, 1, 4, 30, 200, DIALOG_YOSHI_REPETITION)
+        end
+        o.oTimer = 0
+    elseif blowUpYoshi then
+        o.oAction = YOSHI_ACT_IDLE
+        if o.oTimer == 0 then
+            local bombSpawn = {
+                x = 0,
+                y = 7650,
+                z = -4000
+            }
+            if CURR_ROMHACK ~= "sm64" then
+                bombSpawn.x = o.oPosX
+                bombSpawn.y = o.oPosY
+                bombSpawn.z = o.oPosZ
+            end
+
+            local bombAngle = atan2s(o.oPosZ - bombSpawn.z, o.oPosX - bombSpawn.x)
+            spawn_sync_object(id_bhvYoshiCutsceneBobomb, E_MODEL_BLACK_BOBOMB, bombSpawn.x - sins(bombAngle)*1000, bombSpawn.y, bombSpawn.z - coss(bombAngle)*1000, function(oBomb)
+                oBomb.oFaceAngleYaw = bombAngle
+                oBomb.oMoveAngleYaw = bombAngle
+                oBomb.oVelY = 70
+                oBomb.parentObj = o
+            end)
+        end
+    end
+        
+    if o.oAction == YOSHI_ACT_GIVE_PRESENT then
+        o.oAction = YOSHI_ACT_IDLE
     end
 end
 
-hook_coins_behavior(id_bhvYoshi, false, bhv_yoshi_blew_up, bhv_yoshi_reward)
+hook_coins_behavior(id_bhvYoshi, false, bhv_coins_yoshi_init, bhv_coins_yoshi_loop)
+
+---@param o Object
+local function bhv_yoshi_cutscene_bomb_init(o)
+    o.oFlags = OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_HOLDABLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW
+    o.oAnimations = gObjectAnimations.bobomb_seg8_anims_0802396C
+    cur_obj_init_animation(0)
+    bhv_bobomb_buddy_init()
+    camera_freeze()
+end
+
+---@param o Object
+local function bhv_yoshi_cutscene_bomb_loop(o)
+    o.oIntangibleTimer = 0
+
+    if CURR_ROMHACK == "sm64" then
+        local focusWeight = math.clamp(o.oVelY/75*0.3 + 0.7, 0, 1)
+        local focusSpeed = o.oAction == 0 and 0.04 or 0.1
+        gLakituState.focus.x = math.lerp(gLakituState.focus.x, math.lerp(o.parentObj.oPosX, o.oPosX, focusWeight), focusSpeed)
+        gLakituState.focus.y = math.lerp(gLakituState.focus.y, math.lerp(o.parentObj.oPosY, o.oPosY, focusWeight), focusSpeed)
+        gLakituState.focus.z = math.lerp(gLakituState.focus.z, math.lerp(o.parentObj.oPosZ, o.oPosZ, focusWeight), focusSpeed)
+    end
+
+    if o.oAction == 0 then
+        cur_obj_hide()
+        -- Toad Sounds
+        if o.oTimer == 1 then
+            play_sound(gCharacters[CT_TOAD].soundHaha_2, gGlobalSoundSource)
+        end
+        if o.oTimer == 30 then
+            play_sound(gCharacters[CT_TOAD].soundPunchHoo, gGlobalSoundSource)
+        end
+        if o.oTimer == 40 then
+            play_sound(gCharacters[CT_TOAD].soundAttacked, gGlobalSoundSource)
+        end
+        if o.oTimer > 60 then
+            play_sound(gCharacters[CT_TOAD].soundWaaaooow, gGlobalSoundSource)
+            play_sound(SOUND_OBJ_BOBOMB_BUDDY_TALK, gGlobalSoundSource)
+            o.oAction = o.oAction + 1
+        end
+    elseif o.oAction == 1 then
+        o.oPosX = math.lerp(o.oPosX, o.parentObj.oPosX, 0.04)
+        o.oPosZ = math.lerp(o.oPosZ, o.parentObj.oPosZ, 0.04)
+        cur_obj_unhide()
+        object_step()
+        if obj_check_hitbox_overlap(o, o.parentObj) or o.oTimer > 300 then
+            o.oAction = o.oAction + 1
+        end
+    elseif o.oAction == 2 then
+        cur_obj_scale(1 + (o.oTimer / 5))
+        if o.oTimer >= 7 then
+            camera_unfreeze()
+            set_mario_action(m, ACT_IDLE, 0)
+
+            spawn_coin_spawner(o.parentObj, 100 * (gBetterCoinValues.numCoinsToLife or 50), false)
+            obj_mark_for_deletion(o.parentObj)
+            
+            spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
+            obj_mark_for_deletion(o)
+        end
+    end
+end
+
+id_bhvYoshiCutsceneBobomb = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_yoshi_cutscene_bomb_init, bhv_yoshi_cutscene_bomb_loop)
 
 ---@param o Object
 local function bhv_recovery_heart_set_coins(o)
