@@ -4,6 +4,7 @@ gPlayerSyncTable[0].pinkCoin = false
 
 local currShopPage = 0
 local shopItems = {
+    --[[
     {
         name = "Test Item",
         texture = gTextures.star,
@@ -11,10 +12,37 @@ local shopItems = {
         coins = 100,
         stock = -1,
     },
+    ]]
     {
-        name = "Pink Compainion",
-        saveName = "pinkCoin",
+        name = "Pink Companion",
+        key = "pinkCoin",
+        stockDefault = 1,
+        coins = 999999,
         texture = gTextures.coin,
+        color = function(item)
+            if item.stock ~= 0 then
+                return {
+                    r = 255,
+                    g = 255,
+                    b = 255,
+                    a = 255
+                }
+            elseif gPlayerSyncTable[0].pinkCoin then
+                return {
+                    r = 100,
+                    g = 255,
+                    b = 100,
+                    a = 255
+                }
+            else
+                return {
+                    r = 255,
+                    g = 100,
+                    b = 100,
+                    a = 255
+                }
+            end
+        end,
         description = function(item)
             desc = "A fun little friend\n\n"
             if item.stock == 0 then
@@ -24,8 +52,6 @@ local shopItems = {
             end
             return desc
         end,
-        coins = 999999,
-        stock = mod_storage_load_integer("pinkCoinStock", 1),
         interact = function(item)
             if item.stock == 0 then
                 gPlayerSyncTable[0].pinkCoin = not gPlayerSyncTable[0].pinkCoin
@@ -38,7 +64,9 @@ local shopItems = {
     },
     {
         name = "Special Triple Jump",
-        saveName = save_file_prefix("specialTripleJump"),
+        key = "specialTripleJump",
+        stockDefault = 1,
+        coins = 100 * (gBetterCoinValues.numCoinsToLife or 50),
         texture = {
             [0] = get_texture_info("sparkles_seg4_texture_04027490"),
             get_texture_info("sparkles_seg4_texture_04027C90"),
@@ -47,6 +75,30 @@ local shopItems = {
             get_texture_info("sparkles_seg4_texture_04029490"),
             get_texture_info("sparkles_seg4_texture_04029C90"),
         },
+        color = function(item)
+            if item.stock ~= 0 then
+                return {
+                    r = 255,
+                    g = 255,
+                    b = 255,
+                    a = 255
+                }
+            elseif gMarioStates[0].specialTripleJump ~= 0 then
+                return {
+                    r = 100,
+                    g = 255,
+                    b = 100,
+                    a = 255
+                }
+            else
+                return {
+                    r = 255,
+                    g = 100,
+                    b = 100,
+                    a = 255
+                }
+            end
+        end,
         description = function(item)
             desc = "Gives Mario a Special Triple Jump\n\n"
             if item.stock == 0 then
@@ -56,8 +108,6 @@ local shopItems = {
             end
             return desc
         end,
-        coins = 100 * (gBetterCoinValues.numCoinsToLife or 50),
-        stock = mod_storage_load_integer(save_file_prefix("specialTripleJump").."Stock", 1),
         interact = function(item)
             if item.stock == 0 then
                 gMarioStates[0].specialTripleJump = gMarioStates[0].specialTripleJump == 1 and 0 or 1
@@ -70,9 +120,31 @@ local shopItems = {
     },
 }
 
+local function setup_item(item)
+    item.stockDefault = item.stockDefault or 0
+    item.stock = (item.stockDefault and item.stockDefault > 0) and mod_storage_load_integer("shop"..item.key.."Stock", item.stockDefault)
+    item.color = item.color or function()
+        local color = (item.stock ~= 0 or item.interact) and 255 or 150
+        return {
+            r = color,
+            g = color,
+            b = color,
+            a = 255
+        }
+    end
+end
+
 function add_shop_item(item)
     table.insert(shopItems, item)
 end
+
+local function init_shop_items()
+    for _, item in pairs(shopItems) do
+        setup_item(item)
+    end
+end
+
+hook_event(HOOK_ON_MODS_LOADED, init_shop_items)
 
 local TEX_HAND_CLOSED = get_texture_info("gd_texture_hand_closed")
 local TEX_HAND_OPEN = get_texture_info("gd_texture_hand_open")
@@ -221,8 +293,8 @@ local function hud_render()
         if id > perPage*currShopPage and id <= perPage*(currShopPage + 1) then
             local x = shopX + shopW*0.3 - perRowSize*0.5 + itemSpacing*((id-1-perPage*currShopPage)%perRow)*s
             local y = shopY + shopH*0.1 + itemSpacing*math.floor((id-1-perPage*currShopPage)/perRow)*s
-            local color = (item.stock ~= 0 or item.interact) and 255 or 150
-            djui_hud_set_color(color, color, color, 255)
+            local color = run_func_or_get_var(item.color, item)
+            djui_hud_set_color(color.r, color.g, color.b, color.a)
             local tex = type(item.texture) == "table" and item.texture[math.round(get_global_timer()*0.5)%(#item.texture + 1)] or item.texture
             djui_hud_render_texture(tex, x, y, 16/tex.width*s, 16/tex.height*s)
             djui_hud_set_color(dialogTextR, dialogTextG, dialogTextB, dialogTextA)
@@ -244,8 +316,8 @@ local function hud_render()
                 -- Cost
                 y = y + 2
                 djui_hud_set_font(FONT_HUD)
-                local color = (item.stock ~= 0) and 255 or 150
-                djui_hud_set_color(color, color, color, 255)
+                local stockColor = (item.stock ~= 0) and 255 or 150
+                djui_hud_set_color(stockColor, stockColor, stockColor, 255)
                 local coinText = tostring(item.coins):gsub("-", "M")
                 djui_hud_render_texture(gTextures.coin, x, y, 0.5, 0.5)
                 djui_hud_print_text(coinText, x + 8, y, 0.5*s, 0.5*s)
@@ -288,7 +360,7 @@ local function hud_render()
                             save_coin_count()
                             if item.stock ~= -1 then
                                 item.stock = item.stock - 1
-                                mod_storage_save_integer(item.saveName.."Stock", item.stock)
+                                mod_storage_save_integer("shop"..item.key.."Stock", item.stock)
                             end
                         elseif item.stock ~= 0 then
                             shakeTimer = 15
