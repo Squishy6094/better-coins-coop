@@ -451,6 +451,8 @@ local function act_master_cap_results(m)
             m.actionState = pA.prevActionState
         end
         gPlayerSyncTable[m.playerIndex].diedInRun = false
+
+        set_background_music(SEQ_PLAYER_LEVEL, prevLevelMusic, 30)
     end
 
 
@@ -728,6 +730,17 @@ local function on_sync()
     end
 end
 
+prevLevelMusic = 0
+local function on_seq_load(player, seqId)
+    if player == SEQ_PLAYER_LEVEL then
+        prevLevelMusic = seqId
+        local _, levelData = master_cap_get_level()
+        if levelData.runState == 1 then
+            return 0
+        end
+    end
+end
+
 local prevRunState = 0
 local function master_cap_music_update(levelData)
     local m = gMarioStates[0]
@@ -743,13 +756,13 @@ local function master_cap_music_update(levelData)
         local volShift = runState ~= 2 and 1 or math.clamp((masterCapMusicFreq - 0.7)/0.6, 0, 1)
         local volShiftInv = 1 - volShift
         if prevRunState ~= runState then
-            stop_cap_music()
+            stop_background_music(prevLevelMusic)
             audio_stream_play(MUSIC_MASTER_CAP, false, 0.75)
             audio_stream_play(MUSIC_MASTER_CAP_END, false, 0.75)
             prevRunState = runState
         end
         if runState == 1 then
-            play_secondary_music(0, 0, 0, 50)
+            --play_secondary_music(0, 0, 0, 50)
         end
         local freqTargetTime = 1 + (math.max(450 - levelData.capTimer, 0)/450)*0.3
         local freqTarget = runState == 2 and 0.7 or freqTargetTime
@@ -767,7 +780,7 @@ local function master_cap_music_update(levelData)
             audio_stream_set_frequency(MUSIC_MASTER_CAP_END, 1)
             audio_stream_stop(MUSIC_MASTER_CAP)
             audio_stream_stop(MUSIC_MASTER_CAP_END)
-            stop_secondary_music(50)
+            --stop_secondary_music(50)
             masterCapMusicFreq = 0
             prevRunState = runState
         end
@@ -1170,3 +1183,4 @@ hook_event(HOOK_ON_LEVEL_INIT, check_late_entry)
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
 hook_event(HOOK_ON_PAUSE_EXIT, on_pause_exit)
 hook_event(HOOK_ON_ADD_SURFACE, add_surface)
+hook_event(HOOK_ON_SEQ_LOAD, on_seq_load)
