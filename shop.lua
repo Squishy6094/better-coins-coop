@@ -121,8 +121,8 @@ local shopItems = {
 }
 
 local function setup_item(item)
-    item.stockDefault = item.stockDefault or 0
-    item.stock = (item.stockDefault and item.stockDefault > 0) and mod_storage_load_integer("shop"..item.key.."Stock", item.stockDefault)
+    item.stockDefault = item.stockDefault or -1
+    item.stock = item.stockDefault ~= -1 and mod_storage_load_integer("shop"..item.key.."Stock", item.stockDefault) or -1
     item.color = item.color or function()
         local color = (item.stock ~= 0 or item.interact) and 255 or 150
         return {
