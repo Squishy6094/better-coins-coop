@@ -399,6 +399,22 @@ local function chat_command(msg)
         return true
     end
 
+    if msgSplit[1] == "redeem" then
+        local codeHash = hash(msgSplit[2])
+        if redeems[codeHash] then
+            if not mod_storage_load_bool("redeem"..codeHash, false) then
+                redeems[codeHash](msgSplit[2])
+                mod_storage_save_bool("redeem"..codeHash, true)
+            else
+                djui_chat_message_create("Code already Redeemed")
+            end
+        else
+            djui_chat_message_create("Invalid Code")
+        end
+        print(msgSplit[2].." - "..codeHash)
+        return true
+    end
+
     local askedForHelp = false
     if msgSplit[1] == "?" or msgSplit[1] == "help" then
         askedForHelp = true

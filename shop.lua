@@ -1,5 +1,4 @@
 local m = gMarioStates[0] ---@type MarioState
-local testToggle = false
 gPlayerSyncTable[0].pinkCoin = false
 
 local currShopPage = 0
@@ -135,12 +134,21 @@ local function setup_item(item)
 end
 
 function add_shop_item(item)
+    setup_item(item)
     table.insert(shopItems, item)
 end
 
 local function init_shop_items()
     for _, item in pairs(shopItems) do
         setup_item(item)
+    end
+end
+
+function get_shop_item_from_name(name)
+    for _, item in pairs(shopItems) do
+        if item.name == name then
+            return item
+        end
     end
 end
 
