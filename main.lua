@@ -382,6 +382,7 @@ local function chat_command(msg)
         return true
     end
 
+    -- make shoip item later
     if msgSplit[1] == "jp-red-coins" then
         if msgSplit[2] == "off" or tonumber(msgSplit[2]) == 0 then
             configJPReds = 0

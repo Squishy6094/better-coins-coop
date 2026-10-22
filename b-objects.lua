@@ -904,3 +904,187 @@ local function bhv_howling_wind(o)
 end
 
 id_bhvHowlingWind = hook_behavior(id_bhvHowlingWind, OBJ_LIST_GENACTOR, true, nil, bhv_howling_wind, "bhvHowlingWind")
+
+local function bhv_pink_coin_init(o)
+    o.oFlags = OBJ_FLAG_SET_FACE_ANGLE_TO_MOVE_ANGLE | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    obj_set_billboard(o)
+end
+
+---@param o Object
+local function bhv_pink_coin_follow_using_pos(o, m)
+    local oT = o.usingObj
+
+    if not oT or oT.activeFlags == ACTIVE_FLAG_DEACTIVATED or o.oTimer > 300 then
+        o.oAction = 0
+    end
+
+    o.oHomeX = oT.oPosX
+    o.oHomeY = oT.oPosY
+    o.oHomeZ = oT.oPosZ
+end
+
+---@param o Object
+local function bhv_pink_coin_follow_using_home(o, m)
+    local oT = o.usingObj
+
+    if not oT or oT.activeFlags == ACTIVE_FLAG_DEACTIVATED or o.oTimer > 300 then
+        o.oAction = 0
+    end
+
+    o.oHomeX = oT.oHomeX
+    o.oHomeY = oT.oHomeY
+    o.oHomeZ = oT.oHomeZ
+end
+
+local pinkCoinActs = {
+    -- Show Mario's Position
+    {
+        ---@param o Object
+        loop = function(o, m)
+            o.oHomeX = m.pos.x
+            o.oHomeY = m.pos.y
+            o.oHomeZ = m.pos.z
+
+            if o.oTimer > 300 then
+                o.oAction = 0
+            end
+        end,
+    },
+    -- Show Camera Focus
+    {
+        ---@param o Object
+        loop = function(o, m)
+            o.oHomeX = gLakituState.focus.x
+            o.oHomeY = gLakituState.focus.y
+            o.oHomeZ = gLakituState.focus.z
+
+            if o.oTimer > 300 then
+                o.oAction = 0
+            end
+        end,
+    },
+    -- Show HOLP
+    {
+        ---@param o Object
+        ---@param m MarioState
+        loop = function(o, m)
+            o.oHomeX = m.marioBodyState.heldObjLastPosition.x
+            o.oHomeY = m.marioBodyState.heldObjLastPosition.y
+            o.oHomeZ = m.marioBodyState.heldObjLastPosition.z
+
+            if o.oTimer > 300 then
+                o.oAction = 0
+            end
+        end,
+    },
+    -- Show Scuttlebug Object Home
+    {
+        init = function(o, m)
+            local oT = obj_get_nearest_object_with_behavior_id(o, id_bhvScuttlebug)
+            if oT and obj_to_obj_dist(o, oT) < 5000 then
+                o.usingObj = oT
+                return true
+            end
+            return false
+        end,
+        loop = bhv_pink_coin_follow_using_home
+    },
+    -- Show Moneybag Object Home
+    {
+        init = function(o, m)
+            local oT = obj_get_nearest_object_with_behavior_id(o, id_bhvMoneybag)
+            if oT and obj_to_obj_dist(o, oT) < 5000 then
+                o.usingObj = oT
+                return true
+            end
+            return false
+        end,
+        loop = bhv_pink_coin_follow_using_home
+    },
+    -- Show Pyramid Activators
+    {
+        init = function(o, m)
+            local oT = obj_get_nearest_object_with_behavior_id(o, id_bhvPyramidPillarTouchDetector)
+            if oT then
+                o.usingObj = oT
+                return true
+            end
+            return false
+        end,
+        loop = bhv_pink_coin_follow_using_pos
+    },
+    -- Show Mystery Inside Cannon
+    {
+        init = function(o, m)
+            local oT = obj_get_nearest_object_with_behavior_id(o, id_bhvInsideCannon)
+            if oT then
+                o.usingObj = oT
+                return true
+            end
+            return false
+        end,
+        loop = bhv_pink_coin_follow_using_pos
+    },
+    -- Show Mystery Splash Spawner
+    {
+        init = function(o, m)
+            local oT = obj_get_nearest_object_with_behavior_id(o, id_bhvBetaFishSplashSpawner)
+            if oT then
+                o.usingObj = oT
+                return true
+            end
+            return false
+        end,
+        loop = bhv_pink_coin_follow_using_pos
+    },
+}
+
+---@param o Object
+local function bhv_pink_coin_loop(o)
+    local m = gMarioStates[network_local_index_from_global(o.globalPlayerIndex)]
+    if not m or not gPlayerSyncTable[m.playerIndex].pinkCoinActive then
+        spawn_mist_from_global()
+        obj_mark_for_deletion(o)
+        return
+    end
+
+    local angle = m.faceAngle.y + 0x6000
+    if o.oAction == 0 then
+        o.oHomeX = math.lerp(o.oHomeX, m.pos.x + sins(angle)*m.marioObj.hitboxHeight*1.5, 0.2)
+        o.oHomeY = math.lerp(o.oHomeY, m.pos.y + m.marioObj.hitboxHeight*1.5, 0.2) + math.sin(get_global_timer()/10)*2
+        o.oHomeZ = math.lerp(o.oHomeZ, m.pos.z + coss(angle)*m.marioObj.hitboxHeight*1.5, 0.2)
+        if o.oTimer > 300 then
+            repeat
+                local randAct = math.ceil(random_float()*#pinkCoinActs)
+                if pinkCoinActs[randAct] and (not pinkCoinActs[randAct].init) or pinkCoinActs[randAct].init(o, m) then
+                    o.oAction = randAct
+                end
+            until o.oAction ~= 0
+        end
+    else
+        pinkCoinActs[o.oAction].loop(o, m)
+    end
+
+    o.oPosX = math.lerp(o.oPosX, o.oHomeX, math.clamp(o.oTimer/30, 0, 1))
+    o.oPosY = math.lerp(o.oPosY, o.oHomeY, math.clamp(o.oTimer/30, 0, 1))
+    o.oPosZ = math.lerp(o.oPosZ, o.oHomeZ, math.clamp(o.oTimer/30, 0, 1))
+end
+
+id_bhvPinkCoinCompanion = hook_behavior(id_bhvPinkCoinCompanion, OBJ_LIST_DEFAULT, true, bhv_pink_coin_init, bhv_pink_coin_loop, "bhvPinkCoinCompanion")
+
+hook_event(HOOK_UPDATE, function()
+    local m = gMarioStates[0]
+    if gPlayerSyncTable[0].pinkCoinActive then
+        local oPinkCoin = obj_get_first_with_behavior_id(id_bhvPinkCoinCompanion)
+        while oPinkCoin do
+            if network_local_index_from_global(oPinkCoin.globalPlayerIndex) == 0 then
+                return
+            end
+            oPinkCoin = obj_get_next_with_same_behavior_id(oPinkCoin)
+        end
+
+        spawn_sync_object(id_bhvPinkCoinCompanion, E_MODEL_YELLOW_COIN, m.pos.x, m.pos.y + 5000, m.pos.z, function(oNewPinkCoin)
+            oNewPinkCoin.globalPlayerIndex = network_global_index_from_local(0)
+        end)
+    end
+end)

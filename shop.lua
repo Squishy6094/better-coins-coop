@@ -26,7 +26,7 @@ local shopItems = {
                     b = 255,
                     a = 255
                 }
-            elseif gPlayerSyncTable[0].pinkCoin then
+            elseif gPlayerSyncTable[0].pinkCoinActive then
                 return {
                     r = 100,
                     g = 255,
@@ -45,7 +45,7 @@ local shopItems = {
         description = function(item)
             desc = "A fun little friend\n\n"
             if item.stock == 0 then
-                desc = desc..(gPlayerSyncTable[0].pinkCoin and "Enabled" or "Disabled")
+                desc = desc..(gPlayerSyncTable[0].pinkCoinActive and "Enabled" or "Disabled")
             else
                 desc = desc.."Purchase to Enable"
             end
@@ -53,8 +53,8 @@ local shopItems = {
         end,
         interact = function(item)
             if item.stock == 0 then
-                gPlayerSyncTable[0].pinkCoin = not gPlayerSyncTable[0].pinkCoin
-                play_sound(gPlayerSyncTable[0].pinkCoin and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
+                gPlayerSyncTable[0].pinkCoinActive = not gPlayerSyncTable[0].pinkCoinActive
+                play_sound(gPlayerSyncTable[0].pinkCoinActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
                 
                 return false
             end
