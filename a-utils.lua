@@ -170,12 +170,13 @@ function hash(word)
     return result
 end
 
+redeemPinkCoin = 7873909706893735147
 redeems = {
     [249892621358844525] = function(code)
         djui_chat_message_create(string.format('Redeemed "%s" for 500 coins', code))
         savedCoinCount = savedCoinCount + 500
     end,
-    [7873909706893735147] = function(code)
+    [redeemPinkCoin] = function(code)
         local item = get_shop_item_from_name("Pink Companion")
         local itemTarget = 999
         djui_chat_message_create(string.format('Redeemed "%s" to discount "%s" from %d to %d', code, item.name, item.coins, itemTarget))

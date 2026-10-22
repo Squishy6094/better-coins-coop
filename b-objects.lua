@@ -954,9 +954,9 @@ local pinkCoinActs = {
     {
         ---@param o Object
         loop = function(o, m)
-            o.oHomeX = gLakituState.focus.x
-            o.oHomeY = gLakituState.focus.y
-            o.oHomeZ = gLakituState.focus.z
+            o.oHomeX = gLakituState.goalFocus.x
+            o.oHomeY = gLakituState.goalFocus.y
+            o.oHomeZ = gLakituState.goalFocus.z
 
             if o.oTimer > 300 then
                 o.oAction = 0

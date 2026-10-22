@@ -1,5 +1,4 @@
 local m = gMarioStates[0] ---@type MarioState
-gPlayerSyncTable[0].pinkCoin = false
 
 local currShopPage = 0
 local shopItems = {
@@ -16,7 +15,7 @@ local shopItems = {
         name = "Pink Companion",
         key = "pinkCoin",
         stockDefault = 1,
-        coins = 999999,
+        coins = mod_storage_load_bool("redeem"..redeemPinkCoin, false) and 999 or 999999,
         texture = gTextures.coin,
         color = function(item)
             if item.stock ~= 0 then
@@ -43,17 +42,21 @@ local shopItems = {
             end
         end,
         description = function(item)
-            desc = "A fun little friend\n\n"
+            desc = "A fun little coin shaped friend.\nIt finds joy in showing you things\nwe cannot comprehend, almost\nletting you See the Unseen.\n\n"
             if item.stock == 0 then
-                desc = desc..(gPlayerSyncTable[0].pinkCoinActive and "Enabled" or "Disabled")
+                desc = desc..item.name.." "..(gPlayerSyncTable[0].pinkCoinActive and "Enabled" or "Disabled")
             else
                 desc = desc.."Purchase to Enable"
+            end
+            if item.coins == 999 then
+                desc = desc .. "\n\nThank you for being a supporter!\nEvery coin helps, and it means the\nworld that you enjoyed my work\nenough to support me!\n- With love, Squishy\n\n"
             end
             return desc
         end,
         interact = function(item)
             if item.stock == 0 then
                 gPlayerSyncTable[0].pinkCoinActive = not gPlayerSyncTable[0].pinkCoinActive
+                mod_storage_save_bool("pinkCoinToggle", gPlayerSyncTable[0].pinkCoinActive)
                 play_sound(gPlayerSyncTable[0].pinkCoinActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
                 
                 return false
@@ -138,18 +141,22 @@ function add_shop_item(item)
     table.insert(shopItems, item)
 end
 
-local function init_shop_items()
-    for _, item in pairs(shopItems) do
-        setup_item(item)
-    end
-end
-
 function get_shop_item_from_name(name)
     for _, item in pairs(shopItems) do
         if item.name == name then
             return item
         end
     end
+end
+
+local function init_shop_items()
+    for _, item in pairs(shopItems) do
+        setup_item(item)
+    end
+
+    -- Load toggle if unlocked
+    pinkCoinItem = get_shop_item_from_name("Pink Companion")
+    gPlayerSyncTable[0].pinkCoinActive = pinkCoinItem.stock == 0 and mod_storage_load_bool("pinkCoinToggle", false) or false
 end
 
 hook_event(HOOK_ON_MODS_LOADED, init_shop_items)
