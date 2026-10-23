@@ -1,5 +1,10 @@
 local m = gMarioStates[0] ---@type MarioState
 
+local TEX_JP_RED_COIN_BAG_CLOSED = get_texture_info("red_coin_jp_bag_closed")
+local TEX_JP_RED_COIN_BAG_OPEN = get_texture_info("red_coin_jp_bag_open")
+local TEX_JP_RED_COIN_BAG_COIN = get_texture_info("red_coin_jp_bag_coin")
+
+
 local currShopPage = 0
 local shopItems = {
     --[[
@@ -69,37 +74,13 @@ local shopItems = {
         stockDefault = 1,
         coins = 2500,
         texture = function(item, x, y)
-            return sRedCoinTextures[math.round(get_global_timer()*0.5)%(#sRedCoinTextures) + 1]
-        end,
-        color = function(item)
-            if item.stock ~= 0 then
-                return {
-                    r = 255,
-                    g = 0,
-                    b = 0,
-                    a = 255
-                }
-            elseif configJPReds == 0 then
-                return {
-                    r = 150,
-                    g = 0,
-                    b = 0,
-                    a = 255
-                }
-            elseif configJPReds == 1 then
-                return {
-                    r = 255,
-                    g = 0,
-                    b = 0,
-                    a = 255
-                }
-            elseif configJPReds == 2 then
-                return {
-                    r = 255,
-                    g = 75 + 75*math.sin(get_global_timer()/10),
-                    b = 0,
-                    a = 255
-                }
+            local texBag = configJPReds == 0 and TEX_JP_RED_COIN_BAG_CLOSED or TEX_JP_RED_COIN_BAG_OPEN 
+            djui_hud_render_texture(texBag, x, y, 1, 1)
+            if configJPReds > 0 then
+                if configJPReds == 2 then
+                    y = y + math.round(-0.5 + 1.5*math.sin(get_global_timer()/10))
+                end
+                djui_hud_render_texture(TEX_JP_RED_COIN_BAG_COIN, x, y, 1, 1)
             end
         end,
         description = function(item)
@@ -429,7 +410,9 @@ local function hud_render()
             local color = run_func_or_get_var(item.color, item)
             djui_hud_set_color(color.r, color.g, color.b, color.a)
             local tex = run_func_or_get_var(item.texture, item, x, y)
-            djui_hud_render_texture(tex, x, y, 16/tex.width*s, 16/tex.height*s)
+            if tex then
+                djui_hud_render_texture(tex, x, y, 16/tex.width*s, 16/tex.height*s)
+            end
             djui_hud_set_color(dialogTextR, dialogTextG, dialogTextB, dialogTextA)
             if gShopBoxState == 1 and cursorX > x and cursorX < x + 16 and cursorY > y and cursorY < y + 16 then
                 if cursorMag < 0.1 then
