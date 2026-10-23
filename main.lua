@@ -294,7 +294,6 @@ local function interact(m, o, int)
     end
 end
 
-local SOUND_JP_RED_COIN = audio_stream_load("sm64_red_coin_jp.ogg")
 jpRedCoinSounds = {}
 for i = 1, 8 do
     jpRedCoinSounds[i] = audio_stream_load("sm64_jp_red_"..i..".ogg")
