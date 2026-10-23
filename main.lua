@@ -68,7 +68,7 @@ end
 
 gLevelValues.maxCoins = 9999
 
-local sRedCoinTextures = {
+sRedCoinTextures = {
     get_texture_info("coin_seg3_texture_03005780"),
     get_texture_info("coin_seg3_texture_03005F80"),
     get_texture_info("coin_seg3_texture_03006780"),
@@ -294,15 +294,17 @@ local function interact(m, o, int)
     end
 end
 
-local configJPReds = mod_storage_load_integer("configJPReds", 0)
 local SOUND_JP_RED_COIN = audio_stream_load("sm64_red_coin_jp.ogg")
+jpRedCoinSounds = {}
+for i = 1, 8 do
+    jpRedCoinSounds[i] = audio_stream_load("sm64_jp_red_"..i..".ogg")
+end
 audio_stream_set_volume_channel(SOUND_JP_RED_COIN, MOD_AUDIO_CHANNEL_SFX)
 local function on_coin_sound(sound, pos)
     if configJPReds ~= 0 then
         for i = 0, 7 do
             if sound == SOUND_MENU_COLLECT_RED_COIN + ((7 - i) << 16) then
-                audio_stream_set_frequency(SOUND_JP_RED_COIN, configJPReds == 1 and 1 or 1.2 - i/8*0.2)
-                audio_stream_play(SOUND_JP_RED_COIN, true, 1)
+                audio_stream_play(jpRedCoinSounds[configJPReds == 1 and 1 or 8-i], true, 2)
                 return NO_SOUND
             end
         end
@@ -379,24 +381,6 @@ local function chat_command(msg)
         else
             djui_chat_message_create("This command is host only.")
         end
-        return true
-    end
-
-    -- make shoip item later
-    if msgSplit[1] == "jp-red-coins" then
-        if msgSplit[2] == "off" or tonumber(msgSplit[2]) == 0 then
-            configJPReds = 0
-            djui_chat_message_create("Japanese Red Coin Sounds set to Off")
-        elseif msgSplit[2] == "original" or tonumber(msgSplit[2]) == 1 then
-            configJPReds = 1
-            djui_chat_message_create("Japanese Red Coin Sounds set to Original")
-        elseif msgSplit[2] == "pitched" or tonumber(msgSplit[2]) == 2 then
-            configJPReds = 2
-            djui_chat_message_create("Japanese Red Coin Sounds set to Pitched")
-        else
-            djui_chat_message_create("Input must be one of the following:\n- (0) Off\n- (1) Original\n- (2) Pitched")
-        end
-
         return true
     end
 

@@ -65,12 +65,79 @@ local shopItems = {
         end,
     },
     {
+        name = "JP Red Coin Sound",
+        key = "jpRedCoinSounds",
+        stockDefault = 1,
+        coins = 2500,
+        texture = sRedCoinTextures,
+        color = function(item)
+            if item.stock ~= 0 then
+                return {
+                    r = 255,
+                    g = 0,
+                    b = 0,
+                    a = 255
+                }
+            elseif configJPReds == 0 then
+                return {
+                    r = 150,
+                    g = 0,
+                    b = 0,
+                    a = 255
+                }
+            elseif configJPReds == 1 then
+                return {
+                    r = 255,
+                    g = 0,
+                    b = 0,
+                    a = 255
+                }
+            elseif configJPReds == 2 then
+                return {
+                    r = 255,
+                    g = 75 + 75*math.sin(get_global_timer()/10),
+                    b = 0,
+                    a = 255
+                }
+            end
+        end,
+        description = function(item)
+            desc = "Even though it's a seemingly normal\nRed Coin, there's something off\nabout it. It washed up on the shore\nand keeps making funky noises,\nalmost like it wasn't meant to\nfloat across the ocean.\n\nEven though it sounds different, it\nseems to take a liking to the way\nall of the Red Coins around here\ncount up!\n\n"
+            if item.stock == 0 then
+                desc = desc..item.name.." set to "
+                if configJPReds == 2 then
+                    desc = desc.."Pitched"
+                elseif configJPReds == 1 then
+                    desc = desc.."Original"
+                else
+                    desc = desc.."Off"
+                end
+            else
+                desc = desc.."Purchase to Enable"
+            end
+            return desc
+        end,
+        interact = function(item)
+            if item.stock == 0 then
+                configJPReds = (configJPReds + 1)%3
+                play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource)
+                if configJPReds == 0 then
+                    play_sound(SOUND_GENERAL_RED_COIN, gGlobalSoundSource)
+                else
+                    audio_stream_play(jpRedCoinSounds[configJPReds == 1 and 1 or 3], true, 2)
+                end
+                return false
+            end
+            return true
+        end,
+    },
+    {
         name = "Special Triple Jump",
         key = "specialTripleJump",
         stockDefault = 1,
         coins = 100 * (gBetterCoinValues.numCoinsToLife or 50),
         texture = {
-            [0] = get_texture_info("sparkles_seg4_texture_04027490"),
+            get_texture_info("sparkles_seg4_texture_04027490"),
             get_texture_info("sparkles_seg4_texture_04027C90"),
             get_texture_info("sparkles_seg4_texture_04028490"),
             get_texture_info("sparkles_seg4_texture_04028C90"),
@@ -102,9 +169,9 @@ local shopItems = {
             end
         end,
         description = function(item)
-            desc = "Gives Mario a Special Triple Jump\n\n"
+            desc = "A trinket from a green dinosaur\nfella that grants the wearer an\nenhanced Triple Jump that's immune\nto fall damage and packed with a\npretty sparkle!\n\n"
             if item.stock == 0 then
-                desc = desc..(gMarioStates[0].specialTripleJump ~= 0 and "Enabled" or "Disabled")
+                desc = desc..item.name.." "..(gMarioStates[0].specialTripleJump ~= 0 and "Enabled" or "Disabled")
             else
                 desc = desc.."Purchase to Enable"
             end
@@ -157,6 +224,9 @@ local function init_shop_items()
     -- Load toggle if unlocked
     pinkCoinItem = get_shop_item_from_name("Pink Companion")
     gPlayerSyncTable[0].pinkCoinActive = pinkCoinItem.stock == 0 and mod_storage_load_bool("pinkCoinToggle", false) or false
+
+    jpRedCoinItem = get_shop_item_from_name("Pink Companion")
+    configJPReds = jpRedCoinItem.stock == 0 and mod_storage_load_integer("configJPReds", 0) or 0
 end
 
 hook_event(HOOK_ON_MODS_LOADED, init_shop_items)
@@ -310,7 +380,7 @@ local function hud_render()
             local y = shopY + shopH*0.1 + itemSpacing*math.floor((id-1-perPage*currShopPage)/perRow)*s
             local color = run_func_or_get_var(item.color, item)
             djui_hud_set_color(color.r, color.g, color.b, color.a)
-            local tex = type(item.texture) == "table" and item.texture[math.round(get_global_timer()*0.5)%(#item.texture + 1)] or item.texture
+            local tex = type(item.texture) == "table" and item.texture[math.round(get_global_timer()*0.5)%(#item.texture) + 1] or item.texture
             djui_hud_render_texture(tex, x, y, 16/tex.width*s, 16/tex.height*s)
             djui_hud_set_color(dialogTextR, dialogTextG, dialogTextB, dialogTextA)
             if gShopBoxState == 1 and cursorX > x and cursorX < x + 16 and cursorY > y and cursorY < y + 16 then

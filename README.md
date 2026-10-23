@@ -30,6 +30,8 @@ An arcade mini-mode with the goal to collect as many coins as you can while your
     - Level Script Parsing Base
 - ItsMamaMoon
     - Pink Clouds Skybox
+- Andrea / Cube6
+    - JP Red Coin Audio Design/Editing
 - Squishy Workshop Community
     - Active Playtesting and Feedback
 
