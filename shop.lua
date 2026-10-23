@@ -185,6 +185,56 @@ local shopItems = {
             return true
         end,
     },
+    {
+        name = "Cosmetic Hot Footed",
+        key = "cosmeticHotFoot",
+        stockDefault = 1,
+        coins = 1000,
+        texture = gTextures.star,
+        color = function(item)
+            if item.stock ~= 0 then
+                return {
+                    r = 255,
+                    g = 255,
+                    b = 255,
+                    a = 255
+                }
+            elseif gPlayerSyncTable[0].particleActiveFoot ~= 0 then
+                return {
+                    r = 100,
+                    g = 255,
+                    b = 100,
+                    a = 255
+                }
+            else
+                return {
+                    r = 255,
+                    g = 100,
+                    b = 100,
+                    a = 255
+                }
+            end
+        end,
+        description = function(item)
+            desc = "Ouch Hot!!!!\n\n"
+            if item.stock == 0 then
+                desc = desc..item.name.." "..(gPlayerSyncTable[0].particleActiveFoot ~= 0 and "Enabled" or "Disabled")
+            else
+                desc = desc.."Purchase to Enable"
+            end
+            return desc
+        end,
+        interact = function(item)
+            if item.stock == 0 then
+                gPlayerSyncTable[0].particleActiveFoot = gPlayerSyncTable[0].particleActiveFoot == 1 and 0 or 1
+                play_sound(gPlayerSyncTable[0].particleActiveFoot and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
+                play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].particleActiveFoot*0.2)
+                
+                return false
+            end
+            return true
+        end,
+    },
 }
 
 local function setup_item(item)

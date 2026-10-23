@@ -297,8 +297,8 @@ end
 jpRedCoinSounds = {}
 for i = 1, 8 do
     jpRedCoinSounds[i] = audio_stream_load("sm64_jp_red_"..i..".ogg")
+    audio_stream_set_volume_channel(jpRedCoinSounds[i], MOD_AUDIO_CHANNEL_SFX)
 end
-audio_stream_set_volume_channel(SOUND_JP_RED_COIN, MOD_AUDIO_CHANNEL_SFX)
 local function on_coin_sound(sound, pos)
     if configJPReds ~= 0 then
         for i = 0, 7 do
