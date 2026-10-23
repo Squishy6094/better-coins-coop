@@ -75,7 +75,7 @@ sRedCoinTextures = {
     get_texture_info("coin_seg3_texture_03006F80"),
 }
 
-local sSecretTextures = {
+sSecretTextures = {
     get_texture_info("sparkles_seg4_texture_04027490"),
     get_texture_info("sparkles_seg4_texture_04027C90"),
     get_texture_info("sparkles_seg4_texture_04028490"),

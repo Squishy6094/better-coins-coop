@@ -57,8 +57,7 @@ local shopItems = {
             if item.stock == 0 then
                 gPlayerSyncTable[0].pinkCoinActive = not gPlayerSyncTable[0].pinkCoinActive
                 mod_storage_save_bool("pinkCoinToggle", gPlayerSyncTable[0].pinkCoinActive)
-                play_sound(gPlayerSyncTable[0].pinkCoinActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
-                
+                play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + (gPlayerSyncTable[0].pinkCoinActive and 0.2 or 0))
                 return false
             end
             return true
@@ -69,7 +68,9 @@ local shopItems = {
         key = "jpRedCoinSounds",
         stockDefault = 1,
         coins = 2500,
-        texture = sRedCoinTextures,
+        texture = function(item, x, y)
+            return sRedCoinTextures[math.round(get_global_timer()*0.5)%(#sRedCoinTextures) + 1]
+        end,
         color = function(item)
             if item.stock ~= 0 then
                 return {
@@ -120,7 +121,8 @@ local shopItems = {
         interact = function(item)
             if item.stock == 0 then
                 configJPReds = (configJPReds + 1)%3
-                play_sound(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource)
+                mod_storage_save_integer("configJPReds", configJPReds)
+                play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + configJPReds*0.1)
                 if configJPReds == 0 then
                     play_sound(SOUND_GENERAL_RED_COIN, gGlobalSoundSource)
                 else
@@ -136,14 +138,9 @@ local shopItems = {
         key = "specialTripleJump",
         stockDefault = 1,
         coins = 100 * (gBetterCoinValues.numCoinsToLife or 50),
-        texture = {
-            get_texture_info("sparkles_seg4_texture_04027490"),
-            get_texture_info("sparkles_seg4_texture_04027C90"),
-            get_texture_info("sparkles_seg4_texture_04028490"),
-            get_texture_info("sparkles_seg4_texture_04028C90"),
-            get_texture_info("sparkles_seg4_texture_04029490"),
-            get_texture_info("sparkles_seg4_texture_04029C90"),
-        },
+        texture = function(item, x, y)
+            return sSecretTextures[math.round(get_global_timer()*0.5)%(#sSecretTextures) + 1]
+        end,
         color = function(item)
             if item.stock ~= 0 then
                 return {
@@ -181,6 +178,7 @@ local shopItems = {
             if item.stock == 0 then
                 gMarioStates[0].specialTripleJump = gMarioStates[0].specialTripleJump == 1 and 0 or 1
                 play_sound(gMarioStates[0].specialTripleJump and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
+                play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gMarioStates[0].specialTripleJump*0.2)
                 
                 return false
             end
@@ -380,7 +378,7 @@ local function hud_render()
             local y = shopY + shopH*0.1 + itemSpacing*math.floor((id-1-perPage*currShopPage)/perRow)*s
             local color = run_func_or_get_var(item.color, item)
             djui_hud_set_color(color.r, color.g, color.b, color.a)
-            local tex = type(item.texture) == "table" and item.texture[math.round(get_global_timer()*0.5)%(#item.texture) + 1] or item.texture
+            local tex = run_func_or_get_var(item.texture, item, x, y)
             djui_hud_render_texture(tex, x, y, 16/tex.width*s, 16/tex.height*s)
             djui_hud_set_color(dialogTextR, dialogTextG, dialogTextB, dialogTextA)
             if gShopBoxState == 1 and cursorX > x and cursorX < x + 16 and cursorY > y and cursorY < y + 16 then
