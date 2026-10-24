@@ -1,4 +1,4 @@
-gPlayerSyncTable[0].particleActiveFoot = 1
+gPlayerSyncTable[0].particleActiveFoot = 0
 
 --[[
     Particle Ideas
