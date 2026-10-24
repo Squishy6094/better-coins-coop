@@ -72,7 +72,7 @@ local shopItems = {
         name = "JP Red Coin Sound",
         key = "jpRedCoinSounds",
         stockDefault = 1,
-        coins = 2500,
+        coins = 1500,
         texture = function(item, x, y, scale)
             local texBag = configJPReds == 0 and TEX_JP_RED_COIN_BAG_CLOSED or TEX_JP_RED_COIN_BAG_OPEN 
             djui_hud_render_texture(texBag, x, y, scale, scale)
@@ -170,7 +170,7 @@ local shopItems = {
         name = "Cosmetic Hot Footed",
         key = "cosmeticHotFoot",
         stockDefault = 1,
-        coins = 1000,
+        coins = 3000,
         texture = gTextures.star,
         color = function(item)
             if item.stock ~= 0 then
