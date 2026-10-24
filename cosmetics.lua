@@ -48,8 +48,9 @@ local function mario_render_particle(o)
         if not m then return end
         local p = gPlayerSyncTable[m.playerIndex]
         if p.particleActiveFoot ~= 1 then return end
-        if m.forwardVel < 10 then return end
-        local flameModel = m.forwardVel > (60 + 40*random_float()) and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME
+        local vel = math.sqrt(m.vel.x^2 + m.vel.y^2 + m.vel.z^2)
+        if vel < 10 then return end
+        local flameModel = vel > (80 + 20*random_float()) and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME
         spawn_non_sync_object(id_bhvPlayerParticleFireFoot, flameModel, 
             get_hand_foot_pos_x(m, 2) + m.vel.x,
             get_hand_foot_pos_y(m, 2) + m.vel.y,
