@@ -364,10 +364,30 @@ hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
 hook_event(HOOK_ON_EXIT, save_coin_count)
 
+local resetConfirm = false
 local function chat_command(msg)
     local moderator = network_is_server() or network_is_moderator()
     msg = string.lower(msg)
     local msgSplit = string_split(msg)
+
+    if msgSplit[1] == "reset" then
+        if resetConfirm then
+            local storage = mod_storage_load_all()
+            for key, _ in pairs(storage) do
+                if not string.find(key, "saveFile") then
+                    mod_storage_remove(key)
+                end
+            end
+            savedCoinCount = 0
+            djui_chat_message_create("Better Coins User Data Reset")
+        else
+            djui_chat_message_create("Are you sure you want to reset Better Coins' Save Data?\nThis will remove all user data (independant of save file data), type command again if you're sure.")
+        end
+        resetConfirm = not resetConfirm
+        return true
+    else
+        resetConfirm = false
+    end
 
     if msgSplit[1] == "master-cap" then
         if moderator then

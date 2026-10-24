@@ -58,12 +58,12 @@ local shopItems = {
             end
             return desc
         end,
-        interact = function(item)
+        before_interact = function(item)
             if item.stock == 0 then
                 gPlayerSyncTable[0].pinkCoinActive = not gPlayerSyncTable[0].pinkCoinActive
                 mod_storage_save_bool("pinkCoinToggle", gPlayerSyncTable[0].pinkCoinActive)
                 play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + (gPlayerSyncTable[0].pinkCoinActive and 0.2 or 0))
-                return false
+                return
             end
             return true
         end,
@@ -73,9 +73,9 @@ local shopItems = {
         key = "jpRedCoinSounds",
         stockDefault = 1,
         coins = 2500,
-        texture = function(item, x, y)
+        texture = function(item, x, y, scale)
             local texBag = configJPReds == 0 and TEX_JP_RED_COIN_BAG_CLOSED or TEX_JP_RED_COIN_BAG_OPEN 
-            djui_hud_render_texture(texBag, x, y, 1, 1)
+            djui_hud_render_texture(texBag, x, y, scale, scale)
             if configJPReds > 0 then
                 if configJPReds == 2 then
                     y = y + math.round(-0.5 + 1.5*math.sin(get_global_timer()/10))
@@ -99,7 +99,7 @@ local shopItems = {
             end
             return desc
         end,
-        interact = function(item)
+        before_interact = function(item)
             if item.stock == 0 then
                 configJPReds = (configJPReds + 1)%3
                 mod_storage_save_integer("configJPReds", configJPReds)
@@ -109,7 +109,7 @@ local shopItems = {
                 else
                     audio_stream_play(jpRedCoinSounds[configJPReds == 1 and 1 or 3], true, 2)
                 end
-                return false
+                return
             end
             return true
         end,
@@ -155,13 +155,13 @@ local shopItems = {
             end
             return desc
         end,
-        interact = function(item)
+        before_interact = function(item)
             if item.stock == 0 then
                 gMarioStates[0].specialTripleJump = gMarioStates[0].specialTripleJump == 1 and 0 or 1
                 play_sound(gMarioStates[0].specialTripleJump and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
                 play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gMarioStates[0].specialTripleJump*0.2)
                 
-                return false
+                return
             end
             return true
         end,
@@ -205,13 +205,13 @@ local shopItems = {
             end
             return desc
         end,
-        interact = function(item)
+        before_interact = function(item)
             if item.stock == 0 then
                 gPlayerSyncTable[0].particleActiveFoot = gPlayerSyncTable[0].particleActiveFoot == 1 and 0 or 1
                 play_sound(gPlayerSyncTable[0].particleActiveFoot and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
                 play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].particleActiveFoot*0.2)
                 
-                return false
+                return
             end
             return true
         end,
@@ -222,7 +222,7 @@ local function setup_item(item)
     item.stockDefault = item.stockDefault or -1
     item.stock = item.stockDefault ~= -1 and mod_storage_load_integer("shop"..item.key.."Stock", item.stockDefault) or -1
     item.color = item.color or function()
-        local color = (item.stock ~= 0 or item.interact) and 255 or 150
+        local color = (item.stock ~= 0 or item.before_interact) and 255 or 150
         return {
             r = color,
             g = color,
@@ -409,7 +409,7 @@ local function hud_render()
             local y = shopY + shopH*0.1 + itemSpacing*math.floor((id-1-perPage*currShopPage)/perRow)*s
             local color = run_func_or_get_var(item.color, item)
             djui_hud_set_color(color.r, color.g, color.b, color.a)
-            local tex = run_func_or_get_var(item.texture, item, x, y)
+            local tex = run_func_or_get_var(item.texture, item, x, y, s)
             if tex then
                 djui_hud_render_texture(tex, x, y, 16/tex.width*s, 16/tex.height*s)
             end
@@ -469,14 +469,21 @@ local function hud_render()
                 y = y + tH*0.25
 
                 if c.buttonPressed & A_BUTTON ~= 0 then
-                    if not item.interact or item.interact(item) then
-                        if savedCoinCount >= item.coins and item.stock ~= 0 then
+                    local beforeInteract = true
+                    if item.before_interact then
+                        beforeInteract = item.before_interact(item)
+                    end
+                    if beforeInteract ~= nil then
+                        if savedCoinCount >= item.coins and item.stock ~= 0 and beforeInteract then
                             prevCoinAmount = item.coins
                             savedCoinCount = savedCoinCount - item.coins
                             save_coin_count()
                             if item.stock ~= -1 then
                                 item.stock = item.stock - 1
                                 mod_storage_save_integer("shop"..item.key.."Stock", item.stock)
+                            end
+                            if item.interact then
+                                item.interact(item) 
                             end
                         elseif item.stock ~= 0 then
                             shakeTimer = 15
