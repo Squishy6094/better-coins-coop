@@ -1,4 +1,4 @@
-gPlayerSyncTable[0].particleActiveFoot = 0
+gPlayerSyncTable[0].particleActiveFoot = 1
 
 --[[
     Particle Ideas
@@ -7,6 +7,7 @@ gPlayerSyncTable[0].particleActiveFoot = 0
 ]]
 
 local function bhv_particle_fire_init(o)
+    cur_obj_hide()
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_SET_FACE_ANGLE_TO_MOVE_ANGLE
     obj_set_billboard(o)
 end
@@ -73,7 +74,9 @@ end
 local function before_set_mario_action(m, nextAct)
     local p = gPlayerSyncTable[m.playerIndex]
     if p.particleActiveFoot ~= 1 then return end
-    if nextAct == ACT_WALL_KICK_AIR and m.action & ACT_FLAG_ON_POLE == 0 then
+    -- Wall Kick Flames
+    if m.particleFlags & PARTICLE_VERTICAL_STAR ~= 0 or (nextAct == ACT_WALL_KICK_AIR and m.action & ACT_FLAG_ON_POLE == 0) then
+        m.particleFlags = m.particleFlags & ~PARTICLE_VERTICAL_STAR
         for i = 0, 7 do
             spawn_non_sync_object(id_bhvPlayerParticleFireFoot, m.wallKickTimer == 0 and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME, 
                 m.pos.x,
@@ -88,6 +91,26 @@ local function before_set_mario_action(m, nextAct)
                 o.oVelY = coss(circleAngle)*30
                 o.oVelZ = sins(circleAngle)*30*coss(wallAngle+0x4000) + sins(wallAngle-0x4000)*5
             end)
+        end
+    end
+
+    -- Ground Pound Flames
+    if m.particleFlags & PARTICLE_HORIZONTAL_STAR ~= 0 then
+        m.particleFlags = m.particleFlags & ~PARTICLE_HORIZONTAL_STAR
+        for c = 1, 5 do
+            for i = 0, 7 do
+                local circleAngle = 0x2000*i + 0x800*c
+                local circleDist = 50*c
+                spawn_non_sync_object(id_bhvPlayerParticleFireFoot, m.wallKickTimer == 0 and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME, 
+                    m.pos.x + sins(circleAngle)*circleDist,
+                    m.pos.y,
+                    m.pos.z + coss(circleAngle)*circleDist,
+                function(o)
+                    o.oIntangibleTimer = c
+                    o.oBehParams = 5*c
+                    o.oVelY = 5*c
+                end)
+            end
         end
     end
 end
