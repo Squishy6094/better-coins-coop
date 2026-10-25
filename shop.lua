@@ -180,7 +180,7 @@ local shopItems = {
                     b = 255,
                     a = 255
                 }
-            elseif gPlayerSyncTable[0].particleActiveFoot ~= 0 then
+            elseif gPlayerSyncTable[0].cosmeticActive == 1 then
                 return {
                     r = 100,
                     g = 255,
@@ -199,7 +199,7 @@ local shopItems = {
         description = function(item)
             desc = "Ouch Hot!!!!\n\n"
             if item.stock == 0 then
-                desc = desc..item.name.." "..(gPlayerSyncTable[0].particleActiveFoot ~= 0 and "Enabled" or "Disabled")
+                desc = desc..item.name.." "..(gPlayerSyncTable[0].cosmeticActive == 1 and "Enabled" or "Disabled")
             else
                 desc = desc.."Purchase to Enable"
             end
@@ -207,9 +207,59 @@ local shopItems = {
         end,
         before_interact = function(item)
             if item.stock == 0 then
-                gPlayerSyncTable[0].particleActiveFoot = gPlayerSyncTable[0].particleActiveFoot == 1 and 0 or 1
-                play_sound(gPlayerSyncTable[0].particleActiveFoot and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
-                play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].particleActiveFoot*0.2)
+                gPlayerSyncTable[0].cosmeticActive = gPlayerSyncTable[0].cosmeticActive == 1 and 0 or 1
+                play_sound(gPlayerSyncTable[0].cosmeticActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
+                play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].cosmeticActive*0.2)
+                
+                return
+            end
+            return true
+        end,
+    },
+    {
+        name = "Cosmetic Air Headed",
+        key = "cosmeticHotFoot",
+        stockDefault = 1,
+        coins = 3000,
+        texture = gTextures.star,
+        color = function(item)
+            if item.stock ~= 0 then
+                return {
+                    r = 255,
+                    g = 255,
+                    b = 255,
+                    a = 255
+                }
+            elseif gPlayerSyncTable[0].cosmeticActive == 2 then
+                return {
+                    r = 100,
+                    g = 255,
+                    b = 100,
+                    a = 255
+                }
+            else
+                return {
+                    r = 255,
+                    g = 100,
+                    b = 100,
+                    a = 255
+                }
+            end
+        end,
+        description = function(item)
+            desc = "Ouch Air!!!!\n\n"
+            if item.stock == 0 then
+                desc = desc..item.name.." "..(gPlayerSyncTable[0].cosmeticActive == 2 and "Enabled" or "Disabled")
+            else
+                desc = desc.."Purchase to Enable"
+            end
+            return desc
+        end,
+        before_interact = function(item)
+            if item.stock == 0 then
+                gPlayerSyncTable[0].cosmeticActive = gPlayerSyncTable[0].cosmeticActive == 2 and 0 or 2
+                play_sound(gPlayerSyncTable[0].cosmeticActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
+                play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].cosmeticActive*0.2)
                 
                 return
             end
