@@ -20,7 +20,7 @@ local shopItems = {
         name = "Pink Companion",
         key = "pinkCoin",
         stockDefault = 1,
-        coins = mod_storage_load_bool("redeem"..redeemPinkCoin, false) and 999 or 999999,
+        coins = mod_storage_load_bool("redeem"..redeemPinkCoin, false) and 1000 or 30000,
         texture = gTextures.coin,
         color = function(item)
             if item.stock ~= 0 then
@@ -69,7 +69,7 @@ local shopItems = {
         end,
     },
     {
-        name = "JP Red Coin Sound",
+        name = "Japanese Red Coin Sound",
         key = "jpRedCoinSounds",
         stockDefault = 1,
         coins = 1500,
@@ -84,7 +84,7 @@ local shopItems = {
             end
         end,
         description = function(item)
-            desc = "Even though it's a seemingly normal\nRed Coin, there's something off\nabout it. It washed up on the shore\nand keeps making funky noises,\nalmost like it wasn't meant to\nfloat across the ocean.\n\nEven though it sounds different, it\nseems to take a liking to the way\nall of the Red Coins around here\ncount up!\n\n"
+            desc = "A Red Coin in a small bag I found\nwashed up on shore, it keeps making\nfunky noises as if it's traveled\nacross an entire ocean! I found this\nthing ages ago and since then it\nseems to be able to count up like\nour Red Coins!\n\n"
             if item.stock == 0 then
                 desc = desc..item.name.." set to "
                 if configJPReds == 2 then
@@ -166,106 +166,6 @@ local shopItems = {
             return true
         end,
     },
-    {
-        name = "Cosmetic Hot Footed",
-        key = "cosmeticHotFoot",
-        stockDefault = 1,
-        coins = 3000,
-        texture = gTextures.star,
-        color = function(item)
-            if item.stock ~= 0 then
-                return {
-                    r = 255,
-                    g = 255,
-                    b = 255,
-                    a = 255
-                }
-            elseif gPlayerSyncTable[0].cosmeticActive == 1 then
-                return {
-                    r = 100,
-                    g = 255,
-                    b = 100,
-                    a = 255
-                }
-            else
-                return {
-                    r = 255,
-                    g = 100,
-                    b = 100,
-                    a = 255
-                }
-            end
-        end,
-        description = function(item)
-            desc = "Ouch Hot!!!!\n\n"
-            if item.stock == 0 then
-                desc = desc..item.name.." "..(gPlayerSyncTable[0].cosmeticActive == 1 and "Enabled" or "Disabled")
-            else
-                desc = desc.."Purchase to Enable"
-            end
-            return desc
-        end,
-        before_interact = function(item)
-            if item.stock == 0 then
-                gPlayerSyncTable[0].cosmeticActive = gPlayerSyncTable[0].cosmeticActive == 1 and 0 or 1
-                play_sound(gPlayerSyncTable[0].cosmeticActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
-                play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].cosmeticActive*0.2)
-                
-                return
-            end
-            return true
-        end,
-    },
-    {
-        name = "Cosmetic Air Headed",
-        key = "cosmeticHotFoot",
-        stockDefault = 1,
-        coins = 3000,
-        texture = gTextures.star,
-        color = function(item)
-            if item.stock ~= 0 then
-                return {
-                    r = 255,
-                    g = 255,
-                    b = 255,
-                    a = 255
-                }
-            elseif gPlayerSyncTable[0].cosmeticActive == 2 then
-                return {
-                    r = 100,
-                    g = 255,
-                    b = 100,
-                    a = 255
-                }
-            else
-                return {
-                    r = 255,
-                    g = 100,
-                    b = 100,
-                    a = 255
-                }
-            end
-        end,
-        description = function(item)
-            desc = "Ouch Air!!!!\n\n"
-            if item.stock == 0 then
-                desc = desc..item.name.." "..(gPlayerSyncTable[0].cosmeticActive == 2 and "Enabled" or "Disabled")
-            else
-                desc = desc.."Purchase to Enable"
-            end
-            return desc
-        end,
-        before_interact = function(item)
-            if item.stock == 0 then
-                gPlayerSyncTable[0].cosmeticActive = gPlayerSyncTable[0].cosmeticActive == 2 and 0 or 2
-                play_sound(gPlayerSyncTable[0].cosmeticActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
-                play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].cosmeticActive*0.2)
-                
-                return
-            end
-            return true
-        end,
-    },
 }
 
 local function setup_item(item)
@@ -296,8 +196,63 @@ function get_shop_item_from_name(name)
 end
 
 local function init_shop_items()
+    -- Initialize Items
     for _, item in pairs(shopItems) do
         setup_item(item)
+    end
+
+    -- Add Cosmetics automatically
+    for id, data in ipairs(cosmeticShopEntries) do
+        add_shop_item({
+            name = "Cosmetic "..data.name,
+            key = "cosmetic"..data.key,
+            stockDefault = 1,
+            coins = 3000,
+            texture = gTextures.star,
+            color = function(item)
+                if item.stock ~= 0 then
+                    return {
+                        r = 255,
+                        g = 255,
+                        b = 255,
+                        a = 255
+                    }
+                elseif gPlayerSyncTable[0].cosmeticActive == 1 then
+                    return {
+                        r = 100,
+                        g = 255,
+                        b = 100,
+                        a = 255
+                    }
+                else
+                    return {
+                        r = 255,
+                        g = 100,
+                        b = 100,
+                        a = 255
+                    }
+                end
+            end,
+            description = function(item)
+                local desc = data.desc.."\n\n"
+                if item.stock == 0 then
+                    desc = desc..item.name.." "..(gPlayerSyncTable[0].cosmeticActive == 1 and "Enabled" or "Disabled")
+                else
+                    desc = desc.."Purchase to Enable"
+                end
+                return desc.."\n\nNote: Cosmetic Badge Items do not\naffect your moveset, only one\ncosmetic badge can be applied\nat a time."
+            end,
+            before_interact = function(item)
+                if item.stock == 0 then
+                    gPlayerSyncTable[0].cosmeticActive = gPlayerSyncTable[0].cosmeticActive == id and 0 or id
+                    play_sound(gPlayerSyncTable[0].cosmeticActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
+                    play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].cosmeticActive*0.2)
+                    mod_storage_save_integer("configCosmetic", gPlayerSyncTable[0].cosmeticActive)
+                    return
+                end
+                return true
+            end,
+        })
     end
 
     -- Load toggle if unlocked
@@ -362,17 +317,39 @@ local shakeTimer = 0
 gShopBoxState = 3
 gShopBoxScale = 0.1
 gShopBoxOpenTimer = 90
+gPauseMenuAlpha = 0
 
 local function hud_render()
-    if gShopBoxState == 3 then
-        coinCountLerp = savedCoinCount
-        return
-    end
     local c = m.controller
     djui_hud_set_resolution(RESOLUTION_N64)
     local sW = djui_hud_get_screen_width()
     local sH = djui_hud_get_screen_height()
 
+    -- Show bank count in pause menu
+    if is_game_paused() then
+        if not djui_hud_is_pause_menu_created() then
+            djui_hud_set_font(FONT_HUD)
+            local coinString = tostring(coinCountLerp):gsub("-", "M")
+            local tW, tH = djui_hud_measure_text(coinString)
+            tW = tW
+            local x, y = hudDodge.find_open_hud_space(sW*0.5 - tW*0.5 - 16, sH, tW + 32, 16, 0, 1, 3)
+            djui_hud_set_color(255, 255, 255, gPauseMenuAlpha)
+            djui_hud_render_texture(gTextures.coin, x, y, 1, 1)
+            djui_hud_print_text("@", x + 16, y, 1, 1)
+            djui_hud_print_text(coinString, x + 32, y, 1, 1)
+        end
+
+        if gPauseMenuAlpha < 250 then
+            gPauseMenuAlpha = gPauseMenuAlpha + 25
+        end
+        return
+    else
+        gPauseMenuAlpha = 0
+        if gShopBoxState == 3 then
+            coinCountLerp = savedCoinCount
+            return
+        end
+    end
 
     -- anim logic
     if (gShopBoxState == 0 or gShopBoxState == 2) then
@@ -394,10 +371,10 @@ local function hud_render()
     end
     
     local s = gShopBoxScale
-    local shopX = sW*0.5 - sW*0.4*s
-    local shopY = sH*0.5 - sH*0.4*s
-    local shopW = sW*0.8*s
+    local shopW = 320*0.8*s
     local shopH = sH*0.8*s
+    local shopX = sW*0.5 - shopW*0.5
+    local shopY = sH*0.5 - shopH*0.5
 
     local perRow = math.round((shopW*0.6 - shopH*0.2)/s/itemSpacing)
     local perPage = perColumn*perRow
@@ -475,7 +452,7 @@ local function hud_render()
                 -- Name
                 djui_hud_set_font(FONT_NORMAL)
                 local tW, tH = djui_hud_measure_text(item.name)
-                local tS = math.min((shopW*0.6 + 7)/tW, 1)*0.5*s
+                local tS = math.min((shopW*0.4 - 14)/(tW*0.5), 1)*0.5*s
                 djui_hud_print_text(item.name, x, y, tS, tS)
                 y = y + tH*tS
 

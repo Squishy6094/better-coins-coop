@@ -1,4 +1,9 @@
+COSMETIC_HOT_FOOT = 1
+COSMETIC_AIR_HEAD = 2
+
 gPlayerSyncTable[0].cosmeticActive = mod_storage_load_integer("configCosmetic", 0)
+
+local l = gLakituState
 
 local function bhv_particle_fire_init(o)
     cur_obj_hide()
@@ -59,17 +64,27 @@ local function bhv_particle_bubble_helmet_loop(o)
         obj_mark_for_deletion(o)
         return
     end
-    obj_scale(o, 3)
+    obj_scale(o, 3.5)
+
     local headPos = {x = 0, y = 0, z = 0}
     local headRot = {x = 0, y = 0, z = 0}
     get_mario_anim_part_pos(m, MARIO_ANIM_PART_HEAD, headPos)
     get_mario_anim_part_rot(m, MARIO_ANIM_PART_HEAD, headRot)
-    local headOffset = {x = 0, y = 0, z = 0}
+    headRot.y = 0
+    local headOffset = {x = 0, y = 40, z = 0}
     vec3f_rotate_zxy(headOffset, headRot)
+    headOffset.y = headOffset.y - 40
 
-    o.oPosX = headPos.x + headOffset.x + (m.marioObj.header.gfx.pos.x - prevMarioGfxPos[m.playerIndex].x)
-    o.oPosY = headPos.y + headOffset.y + (m.marioObj.header.gfx.pos.y - prevMarioGfxPos[m.playerIndex].y)
-    o.oPosZ = headPos.z + headOffset.z + (m.marioObj.header.gfx.pos.z - prevMarioGfxPos[m.playerIndex].z)
+    local camYaw = atan2s(headPos.z - l.pos.z, headPos.x - l.pos.x)
+    local camLatDist = math.sqrt((headPos.z - l.pos.z)^2 + (headPos.x - l.pos.x)^2)
+    local camPitch = atan2s(camYaw*camLatDist, headPos.y - l.curPos.y)
+    local camRot = {x = 0, y = camYaw, z = 0}
+    local camOffset = {x = 0, y = 0, z = -80}
+    vec3f_rotate_zxy(camOffset, camRot)
+
+    o.oPosX = headPos.x + headOffset.x + camOffset.x + (m.marioObj.header.gfx.pos.x - prevMarioGfxPos[m.playerIndex].x)
+    o.oPosY = headPos.y + headOffset.y + camOffset.y + (m.marioObj.header.gfx.pos.y - prevMarioGfxPos[m.playerIndex].y)
+    o.oPosZ = headPos.z + headOffset.z + camOffset.z + (m.marioObj.header.gfx.pos.z - prevMarioGfxPos[m.playerIndex].z)
     -- Used for predicting gfx velocity
     prevMarioGfxPos[m.playerIndex].x = m.marioObj.header.gfx.pos.x
     prevMarioGfxPos[m.playerIndex].y = m.marioObj.header.gfx.pos.y
@@ -82,13 +97,11 @@ end
 
 id_bhvCosmeticBubbleHelmet = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, bhv_particle_bubble_helmet_init, bhv_particle_bubble_helmet_loop)
 
-local function mario_render_particle(o)
-    if obj_has_behavior_id(o, id_bhvMario) ~= 0 then
-        local m = get_mario_state_from_object(o)
-        if not m then return end
-        local p = gPlayerSyncTable[m.playerIndex]
-        if p.cosmeticActive ~= 1 then return end
-        local vel = math.sqrt(m.vel.x^2 + m.vel.y^2 + m.vel.z^2)
+local function mario_update(m)
+    if not m then return end
+    local p = gPlayerSyncTable[m.playerIndex]
+    if p.cosmeticActive == COSMETIC_HOT_FOOT then
+        local vel = math.sqrt(m.vel.x^2 + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y or 0)^2 + m.vel.z^2)
         if vel < 10 then return end
         local flameModel = vel > (80 + 20*random_float()) and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME
         spawn_non_sync_object(id_bhvCosmeticFireFoot, flameModel, 
@@ -114,43 +127,44 @@ end
 ---@param m MarioState
 local function before_set_mario_action(m, nextAct)
     local p = gPlayerSyncTable[m.playerIndex]
-    if p.cosmeticActive ~= 1 then return end
-    -- Wall Kick Flames
-    if m.particleFlags & PARTICLE_VERTICAL_STAR ~= 0 or (nextAct == ACT_WALL_KICK_AIR and m.action & ACT_FLAG_ON_POLE == 0) then
-        m.particleFlags = m.particleFlags & ~PARTICLE_VERTICAL_STAR
-        for i = 0, 7 do
-            spawn_non_sync_object(id_bhvCosmeticFireFoot, m.wallKickTimer == 0 and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME, 
-                m.pos.x,
-                m.pos.y,
-                m.pos.z,
-            function(o)
-                o.oIntangibleTimer = i
-                o.oBehParams = 25
-                local circleAngle = 0x2000*i
-                local wallAngle = atan2s(m.wallNormal.z, m.wallNormal.x)
-                o.oVelX = sins(circleAngle)*30*sins(wallAngle+0x4000) + coss(wallAngle-0x4000)*5
-                o.oVelY = coss(circleAngle)*30
-                o.oVelZ = sins(circleAngle)*30*coss(wallAngle+0x4000) + sins(wallAngle-0x4000)*5
-            end)
-        end
-    end
-
-    -- Ground Pound Flames
-    if m.particleFlags & PARTICLE_HORIZONTAL_STAR ~= 0 then
-        m.particleFlags = m.particleFlags & ~PARTICLE_HORIZONTAL_STAR
-        for c = 1, 5 do
+    if p.cosmeticActive == COSMETIC_HOT_FOOT then
+        -- Wall Kick Flames
+        if m.particleFlags & PARTICLE_VERTICAL_STAR ~= 0 or (nextAct == ACT_WALL_KICK_AIR and m.action & ACT_FLAG_ON_POLE == 0) then
+            m.particleFlags = m.particleFlags & ~PARTICLE_VERTICAL_STAR
             for i = 0, 7 do
-                local circleAngle = 0x2000*i + 0x800*c
-                local circleDist = 50*c
                 spawn_non_sync_object(id_bhvCosmeticFireFoot, m.wallKickTimer == 0 and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME, 
-                    m.pos.x + sins(circleAngle)*circleDist,
+                    m.pos.x,
                     m.pos.y,
-                    m.pos.z + coss(circleAngle)*circleDist,
+                    m.pos.z,
                 function(o)
-                    o.oIntangibleTimer = c
-                    o.oBehParams = 5*c
-                    o.oVelY = 5*c
+                    o.oIntangibleTimer = i
+                    o.oBehParams = 25
+                    local circleAngle = 0x2000*i
+                    local wallAngle = atan2s(m.wallNormal.z, m.wallNormal.x)
+                    o.oVelX = sins(circleAngle)*30*sins(wallAngle+0x4000) + coss(wallAngle-0x4000)*5
+                    o.oVelY = coss(circleAngle)*30
+                    o.oVelZ = sins(circleAngle)*30*coss(wallAngle+0x4000) + sins(wallAngle-0x4000)*5
                 end)
+            end
+        end
+
+        -- Ground Pound Flames
+        if m.particleFlags & PARTICLE_HORIZONTAL_STAR ~= 0 then
+            m.particleFlags = m.particleFlags & ~PARTICLE_HORIZONTAL_STAR
+            for c = 1, 5 do
+                for i = 0, 7 do
+                    local circleAngle = 0x2000*i + 0x800*c
+                    local circleDist = 50*c
+                    spawn_non_sync_object(id_bhvCosmeticFireFoot, m.wallKickTimer == 0 and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME, 
+                        m.pos.x + sins(circleAngle)*circleDist,
+                        m.pos.y,
+                        m.pos.z + coss(circleAngle)*circleDist,
+                    function(o)
+                        o.oIntangibleTimer = c
+                        o.oBehParams = 5*c
+                        o.oVelY = 5*c
+                    end)
+                end
             end
         end
     end
@@ -158,7 +172,7 @@ end
 
 local function spawn_cosmetics()
     local m = gMarioStates[0]
-    if gPlayerSyncTable[0].cosmeticActive == 2 then
+    if gPlayerSyncTable[0].cosmeticActive == COSMETIC_AIR_HEAD then
         local oBubble = obj_get_first_with_behavior_id(id_bhvCosmeticBubbleHelmet)
         while oBubble do
             if network_local_index_from_global(oBubble.globalPlayerIndex) == 0 then
@@ -175,4 +189,17 @@ end
 
 hook_event(HOOK_UPDATE, spawn_cosmetics)
 hook_event(HOOK_BEFORE_SET_MARIO_ACTION, before_set_mario_action)
-hook_event(HOOK_ON_OBJECT_RENDER, mario_render_particle)
+hook_event(HOOK_MARIO_UPDATE, mario_update)
+
+cosmeticShopEntries = {
+    [COSMETIC_HOT_FOOT] = {
+        name = "Hot Footed",
+        key = "HotFoot",
+        desc = "A Cosmetic Badge that causes your\nboots to catch ablaze! This gives\nmovement and impacts a little\nmore spice!"
+    },
+    [COSMETIC_AIR_HEAD] = {
+        name = "Air Headed",
+        key = "AirHead",
+        desc = "A Cosmetic Badge that surrounds\nyour head in a bubble!"
+    },
+}

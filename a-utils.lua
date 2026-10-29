@@ -178,7 +178,7 @@ redeems = {
     end,
     [redeemPinkCoin] = function(code)
         local item = get_shop_item_from_name("Pink Companion")
-        local itemTarget = 999
+        local itemTarget = 1000
         djui_chat_message_create(string.format('Redeemed "%s" to discount "%s" from %d to %d', code, item.name, item.coins, itemTarget))
         item.coins = itemTarget
     end,
