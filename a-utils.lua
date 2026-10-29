@@ -173,8 +173,8 @@ end
 redeemPinkCoin = 7873909706893735147
 redeems = {
     [249892621358844525] = function(code)
-        djui_chat_message_create(string.format('Redeemed "%s" for 500 coins', code))
-        savedCoinCount = savedCoinCount + 500
+        djui_chat_message_create(string.format('Redeemed "%s" for 1000 coins', code))
+        savedCoinCount = savedCoinCount + 1000
     end,
     [redeemPinkCoin] = function(code)
         local item = get_shop_item_from_name("Pink Companion")

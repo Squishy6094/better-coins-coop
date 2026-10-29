@@ -908,6 +908,15 @@ id_bhvHowlingWind = hook_behavior(id_bhvHowlingWind, OBJ_LIST_GENACTOR, true, ni
 local function bhv_pink_coin_init(o)
     o.oFlags = OBJ_FLAG_SET_FACE_ANGLE_TO_MOVE_ANGLE | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     obj_set_billboard(o)
+    network_init_object(o, false, {
+        "oAction",
+        "oPosX",
+        "oPosY",
+        "oPosZ",
+        "oHomeX",
+        "oHomeY",
+        "oHomeZ",
+    })
 end
 
 ---@param o Object
@@ -954,13 +963,13 @@ local pinkCoinActs = {
     {
         ---@param o Object
         loop = function(o, m)
+            if m.playerIndex ~= 0 or o.oTimer > 300 then
+                o.oAction = 0
+            end
+
             o.oHomeX = gLakituState.goalFocus.x
             o.oHomeY = gLakituState.goalFocus.y
             o.oHomeZ = gLakituState.goalFocus.z
-
-            if o.oTimer > 300 then
-                o.oAction = 0
-            end
         end,
     },
     -- Show HOLP
@@ -1060,6 +1069,8 @@ local function bhv_pink_coin_loop(o)
                     o.oAction = randAct
                 end
             until o.oAction ~= 0
+            o.oTimer = 0
+            network_send_object(o, true)
         end
     else
         pinkCoinActs[o.oAction].loop(o, m)
@@ -1068,6 +1079,9 @@ local function bhv_pink_coin_loop(o)
     o.oPosX = math.lerp(o.oPosX, o.oHomeX, math.clamp(o.oTimer/30, 0, 1))
     o.oPosY = math.lerp(o.oPosY, o.oHomeY, math.clamp(o.oTimer/30, 0, 1))
     o.oPosZ = math.lerp(o.oPosZ, o.oHomeZ, math.clamp(o.oTimer/30, 0, 1))
+    if m.playerIndex == 0 then 
+        network_send_object(o, false)
+    end
 end
 
 id_bhvPinkCoinCompanion = hook_behavior(id_bhvPinkCoinCompanion, OBJ_LIST_DEFAULT, true, bhv_pink_coin_init, bhv_pink_coin_loop, "bhvPinkCoinCompanion")
