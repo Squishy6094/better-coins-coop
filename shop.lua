@@ -53,7 +53,7 @@ local shopItems = {
             else
                 desc = desc.."Purchase to Enable"
             end
-            if item.coins == 999 then
+            if item.coins == 1000 then
                 desc = desc .. "\n\nThank you for being a supporter!\nEvery coin helps, and it means the\nworld that you enjoyed my work\nenough to support me!\n- With love, Squishy\n\n"
             end
             return desc
@@ -217,7 +217,7 @@ local function init_shop_items()
                         b = 255,
                         a = 255
                     }
-                elseif gPlayerSyncTable[0].cosmeticActive == 1 then
+                elseif gPlayerSyncTable[0].cosmeticActive == id then
                     return {
                         r = 100,
                         g = 255,
@@ -236,7 +236,7 @@ local function init_shop_items()
             description = function(item)
                 local desc = data.desc.."\n\n"
                 if item.stock == 0 then
-                    desc = desc..item.name.." "..(gPlayerSyncTable[0].cosmeticActive == 1 and "Enabled" or "Disabled")
+                    desc = desc..item.name.." "..(gPlayerSyncTable[0].cosmeticActive == id and "Enabled" or "Disabled")
                 else
                     desc = desc.."Purchase to Enable"
                 end

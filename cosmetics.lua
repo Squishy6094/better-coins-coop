@@ -1,9 +1,16 @@
+local E_MODEL_FLOWER = smlua_model_util_get_id("unused_flower_geo")
+
 COSMETIC_HOT_FOOT = 1
 COSMETIC_AIR_HEAD = 2
+COSMETIC_GARDEN_GROWER = 3
 
 gPlayerSyncTable[0].cosmeticActive = mod_storage_load_integer("configCosmetic", 0)
 
 local l = gLakituState
+local prevMarioGfxPos = {}
+for i = 0, MAX_PLAYERS - 1 do
+    prevMarioGfxPos[i] = {x = 0, y = 0, z = 0}
+end
 
 local function bhv_particle_fire_init(o)
     cur_obj_hide()
@@ -40,11 +47,6 @@ local function bhv_particle_fire_loop(o)
 end
 
 id_bhvCosmeticFireFoot = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, bhv_particle_fire_init, bhv_particle_fire_loop)
-
-local prevMarioGfxPos = {}
-for i = 0, MAX_PLAYERS - 1 do
-    prevMarioGfxPos[i] = {x = 0, y = 0, z = 0}
-end
 
 ---@param o Object
 local function bhv_particle_bubble_helmet_init(o)
@@ -97,11 +99,50 @@ end
 
 id_bhvCosmeticBubbleHelmet = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, bhv_particle_bubble_helmet_init, bhv_particle_bubble_helmet_loop)
 
+
+---@param o Object
+local function bhv_particle_flower_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_SET_FACE_ANGLE_TO_MOVE_ANGLE
+    obj_set_billboard(o)
+    cur_obj_scale(0)
+    o.oBehParams = math.random(0, 3)
+end
+
+---@param o Object
+local function bhv_particle_flower_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    local p = gPlayerSyncTable[m.playerIndex]
+    
+    o.oAnimState = math.round((get_global_timer())/3 + o.oBehParams)%6
+    if o.oAction == 0 then
+        cur_obj_scale(o.oTimer/5)
+        if o.oTimer > 5 then
+            o.oAction = o.oAction + 1
+        end
+    elseif o.oAction == 1 then
+        local timerMax = 30
+        if obj_to_obj_dist(m.marioObj, o) < 300 and p.cosmeticActive == COSMETIC_GARDEN_GROWER then
+            timerMax = 90
+        end
+        if o.oTimer > timerMax then
+            o.oAction = o.oAction + 1
+        end
+    elseif o.oAction == 2 then
+        cur_obj_scale((30-o.oTimer)/30)
+        if o.oTimer > 30 then
+            obj_mark_for_deletion(o)
+        end
+    end
+end
+
+id_bhvCosmeticFlower = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, bhv_particle_flower_init, bhv_particle_flower_loop)
+
 local function mario_update(m)
     if not m then return end
     local p = gPlayerSyncTable[m.playerIndex]
+    local vel = math.sqrt(m.vel.x^2 + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y or 0)^2 + m.vel.z^2)
+    local latVel = math.sqrt(m.vel.x^2 + m.vel.z^2)
     if p.cosmeticActive == COSMETIC_HOT_FOOT then
-        local vel = math.sqrt(m.vel.x^2 + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y or 0)^2 + m.vel.z^2)
         if vel < 10 then return end
         local flameModel = vel > (80 + 20*random_float()) and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME
         spawn_non_sync_object(id_bhvCosmeticFireFoot, flameModel, 
@@ -121,6 +162,21 @@ local function mario_update(m)
             o.oForwardVel = 5 + random_float()*2
             o.oMoveAngleYaw = m.faceAngle.y + 0x4000 + 0x2000*random_float()
         end)
+    end
+
+    if p.cosmeticActive == COSMETIC_GARDEN_GROWER and get_global_timer()%3 == 0 then
+        local randRot = random_u16()
+        local randDist = random_float()*150 + 150
+        local randX = m.pos.x + sins(m.faceAngle.y)*latVel*5 + sins(randRot)*randDist
+        local randZ = m.pos.z + coss(m.faceAngle.y)*latVel*5 + coss(randRot)*randDist
+        local floorHeight = find_floor(randX, m.pos.y, randZ)
+        spawn_non_sync_object(id_bhvCosmeticFlower, E_MODEL_FLOWER, 
+            randX,
+            floorHeight,
+            randZ,
+        function(o)
+        end)
+        
     end
 end
 
@@ -201,5 +257,10 @@ cosmeticShopEntries = {
         name = "Air Headed",
         key = "AirHead",
         desc = "A Cosmetic Badge that surrounds\nyour head in a bubble!"
+    },
+    [COSMETIC_GARDEN_GROWER] = {
+        name = "Garden Grower",
+        key = "Flowers",
+        desc = "A Cosmetic Badge that grows flowers\nwherever you step!"
     },
 }
