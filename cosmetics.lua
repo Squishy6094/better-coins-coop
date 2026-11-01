@@ -4,8 +4,6 @@ COSMETIC_HOT_FOOT = 1
 COSMETIC_AIR_HEAD = 2
 COSMETIC_GARDEN_GROWER = 3
 
-gPlayerSyncTable[0].cosmeticActive = mod_storage_load_integer("configCosmetic", 0)
-
 local l = gLakituState
 local prevMarioGfxPos = {}
 for i = 0, MAX_PLAYERS - 1 do
@@ -57,7 +55,7 @@ end
 ---@param o Object
 local function bhv_particle_bubble_helmet_loop(o)
     local m = gMarioStates[network_local_index_from_global(o.globalPlayerIndex)] ---@type MarioState
-    if not m then
+    if not m or is_player_active(m) == 0 then
         obj_mark_for_deletion(o)
         return
     end
@@ -138,7 +136,7 @@ end
 id_bhvCosmeticFlower = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, bhv_particle_flower_init, bhv_particle_flower_loop)
 
 local function mario_update(m)
-    if not m then return end
+    if not m or is_player_active(m) == 0 then return end
     local p = gPlayerSyncTable[m.playerIndex]
     local vel = math.sqrt(m.vel.x^2 + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y or 0)^2 + m.vel.z^2)
     local latVel = math.sqrt(m.vel.x^2 + m.vel.z^2)
@@ -243,9 +241,14 @@ local function spawn_cosmetics()
     end
 end
 
+local function on_sync()
+    gPlayerSyncTable[0].cosmeticActive = mod_storage_load_integer("configCosmetic", 0)
+end
+
 hook_event(HOOK_UPDATE, spawn_cosmetics)
 hook_event(HOOK_BEFORE_SET_MARIO_ACTION, before_set_mario_action)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
+hook_event(HOOK_ON_SYNC_VALID, on_sync)
 
 cosmeticShopEntries = {
     [COSMETIC_HOT_FOOT] = {
