@@ -332,7 +332,7 @@ local function hud_render()
             local coinString = tostring(coinCountLerp):gsub("-", "M")
             local tW, tH = djui_hud_measure_text(coinString)
             tW = tW
-            local x, y = hudDodge.find_open_hud_space(sW*0.5 - tW*0.5 - 16, sH, tW + 32, 16, 0, 1, 3)
+            local x, y = sW*0.5 - tW*0.5 - 16, sH - 31
             djui_hud_set_color(255, 255, 255, gPauseMenuAlpha)
             djui_hud_render_texture(gTextures.coin, x, y, 1, 1)
             djui_hud_print_text("@", x + 16, y, 1, 1)
