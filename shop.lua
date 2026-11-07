@@ -107,7 +107,7 @@ local shopItems = {
                 if configJPReds == 0 then
                     play_sound(SOUND_GENERAL_RED_COIN, gGlobalSoundSource)
                 else
-                    audio_stream_play(jpRedCoinSounds[configJPReds == 1 and 1 or 3], true, 2)
+                    audio_stream_play(jpRedCoinSounds[configJPReds == 1 and 1 or 3], true, 1)
                 end
                 return
             end

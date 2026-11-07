@@ -303,7 +303,7 @@ local function on_coin_sound(sound, pos)
     if configJPReds ~= 0 then
         for i = 0, 7 do
             if sound == SOUND_MENU_COLLECT_RED_COIN + ((7 - i) << 16) then
-                audio_stream_play(jpRedCoinSounds[configJPReds == 1 and 1 or 8-i], true, 2)
+                audio_stream_play(jpRedCoinSounds[configJPReds == 1 and 1 or 8-i], true, 1)
                 return NO_SOUND
             end
         end
