@@ -83,7 +83,6 @@ function obj_is_in_container(o)
 end
 
 -- Automatically check for if the objects is synced
-
 local og_network_init_object = network_init_object
 function network_init_object(object, standardSync, fieldTable)
     if object.oSyncID ~= 0 and sync_object_is_initialized(object.oSyncID) then
