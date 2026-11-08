@@ -32,7 +32,7 @@ const LevelScript level_master_cap_stage_entry[] = {
 		WARP_NODE(0xF1, LEVEL_CASTLE_GROUNDS, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		OBJECT(MODEL_NONE, -9000, 100, -1500, 0, 0, 0, 0x00000000, bhvHowlingWind),
 		MARIO_POS(0x01, 90, -8700, 200, -900),
-		OBJECT(MODEL_NONE, 2300, 4100, -6300, 0, 135, 0, 0x00000000, bhvMasterCapSwitch),
+		OBJECT(MODEL_NONE, 1900, 4100, -6100, 0, 135, 0, 0x00000000, bhvMasterCapSwitch),
 		OBJECT(E_MODEL_SCARECROW, 3700, 700, 3900, 0, 0, 0, 0x00000000, bhvMasterCapScarecrow),
 		OBJECT(MODEL_NONE, -8700, 200, -900, 0, 90, 0, 0x000A0000, bhvSpinAirborneWarp),
 		TERRAIN(master_cap_stage_area_1_collision),
