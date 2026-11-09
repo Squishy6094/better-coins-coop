@@ -820,8 +820,11 @@ local function master_cap_update()
         -- Saves if someone has defeated bowser
         if prevBowserBeat ~= gGlobalSyncTable.defeatFinalBowser then
             prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
-            mod_storage_save_bool(save_file_prefix("defeatFinalBowser"), true)
-            log_to_console("Better Coins: Saved Bowser Being Defeated")
+            if mod_storage_save_bool(save_file_prefix("defeatFinalBowser"), true) then
+                log_to_console("Better Coins: Saved Bowser Being Defeated")
+            else
+                log_to_console("Better Coins: Failed to Save Bowser Being Defeated")
+            end
         end
 
         -- Saves progress updating and saving
