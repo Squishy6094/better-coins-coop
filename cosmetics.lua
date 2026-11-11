@@ -109,7 +109,6 @@ end
 ---@param o Object
 local function bhv_particle_flower_loop(o)
     local m = nearest_mario_state_to_object(o)
-    local p = gPlayerSyncTable[m.playerIndex]
     
     o.oAnimState = math.round((get_global_timer())/3 + o.oBehParams)%6
     if o.oAction == 0 then
@@ -118,8 +117,12 @@ local function bhv_particle_flower_loop(o)
             o.oAction = o.oAction + 1
         end
     elseif o.oAction == 1 then
+        if not m or is_player_active(m) == 0 then
+            o.oAction = o.oAction + 1
+            return
+        end
         local timerMax = 30
-        if obj_to_obj_dist(m.marioObj, o) < 300 and p.cosmeticActive == COSMETIC_GARDEN_GROWER then
+        if obj_to_obj_dist(m.marioObj, o) < 300 and gPlayerSyncTable[m.playerIndex].cosmeticActive == COSMETIC_GARDEN_GROWER then
             timerMax = 90
         end
         if o.oTimer > timerMax then
