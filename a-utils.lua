@@ -452,3 +452,113 @@ function spawn_sync_object_if_not_exist(behaviorId, modelId, x, y, z, objSetupFu
         return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction)
     end
 end
+
+local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+function enc(data)
+    return ((data:gsub('.', function(x) 
+        local r,b='',x:byte()
+        for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
+        return r;
+    end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+        if (#x < 6) then return '' end
+        local c=0
+        for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
+        return b:sub(c+1,c+1)
+    end)..({ '', '==', '=' })[#data%3+1])
+end
+
+-- decoding
+function dec(data)
+    data = string.gsub(data, '[^'..b..'=]', '')
+    return (data:gsub('.', function(x)
+        if (x == '=') then return '' end
+        local r,f='',(b:find(x)-1)
+        for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
+        return r;
+    end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
+        if (#x ~= 8) then return '' end
+        local c=0
+        for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
+            return string.char(c)
+    end))
+end
+
+-- Custom Save System
+local modFs = mod_fs_get() or mod_fs_create()
+local saveData = modFs:get_file("better_coins_save_data.bin") or modFs:create_file("better_coins_save_data.bin", false)
+saveData:set_text_mode(false)
+local saveDataTable = {}
+local saveString = saveData:read_string()
+if saveString then
+    for _, str in pairs(string_split(dec(saveString), ",")) do
+        local strKeyValue = string_split(str, "=")
+        if strKeyValue[1] and strKeyValue[2] then
+            saveDataTable[strKeyValue[1]] = strKeyValue[2]
+        end
+    end
+end
+
+local function write_save_table()
+    saveData:erase(saveData.size)
+    saveData:rewind()
+    local saveString = ""
+    for key, value in pairs(saveDataTable) do
+        saveString = saveString..key.."="..value..","
+    end
+
+    saveData:write_string(enc(saveString))
+    return modFs:save()
+end
+
+---@param key string
+---@param value string
+function modfs_storage_save(key, value)
+    saveDataTable[key] = value
+    return write_save_table()
+end
+
+---@param key string
+---@param failsafe string?
+function modfs_storage_load(key, failsafe)
+    return saveDataTable[key] or failsafe
+end
+
+---@param key string
+---@param value integer
+function modfs_storage_save_integer(key, value)
+    saveDataTable[key] = tostring(value)
+    return write_save_table()
+end
+
+---@param key string
+---@param failsafe integer?
+function modfs_storage_load_integer(key, failsafe)
+    return tonumber(saveDataTable[key]) or failsafe
+end
+
+---@param key string
+---@param value boolean
+function modfs_storage_save_bool(key, value)
+    saveDataTable[key] = value and "true" or "false"
+    return write_save_table()
+end
+
+---@param key string
+---@param failsafe boolean?
+function modfs_storage_load_bool(key, failsafe)
+    if saveDataTable[key] ~= nil then
+        return saveDataTable[key] == "true"
+    else
+        return failsafe
+    end
+end
+
+function modfs_storage_load_all()
+    return saveDataTable
+end
+
+---@param key string
+function modfs_storage_remove(key)
+    saveDataTable[key] = nil
+    return write_save_table()
+end

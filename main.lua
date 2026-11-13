@@ -6,11 +6,11 @@
     - run end hud logic outside outside of action 
 ]]
 
-savedCoinCount = mod_storage_load_integer("coins", 0)
+savedCoinCount = modfs_storage_load_integer("coins", 0)
 log_to_console("Better Coins Count: " .. tostring(savedCoinCount))
 
 function save_coin_count()
-    mod_storage_save_integer("coins", savedCoinCount)
+    modfs_storage_save_integer("coins", savedCoinCount)
 end
 
 gLevelValues.previewBlueCoins = 1
@@ -372,10 +372,10 @@ local function chat_command(msg)
 
     if msgSplit[1] == "reset" then
         if resetConfirm then
-            local storage = mod_storage_load_all()
+            local storage = modfs_storage_load_all()
             for key, _ in pairs(storage) do
                 if not string.find(key, "saveFile") then
-                    mod_storage_remove(key)
+                    modfs_storage_remove(key)
                 end
             end
             savedCoinCount = 0
@@ -406,9 +406,9 @@ local function chat_command(msg)
     if msgSplit[1] == "redeem" then
         local codeHash = hash(msgSplit[2])
         if redeems[codeHash] then
-            if not mod_storage_load_bool("redeem"..codeHash, false) then
+            if not modfs_storage_load_bool("redeem"..codeHash, false) then
                 redeems[codeHash](msgSplit[2])
-                mod_storage_save_bool("redeem"..codeHash, true)
+                modfs_storage_save_bool("redeem"..codeHash, true)
             else
                 djui_chat_message_create("Code already Redeemed")
             end

@@ -199,7 +199,7 @@ hook_coins_behavior(id_bhvSignOnWall, false, bhv_message_panel_set_coins, bhv_me
 ]]
 
 local blowUpYoshi = false
-gPlayerSyncTable[0].blewUpYoshi = mod_storage_load_bool("blewUpYoshi", false)
+gPlayerSyncTable[0].blewUpYoshi = modfs_storage_load_bool("blewUpYoshi", false)
 
 ---@param o Object
 local function bhv_coins_yoshi_init(o)
@@ -306,7 +306,7 @@ local function bhv_yoshi_cutscene_bomb_loop(o)
             obj_mark_for_deletion(o.parentObj)
 
             p.blewUpYoshi = true
-            mod_storage_save_bool("blewUpYoshi", true)
+            modfs_storage_save_bool("blewUpYoshi", true)
             blowUpYoshi = false
             camera_unfreeze()
             set_mario_action(m, ACT_IDLE, 0)

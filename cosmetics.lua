@@ -245,7 +245,7 @@ local function spawn_cosmetics()
 end
 
 local function on_sync()
-    gPlayerSyncTable[0].cosmeticActive = mod_storage_load_integer("configCosmetic", 0)
+    gPlayerSyncTable[0].cosmeticActive = modfs_storage_load_integer("configCosmetic", 0)
 end
 
 hook_event(HOOK_UPDATE, spawn_cosmetics)

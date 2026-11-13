@@ -73,16 +73,16 @@ end
 
 local function update_save()
     if not network_is_server() then return end
-    if save_file_get_flags() < mod_storage_load_number(save_file_prefix("progress"), 0) then
+    if save_file_get_flags() < modfs_storage_load_integer(save_file_prefix("progress"), 0) then
         -- Assume if progress is lost, that the save had been deleted
         log_to_console("Better Coins: Save Data Lost, Deleting Custom Save Flags!", CONSOLE_MESSAGE_WARNING)
-        mod_storage_remove(save_file_prefix("defeatFinalBowser"))
-        mod_storage_remove(save_file_prefix("unlockedMasterCap"))
+        modfs_storage_remove(save_file_prefix("defeatFinalBowser"))
+        modfs_storage_remove(save_file_prefix("unlockedMasterCap"))
     end
-    mod_storage_save_integer(save_file_prefix("progress"), save_file_get_flags())
+    modfs_storage_save_integer(save_file_prefix("progress"), save_file_get_flags())
 
-    gGlobalSyncTable.defeatFinalBowser = mod_storage_load_bool(save_file_prefix("defeatFinalBowser"), false)
-    gGlobalSyncTable.unlockedMasterCap = mod_storage_load_bool(save_file_prefix("unlockedMasterCap"), false)
+    gGlobalSyncTable.defeatFinalBowser = modfs_storage_load_bool(save_file_prefix("defeatFinalBowser"), false)
+    gGlobalSyncTable.unlockedMasterCap = modfs_storage_load_bool(save_file_prefix("unlockedMasterCap"), false)
 end
 update_save()
 
@@ -169,8 +169,8 @@ function master_cap_init_level(levelNum)
     if network_is_server() then
         local coinSave = save.."coins"
         local timeSave = save.."time"
-        gGlobalSyncTable[coinSave] = mod_storage_load_number(coinSave, 0)
-        gGlobalSyncTable[timeSave] = mod_storage_load_number(timeSave, 0)
+        gGlobalSyncTable[coinSave] = modfs_storage_load_integer(coinSave, 0)
+        gGlobalSyncTable[timeSave] = modfs_storage_load_integer(timeSave, 0)
     end
 end
 
@@ -190,8 +190,8 @@ function master_cap_set_record(levelNum, coins, time)
     local timeSave = levelData.save.."time"
     gGlobalSyncTable[coinSave] = coins
     gGlobalSyncTable[timeSave] = time
-    mod_storage_save(coinSave, tostring(math.round(coins)))
-    mod_storage_save(timeSave, tostring(math.round(time)))
+    modfs_storage_save(coinSave, tostring(math.round(coins)))
+    modfs_storage_save(timeSave, tostring(math.round(time)))
 end
 
 ---@param m MarioState
@@ -336,7 +336,7 @@ function master_cap_switch_press(value, noSync)
         play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 45, 230, 230, 230)
         gGlobalSyncTable.unlockedMasterCap = true
         if network_is_server() then
-            mod_storage_save_bool(save_file_prefix("unlockedMasterCap"), true)
+            modfs_storage_save_bool(save_file_prefix("unlockedMasterCap"), true)
             log_to_console("Better Coins: Saved Master Cap Being Unlocked")
         end
     end
@@ -820,7 +820,7 @@ local function master_cap_update()
         -- Saves if someone has defeated bowser
         if prevBowserBeat ~= gGlobalSyncTable.defeatFinalBowser then
             prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
-            if mod_storage_save_bool(save_file_prefix("defeatFinalBowser"), true) then
+            if modfs_storage_save_bool(save_file_prefix("defeatFinalBowser"), true) then
                 log_to_console("Better Coins: Saved Bowser Being Defeated")
             else
                 log_to_console("Better Coins: Failed to Save Bowser Being Defeated")
