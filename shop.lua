@@ -4,7 +4,6 @@ local TEX_JP_RED_COIN_BAG_CLOSED = get_texture_info("red_coin_jp_bag_closed")
 local TEX_JP_RED_COIN_BAG_OPEN = get_texture_info("red_coin_jp_bag_open")
 local TEX_JP_RED_COIN_BAG_COIN = get_texture_info("red_coin_jp_bag_coin")
 
-
 local currShopPage = 0
 local shopItems = {
     --[[

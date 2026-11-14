@@ -636,6 +636,13 @@ local function spawn_req_scarecrow()
     return true
 end
 
+local function spawn_req_shopkeeper(surfData)
+    if surfData.y < find_water_level(surfData.x, surfData.z) then
+        return false
+    end
+    return true
+end
+
 -- Handles only spawning one scarecrow
 function master_cap_request_scarecrow_spawn()
     local scarecrowSpawnPos = master_cap_get_spawn("scarecrow")
@@ -652,9 +659,9 @@ local entranceAreaNum = 1
 local function on_sync()
     local np = gNetworkPlayers[0]
     if np.currLevelNum == gLevelValues.entryLevel then
-        local shopSpawn = master_cap_get_spawn("shop", nil)
+        local shopSpawn = master_cap_get_spawn("shopkeeper", spawn_req_shopkeeper)
         if shopSpawn then
-            spawn_sync_object_if_not_exist(id_bhvShopkeeper, E_MODEL_STAR, shopSpawn.x, shopSpawn.y, shopSpawn.z, function (o)
+            spawn_sync_object_if_not_exist(id_bhvShopkeeper, E_MODEL_SHOPKEEPER, shopSpawn.x, shopSpawn.y, shopSpawn.z, function (o)
                 
             end)
         end

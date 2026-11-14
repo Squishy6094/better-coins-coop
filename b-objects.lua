@@ -845,6 +845,16 @@ end
 
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
 
+E_MODEL_SHOPKEEPER = smlua_model_util_get_id("shopkeeper_geo")
+
+function shopkeeper_money_bag_switch()
+
+end
+
+function shopkeeper_gameboy_switch()
+
+end
+
 ---@param o Object 
 local function bhv_shopkeeper_init(o)
     o.oFlags = (OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_HOLDABLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
