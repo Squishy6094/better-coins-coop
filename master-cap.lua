@@ -16,7 +16,7 @@ local surfaceList = {}
 ---@param list table
 ---@param surface Surface
 local function add_surface_to_list(list, surface)
-    if surface and not evilFloorTypes[surface.type] and surface.normal.y > 0.9 then
+    if surface and not evilFloorTypes[surface.type] then
         local surfaceX = (surface.vertex1.x + surface.vertex2.x + surface.vertex3.x)/3
         local surfaceY = (surface.vertex1.y + surface.vertex2.y + surface.vertex3.y)/3
         local surfaceZ = (surface.vertex1.z + surface.vertex2.z + surface.vertex3.z)/3
@@ -44,7 +44,7 @@ end
 local prevLevel = 0
 local function add_surface(surface, dynamic)
     if dynamic then return end
-    if surface.normal.y < 0.1 then return end
+    if surface.normal.y < 0.95 then return end
     local currLevel = gNetworkPlayers[0].currLevelNum*7 + gNetworkPlayers[0].currAreaIndex
     if prevLevel ~= currLevel then
         surfaceList = {}
@@ -637,9 +637,8 @@ local function spawn_req_scarecrow()
 end
 
 local function spawn_req_shopkeeper(surfData)
-    if surfData.y < find_water_level(surfData.x, surfData.z) then
-        return false
-    end
+    if surfData.y < find_water_level(surfData.x, surfData.z) then return false end
+    if surfData.smallEdge < 500 then return false end
     return true
 end
 
@@ -657,13 +656,15 @@ local prevCoinsBest = 0
 local prevTimeBest = 0
 local entranceAreaNum = 1
 local function on_sync()
+    local m = gMarioStates[0]
     local np = gNetworkPlayers[0]
     if np.currLevelNum == gLevelValues.entryLevel then
         local shopSpawn = master_cap_get_spawn("shopkeeper", spawn_req_shopkeeper)
         if shopSpawn then
             spawn_sync_object_if_not_exist(id_bhvShopkeeper, E_MODEL_SHOPKEEPER, shopSpawn.x, shopSpawn.y, shopSpawn.z, function (o)
-                o.oMoveAngleYaw = shopSpawn.yaw
-                o.oFaceAngleYaw = shopSpawn.yaw
+                local yaw = atan2s(m.pos.z - shopSpawn.z, m.pos.x - shopSpawn.x)
+                o.oMoveAngleYaw = shopSpawn.yaw or yaw
+                o.oFaceAngleYaw = shopSpawn.yaw or yaw
             end)
         end
     end

@@ -858,6 +858,14 @@ end
 function shopkeeper_gameboy_switch(node, matStackIndex)
     local asSwitchNode = cast_graph_node(node)
     local o = geo_get_current_object()
+    local toNode = 1
+
+    asSwitchNode.selectedCase = toNode
+end
+
+function shopkeeper_face_switch(node, matStackIndex)
+    local asSwitchNode = cast_graph_node(node)
+    local o = geo_get_current_object()
     local toNode = 0
 
     asSwitchNode.selectedCase = toNode
