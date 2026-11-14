@@ -30,6 +30,14 @@ Lights1 shopkeeper_doohickeys_lights = gdSPDefLights1(
 	0x7F, 0x7F, 0x7F,
 	0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28);
 
+Lights1 shopkeeper_face_closed_lights = gdSPDefLights1(
+	0x72, 0x77, 0x7F,
+	0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28);
+
+Lights1 shopkeeper_face_lift_lights = gdSPDefLights1(
+	0x72, 0x77, 0x7F,
+	0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28);
+
 Texture shopkeeper_sack_seam_ci4[] = {
 	#include "actors/shopkeeper/sack_seam.ci4.inc.c"
 };
@@ -38,12 +46,8 @@ Texture shopkeeper_sack_seam_pal_rgba16[] = {
 	#include "actors/shopkeeper/sack_seam.rgba16.pal"
 };
 
-Texture shopkeeper_face_open_ci8[] = {
-	#include "actors/shopkeeper/face_open.ci8.inc.c"
-};
-
-Texture shopkeeper_face_open_pal_rgba16[] = {
-	#include "actors/shopkeeper/face_open.rgba16.pal"
+Texture shopkeeper_face_open_rgba16[] = {
+	#include "actors/shopkeeper/face_open.rgba16.inc.c"
 };
 
 Texture shopkeeper_gameboy_ci8[] = {
@@ -82,102 +86,112 @@ Texture shopkeeper_doohickeys_ia8[] = {
 	#include "actors/shopkeeper/doohickeys.ia8.inc.c"
 };
 
-Vtx shopkeeper_body_mesh_layer_1_vtx_0[37] = {
-	{{{106, 155, 39}, 0, {906, -156}, {0x6A, 0x2A, 0x39, 0xFF}}},
+Texture shopkeeper_face_closed_rgba16[] = {
+	#include "actors/shopkeeper/face_closed.rgba16.inc.c"
+};
+
+Texture shopkeeper_face_lift_rgba16[] = {
+	#include "actors/shopkeeper/face_lift.rgba16.inc.c"
+};
+
+Vtx shopkeeper_body_mesh_layer_1_vtx_0[38] = {
+	{{{-44, 204, 54}, 0, {707, -580}, {0xD9, 0x5F, 0x4A, 0xFF}}},
+	{{{44, 204, 54}, 0, {723, -579}, {0x27, 0x5F, 0x4A, 0xFF}}},
+	{{{0, 225, 0}, 0, {519, -809}, {0x00, 0x7F, 0x0A, 0xFF}}},
 	{{{62, 207, -1}, 0, {496, -656}, {0x41, 0x6D, 0x08, 0xFF}}},
-	{{{44, 204, 54}, 0, {1123, -579}, {0x27, 0x5F, 0x4A, 0xFF}}},
+	{{{106, 155, 39}, 0, {906, -156}, {0x6A, 0x2A, 0x39, 0xFF}}},
 	{{{107, 165, -58}, 0, {-196, -332}, {0x6F, 0x2E, 0xD7, 0xFF}}},
 	{{{115, 50, -2}, 0, {334, 740}, {0x7E, 0x0C, 0x02, 0xFF}}},
-	{{{81, 50, 66}, 0, {1118, 802}, {0x4F, 0x10, 0x63, 0xFF}}},
+	{{{81, 50, 66}, 0, {630, 802}, {0x4F, 0x10, 0x63, 0xFF}}},
 	{{{126, 14, 0}, 0, {323, 1068}, {0x73, 0xCA, 0x02, 0xFF}}},
-	{{{89, 13, 71}, 0, {1138, 1141}, {0x4E, 0xC9, 0x54, 0xFF}}},
-	{{{0, 17, 102}, 0, {1489, 1134}, {0x00, 0xDC, 0x7A, 0xFF}}},
-	{{{0, -5, 71}, 0, {1121, 1299}, {0x00, 0x88, 0x29, 0xFF}}},
-	{{{-89, 13, 71}, 0, {1138, 1141}, {0xB2, 0xC9, 0x54, 0xFF}}},
-	{{{-81, 50, 66}, 0, {1118, 802}, {0xB1, 0x10, 0x63, 0xFF}}},
+	{{{89, 13, 71}, 0, {649, 1141}, {0x4E, 0xC9, 0x54, 0xFF}}},
+	{{{0, 17, 102}, 0, {714, 1172}, {0x00, 0xDC, 0x7A, 0xFF}}},
+	{{{0, -5, 71}, 0, {632, 1299}, {0x00, 0x88, 0x29, 0xFF}}},
+	{{{-89, 13, 71}, 0, {649, 1141}, {0xB2, 0xC9, 0x54, 0xFF}}},
+	{{{-81, 50, 66}, 0, {630, 802}, {0xB1, 0x10, 0x63, 0xFF}}},
 	{{{-115, 50, -2}, 0, {334, 740}, {0x82, 0x0C, 0x02, 0xFF}}},
 	{{{-106, 155, 39}, 0, {906, -156}, {0x96, 0x2A, 0x39, 0xFF}}},
 	{{{-107, 165, -58}, 0, {-196, -332}, {0x91, 0x2E, 0xD7, 0xFF}}},
 	{{{-62, 207, -1}, 0, {496, -656}, {0xBF, 0x6D, 0x08, 0xFF}}},
-	{{{-44, 204, 54}, 0, {1107, -580}, {0xD9, 0x5F, 0x4A, 0xFF}}},
-	{{{0, 225, 0}, 0, {519, -809}, {0x00, 0x7F, 0x0A, 0xFF}}},
-	{{{39, 213, -58}, 0, {-160, -757}, {0x25, 0x77, 0xE9, 0xFF}}},
-	{{{44, 196, -118}, 0, {-861, -666}, {0x36, 0x57, 0xB5, 0xFF}}},
-	{{{75, 112, -90}, 0, {-617, 117}, {0x69, 0xDA, 0xC3, 0xFF}}},
+	{{{-44, 204, 54}, 0, {707, -580}, {0xD9, 0x5F, 0x4A, 0xFF}}},
 	{{{-39, 213, -58}, 0, {-160, -757}, {0xDB, 0x77, 0xE9, 0xFF}}},
-	{{{-44, 196, -118}, 0, {-861, -666}, {0xCA, 0x57, 0xB5, 0xFF}}},
-	{{{-75, 112, -90}, 0, {-617, 100}, {0x97, 0xDA, 0xC3, 0xFF}}},
+	{{{39, 213, -58}, 0, {-160, -757}, {0x25, 0x77, 0xE9, 0xFF}}},
+	{{{44, 196, -118}, 0, {-431, -658}, {0x36, 0x57, 0xB5, 0xFF}}},
+	{{{75, 112, -90}, 0, {-506, 121}, {0x69, 0xDA, 0xC3, 0xFF}}},
+	{{{-44, 196, -118}, 0, {-431, -658}, {0xCA, 0x57, 0xB5, 0xFF}}},
+	{{{-75, 112, -90}, 0, {-504, 105}, {0x97, 0xDA, 0xC3, 0xFF}}},
 	{{{-126, 14, 0}, 0, {323, 1068}, {0x8D, 0xCA, 0x02, 0xFF}}},
 	{{{-84, 50, -72}, 0, {-473, 675}, {0xAC, 0x00, 0xA1, 0xFF}}},
-	{{{-75, 112, -90}, 0, {-617, 100}, {0xBC, 0xF4, 0x95, 0xFF}}},
-	{{{0, 50, -96}, 0, {-747, 653}, {0x00, 0x07, 0x81, 0xFF}}},
-	{{{75, 112, -90}, 0, {-617, 117}, {0x44, 0xF4, 0x95, 0xFF}}},
+	{{{-75, 112, -90}, 0, {-504, 105}, {0xBC, 0xF4, 0x95, 0xFF}}},
+	{{{0, 50, -96}, 0, {-580, 653}, {0x00, 0x07, 0x81, 0xFF}}},
+	{{{75, 112, -90}, 0, {-506, 121}, {0x44, 0xF4, 0x95, 0xFF}}},
 	{{{84, 50, -72}, 0, {-473, 675}, {0x54, 0x00, 0xA1, 0xFF}}},
-	{{{89, 14, -74}, 0, {-523, 1000}, {0x4E, 0xC7, 0xAD, 0xFF}}},
+	{{{89, 14, -74}, 0, {-434, 1000}, {0x4E, 0xC7, 0xAD, 0xFF}}},
 	{{{64, -4, 0}, 0, {306, 1226}, {0x16, 0x83, 0x00, 0xFF}}},
 	{{{0, -2, 3}, 0, {343, 1210}, {0x00, 0x81, 0x00, 0xFF}}},
 	{{{-64, -4, 0}, 0, {306, 1226}, {0xEA, 0x83, 0x00, 0xFF}}},
-	{{{-89, 14, -74}, 0, {-523, 1000}, {0xB2, 0xC7, 0xAD, 0xFF}}},
-	{{{0, 14, -104}, 0, {-874, 972}, {0x00, 0xCF, 0x8B, 0xFF}}},
-	{{{0, -6, -72}, 0, {-521, 1178}, {0x00, 0x86, 0xDB, 0xFF}}},
+	{{{-89, 14, -74}, 0, {-434, 1000}, {0xB2, 0xC7, 0xAD, 0xFF}}},
+	{{{0, 14, -104}, 0, {-539, 968}, {0x00, 0xCF, 0x8B, 0xFF}}},
+	{{{0, -6, -72}, 0, {-432, 1178}, {0x00, 0x86, 0xDB, 0xFF}}},
 };
 
 Gfx shopkeeper_body_mesh_layer_1_tri_0[] = {
-	gsSPVertex(shopkeeper_body_mesh_layer_1_vtx_0 + 0, 37, 0),
-	gsSP2Triangles(0, 1, 2, 0, 3, 1, 0, 0),
-	gsSP2Triangles(4, 3, 0, 0, 5, 4, 0, 0),
-	gsSP2Triangles(6, 4, 5, 0, 6, 5, 7, 0),
-	gsSP2Triangles(7, 5, 8, 0, 7, 8, 9, 0),
-	gsSP2Triangles(8, 10, 9, 0, 10, 8, 11, 0),
-	gsSP2Triangles(10, 11, 12, 0, 12, 11, 13, 0),
-	gsSP2Triangles(12, 13, 14, 0, 13, 15, 14, 0),
-	gsSP2Triangles(13, 16, 15, 0, 15, 16, 17, 0),
-	gsSP2Triangles(16, 2, 17, 0, 2, 1, 17, 0),
-	gsSP2Triangles(1, 18, 17, 0, 3, 18, 1, 0),
-	gsSP2Triangles(19, 18, 3, 0, 3, 20, 19, 0),
-	gsSP2Triangles(19, 21, 18, 0, 22, 21, 19, 0),
-	gsSP2Triangles(14, 21, 22, 0, 23, 14, 22, 0),
-	gsSP2Triangles(14, 15, 21, 0, 21, 15, 17, 0),
-	gsSP2Triangles(18, 21, 17, 0, 10, 12, 24, 0),
-	gsSP2Triangles(24, 12, 25, 0, 25, 12, 14, 0),
-	gsSP2Triangles(25, 14, 26, 0, 27, 25, 26, 0),
-	gsSP2Triangles(27, 26, 28, 0, 29, 27, 28, 0),
-	gsSP2Triangles(29, 28, 3, 0, 4, 29, 3, 0),
-	gsSP2Triangles(30, 29, 4, 0, 30, 4, 6, 0),
-	gsSP2Triangles(30, 6, 31, 0, 6, 7, 31, 0),
-	gsSP2Triangles(7, 9, 31, 0, 31, 9, 32, 0),
-	gsSP2Triangles(9, 33, 32, 0, 10, 33, 9, 0),
-	gsSP2Triangles(10, 24, 33, 0, 24, 34, 33, 0),
-	gsSP2Triangles(24, 25, 34, 0, 34, 25, 27, 0),
-	gsSP2Triangles(34, 27, 35, 0, 35, 27, 29, 0),
-	gsSP2Triangles(35, 29, 30, 0, 35, 30, 36, 0),
-	gsSP2Triangles(30, 31, 36, 0, 36, 31, 32, 0),
-	gsSP2Triangles(33, 36, 32, 0, 34, 36, 33, 0),
-	gsSP1Triangle(34, 35, 36, 0),
+	gsSPVertex(shopkeeper_body_mesh_layer_1_vtx_0 + 0, 38, 0),
+	gsSP2Triangles(0, 1, 2, 0, 1, 3, 2, 0),
+	gsSP2Triangles(4, 3, 1, 0, 5, 3, 4, 0),
+	gsSP2Triangles(6, 5, 4, 0, 7, 6, 4, 0),
+	gsSP2Triangles(8, 6, 7, 0, 8, 7, 9, 0),
+	gsSP2Triangles(9, 7, 10, 0, 9, 10, 11, 0),
+	gsSP2Triangles(10, 12, 11, 0, 12, 10, 13, 0),
+	gsSP2Triangles(12, 13, 14, 0, 14, 13, 15, 0),
+	gsSP2Triangles(14, 15, 16, 0, 15, 17, 16, 0),
+	gsSP2Triangles(15, 18, 17, 0, 17, 18, 2, 0),
+	gsSP2Triangles(19, 17, 2, 0, 20, 19, 2, 0),
+	gsSP2Triangles(3, 20, 2, 0, 5, 20, 3, 0),
+	gsSP2Triangles(21, 20, 5, 0, 5, 22, 21, 0),
+	gsSP2Triangles(21, 19, 20, 0, 23, 19, 21, 0),
+	gsSP2Triangles(16, 19, 23, 0, 24, 16, 23, 0),
+	gsSP2Triangles(16, 17, 19, 0, 12, 14, 25, 0),
+	gsSP2Triangles(25, 14, 26, 0, 26, 14, 16, 0),
+	gsSP2Triangles(26, 16, 27, 0, 28, 26, 27, 0),
+	gsSP2Triangles(28, 27, 29, 0, 30, 28, 29, 0),
+	gsSP2Triangles(30, 29, 5, 0, 6, 30, 5, 0),
+	gsSP2Triangles(31, 30, 6, 0, 31, 6, 8, 0),
+	gsSP2Triangles(31, 8, 32, 0, 8, 9, 32, 0),
+	gsSP2Triangles(9, 11, 32, 0, 32, 11, 33, 0),
+	gsSP2Triangles(11, 34, 33, 0, 12, 34, 11, 0),
+	gsSP2Triangles(12, 25, 34, 0, 25, 35, 34, 0),
+	gsSP2Triangles(25, 26, 35, 0, 35, 26, 28, 0),
+	gsSP2Triangles(35, 28, 36, 0, 36, 28, 30, 0),
+	gsSP2Triangles(36, 30, 31, 0, 36, 31, 37, 0),
+	gsSP2Triangles(31, 32, 37, 0, 37, 32, 33, 0),
+	gsSP2Triangles(34, 37, 33, 0, 35, 37, 34, 0),
+	gsSP1Triangle(35, 36, 37, 0),
 	gsSPEndDisplayList(),
 };
 
-Vtx shopkeeper_body_mesh_layer_1_vtx_1[10] = {
-	{{{106, 155, 39}, 0, {2158, 246}, {0x6A, 0x2A, 0x39, 0xFF}}},
-	{{{44, 204, 54}, 0, {1485, -92}, {0x27, 0x5F, 0x4A, 0xFF}}},
-	{{{44, 155, 79}, 0, {1484, 246}, {0x21, 0x1F, 0x77, 0xFF}}},
-	{{{-44, 204, 54}, 0, {531, -92}, {0xD9, 0x5F, 0x4A, 0xFF}}},
-	{{{-44, 155, 79}, 0, {532, 246}, {0xDF, 0x1F, 0x77, 0xFF}}},
-	{{{-106, 155, 39}, 0, {-142, 246}, {0x96, 0x2A, 0x39, 0xFF}}},
-	{{{-81, 50, 66}, 0, {134, 969}, {0xB1, 0x10, 0x63, 0xFF}}},
-	{{{0, 68, 86}, 0, {1008, 850}, {0x00, 0x10, 0x7E, 0xFF}}},
-	{{{0, 17, 102}, 0, {1008, 1201}, {0x00, 0xDC, 0x7A, 0xFF}}},
-	{{{81, 50, 66}, 0, {1882, 969}, {0x4F, 0x10, 0x63, 0xFF}}},
+Vtx shopkeeper_body_mesh_layer_1_vtx_1[11] = {
+	{{{-44, 155, 79}, 0, {519, 268}, {0xDF, 0x1F, 0x77, 0xFF}}},
+	{{{-44, 204, 54}, 0, {519, -70}, {0xD9, 0x5F, 0x4A, 0xFF}}},
+	{{{-106, 155, 39}, 0, {-173, 268}, {0x96, 0x2A, 0x39, 0xFF}}},
+	{{{-81, 50, 66}, 0, {110, 979}, {0xB1, 0x10, 0x63, 0xFF}}},
+	{{{0, 68, 86}, 0, {1008, 862}, {0x00, 0x10, 0x7E, 0xFF}}},
+	{{{0, 17, 102}, 0, {1008, 1207}, {0x00, 0xDC, 0x7A, 0xFF}}},
+	{{{81, 50, 66}, 0, {1906, 979}, {0x4F, 0x10, 0x63, 0xFF}}},
+	{{{44, 155, 79}, 0, {1497, 268}, {0x21, 0x1F, 0x77, 0xFF}}},
+	{{{106, 155, 39}, 0, {2189, 268}, {0x6A, 0x2A, 0x39, 0xFF}}},
+	{{{44, 204, 54}, 0, {1497, -70}, {0x27, 0x5F, 0x4A, 0xFF}}},
+	{{{-44, 204, 54}, 0, {519, -70}, {0xD9, 0x5F, 0x4A, 0xFF}}},
 };
 
 Gfx shopkeeper_body_mesh_layer_1_tri_1[] = {
-	gsSPVertex(shopkeeper_body_mesh_layer_1_vtx_1 + 0, 10, 0),
-	gsSP2Triangles(0, 1, 2, 0, 2, 1, 3, 0),
-	gsSP2Triangles(2, 3, 4, 0, 4, 3, 5, 0),
-	gsSP2Triangles(6, 4, 5, 0, 6, 7, 4, 0),
-	gsSP2Triangles(8, 7, 6, 0, 9, 7, 8, 0),
-	gsSP2Triangles(7, 9, 2, 0, 9, 0, 2, 0),
-	gsSP1Triangle(7, 2, 4, 0),
+	gsSPVertex(shopkeeper_body_mesh_layer_1_vtx_1 + 0, 11, 0),
+	gsSP2Triangles(0, 1, 2, 0, 3, 0, 2, 0),
+	gsSP2Triangles(3, 4, 0, 0, 5, 4, 3, 0),
+	gsSP2Triangles(6, 4, 5, 0, 4, 6, 7, 0),
+	gsSP2Triangles(6, 8, 7, 0, 8, 9, 7, 0),
+	gsSP2Triangles(7, 9, 10, 0, 7, 10, 0, 0),
+	gsSP1Triangle(4, 7, 0, 0),
 	gsSPEndDisplayList(),
 };
 
@@ -629,10 +643,10 @@ Gfx shopkeeper_foot_r_mesh_layer_5_tri_0[] = {
 };
 
 Vtx shopkeeper_hair_skinned_mesh_layer_1_vtx_0[4] = {
-	{{{44, 196, -118}, 0, {-861, -666}, {0x36, 0x57, 0xB5, 0xFF}}},
-	{{{75, 112, -90}, 0, {-617, 117}, {0x69, 0xDA, 0xC3, 0xFF}}},
-	{{{-44, 196, -118}, 0, {-861, -666}, {0xCA, 0x57, 0xB5, 0xFF}}},
-	{{{-75, 112, -90}, 0, {-617, 100}, {0x97, 0xDA, 0xC3, 0xFF}}},
+	{{{44, 196, -118}, 0, {-431, -658}, {0x36, 0x57, 0xB5, 0xFF}}},
+	{{{75, 112, -90}, 0, {-506, 121}, {0x69, 0xDA, 0xC3, 0xFF}}},
+	{{{-44, 196, -118}, 0, {-431, -658}, {0xCA, 0x57, 0xB5, 0xFF}}},
+	{{{-75, 112, -90}, 0, {-504, 105}, {0x97, 0xDA, 0xC3, 0xFF}}},
 };
 
 Gfx shopkeeper_hair_skinned_mesh_layer_1_tri_0[] = {
@@ -641,9 +655,9 @@ Gfx shopkeeper_hair_skinned_mesh_layer_1_tri_0[] = {
 };
 
 Vtx shopkeeper_hair_mesh_layer_1_vtx_0[3] = {
-	{{{24, -35, -76}, 0, {-1539, -22}, {0x36, 0xF6, 0x8E, 0xFF}}},
-	{{{0, -81, -46}, 0, {-1229, 414}, {0x00, 0x84, 0xE6, 0xFF}}},
-	{{{-24, -35, -76}, 0, {-1541, -24}, {0xCA, 0xF6, 0x8E, 0xFF}}},
+	{{{24, -35, -76}, 0, {-560, -25}, {0x36, 0xF6, 0x8E, 0xFF}}},
+	{{{0, -81, -46}, 0, {-588, 411}, {0x00, 0x84, 0xE6, 0xFF}}},
+	{{{-24, -35, -76}, 0, {-560, -27}, {0xCA, 0xF6, 0x8E, 0xFF}}},
 };
 
 Gfx shopkeeper_hair_mesh_layer_1_tri_0[] = {
@@ -656,9 +670,9 @@ Gfx shopkeeper_hair_mesh_layer_1_tri_0[] = {
 };
 
 Vtx shopkeeper_hair_mesh_layer_1_vtx_1[3] = {
-	{{{-24, -35, -76}, 0, {-1541, -24}, {0xCA, 0xF6, 0x8E, 0xFF}}},
-	{{{24, -35, -76}, 0, {-1539, -22}, {0x36, 0xF6, 0x8E, 0xFF}}},
-	{{{0, -81, -46}, 0, {-1229, 414}, {0x00, 0x84, 0xE6, 0xFF}}},
+	{{{-24, -35, -76}, 0, {-560, -27}, {0xCA, 0xF6, 0x8E, 0xFF}}},
+	{{{24, -35, -76}, 0, {-560, -25}, {0x36, 0xF6, 0x8E, 0xFF}}},
+	{{{0, -81, -46}, 0, {-588, 411}, {0x00, 0x84, 0xE6, 0xFF}}},
 };
 
 Gfx shopkeeper_hair_mesh_layer_1_tri_1[] = {
@@ -834,12 +848,11 @@ Gfx shopkeeper_stand_mesh_layer_6_tri_0[] = {
 
 
 Gfx mat_shopkeeper_sack_seam[] = {
-	gsSPLoadGeometryMode(G_CULL_BACK | G_LIGHTING | G_SHADE | G_SHADING_SMOOTH | G_ZBUFFER),
 	gsSPSetLights1(shopkeeper_sack_seam_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
-	gsSPSetOtherMode(G_SETOTHERMODE_H, 4, 20, G_CD_MAGICSQ | G_TF_BILERP | G_CYC_1CYCLE | G_TC_FILT | G_TD_CLAMP | G_TT_RGBA16 | G_CK_NONE | G_TL_TILE | G_TP_PERSP | G_AD_NOISE | G_PM_1PRIMITIVE),
-	gsSPSetOtherMode(G_SETOTHERMODE_L, 0, 3, G_AC_NONE | G_ZS_PIXEL),
+	gsDPSetAlphaDither(G_AD_NOISE),
+	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, shopkeeper_sack_seam_pal_rgba16),
 	gsDPSetTile(0, 0, 0, 256, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
@@ -852,32 +865,39 @@ Gfx mat_shopkeeper_sack_seam[] = {
 	gsSPEndDisplayList(),
 };
 
+Gfx mat_revert_shopkeeper_sack_seam[] = {
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsDPSetTextureLUT(G_TT_NONE),
+	gsSPEndDisplayList(),
+};
+
 Gfx mat_shopkeeper_face_open[] = {
-	gsSPLoadGeometryMode(G_CULL_BACK | G_LIGHTING | G_SHADE | G_SHADING_SMOOTH | G_ZBUFFER),
 	gsSPSetLights1(shopkeeper_face_open_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
-	gsSPSetOtherMode(G_SETOTHERMODE_H, 4, 20, G_CD_MAGICSQ | G_TF_BILERP | G_CYC_1CYCLE | G_TC_FILT | G_TD_CLAMP | G_TT_RGBA16 | G_CK_NONE | G_TL_TILE | G_TP_PERSP | G_AD_NOISE | G_PM_1PRIMITIVE),
-	gsSPSetOtherMode(G_SETOTHERMODE_L, 0, 3, G_AC_NONE | G_ZS_PIXEL),
+	gsDPSetAlphaDither(G_AD_NOISE),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, shopkeeper_face_open_pal_rgba16),
-	gsDPSetTile(0, 0, 0, 256, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
-	gsDPLoadTLUTCmd(5, 49),
-	gsDPSetTextureImage(G_IM_FMT_CI, G_IM_SIZ_8b_LOAD_BLOCK, 1, shopkeeper_face_open_ci8),
-	gsDPSetTile(G_IM_FMT_CI, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
-	gsDPLoadBlock(7, 0, 0, 511, 512),
-	gsDPSetTile(G_IM_FMT_CI, G_IM_SIZ_8b, 4, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_CLAMP | G_TX_MIRROR, 5, 0),
-	gsDPSetTileSize(0, 0, 0, 252, 124),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, shopkeeper_face_open_rgba16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 1023, 256),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 8, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_WRAP | G_TX_MIRROR, 5, 0),
+	gsDPSetTileSize(0, 0, 0, 124, 124),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_revert_shopkeeper_face_open[] = {
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsSPEndDisplayList(),
 };
 
 Gfx mat_shopkeeper_gameboy[] = {
-	gsSPLoadGeometryMode(G_CULL_BACK | G_LIGHTING | G_SHADE | G_SHADING_SMOOTH | G_ZBUFFER),
 	gsSPSetLights1(shopkeeper_gameboy_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
-	gsSPSetOtherMode(G_SETOTHERMODE_H, 4, 20, G_CD_MAGICSQ | G_TF_BILERP | G_CYC_1CYCLE | G_TC_FILT | G_TD_CLAMP | G_TT_RGBA16 | G_CK_NONE | G_TL_TILE | G_TP_PERSP | G_AD_NOISE | G_PM_1PRIMITIVE),
-	gsSPSetOtherMode(G_SETOTHERMODE_L, 0, 3, G_AC_NONE | G_ZS_PIXEL),
+	gsDPSetAlphaDither(G_AD_NOISE),
+	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, shopkeeper_gameboy_pal_rgba16),
 	gsDPSetTile(0, 0, 0, 256, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
@@ -890,24 +910,34 @@ Gfx mat_shopkeeper_gameboy[] = {
 	gsSPEndDisplayList(),
 };
 
+Gfx mat_revert_shopkeeper_gameboy[] = {
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsDPSetTextureLUT(G_TT_NONE),
+	gsSPEndDisplayList(),
+};
+
 Gfx mat_shopkeeper_shoe[] = {
-	gsSPLoadGeometryMode(G_CULL_BACK | G_LIGHTING | G_SHADE | G_SHADING_SMOOTH | G_ZBUFFER),
 	gsSPSetLights1(shopkeeper_shoe_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
-	gsSPSetOtherMode(G_SETOTHERMODE_H, 4, 20, G_CD_MAGICSQ | G_TF_BILERP | G_CYC_1CYCLE | G_TC_FILT | G_TD_CLAMP | G_CK_NONE | G_TT_NONE | G_TL_TILE | G_TP_PERSP | G_AD_NOISE | G_PM_1PRIMITIVE),
-	gsSPSetOtherMode(G_SETOTHERMODE_L, 0, 3, G_AC_NONE | G_ZS_PIXEL),
+	gsDPSetAlphaDither(G_AD_NOISE),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsSPEndDisplayList(),
 };
 
+Gfx mat_revert_shopkeeper_shoe[] = {
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsSPEndDisplayList(),
+};
+
 Gfx mat_shopkeeper_bag[] = {
-	gsSPLoadGeometryMode(G_CULL_BACK | G_LIGHTING | G_SHADE | G_SHADING_SMOOTH | G_ZBUFFER),
 	gsSPSetLights1(shopkeeper_bag_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
-	gsSPSetOtherMode(G_SETOTHERMODE_H, 4, 20, G_CD_MAGICSQ | G_TF_BILERP | G_CYC_1CYCLE | G_TC_FILT | G_TD_CLAMP | G_TT_RGBA16 | G_CK_NONE | G_TL_TILE | G_TP_PERSP | G_AD_NOISE | G_PM_1PRIMITIVE),
-	gsSPSetOtherMode(G_SETOTHERMODE_L, 0, 3, G_AC_NONE | G_ZS_PIXEL),
+	gsDPSetAlphaDither(G_AD_NOISE),
+	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, shopkeeper_bag_pal_rgba16),
 	gsDPSetTile(0, 0, 0, 256, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
@@ -920,13 +950,20 @@ Gfx mat_shopkeeper_bag[] = {
 	gsSPEndDisplayList(),
 };
 
+Gfx mat_revert_shopkeeper_bag[] = {
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsDPSetTextureLUT(G_TT_NONE),
+	gsSPEndDisplayList(),
+};
+
 Gfx mat_shopkeeper_shoe_phong[] = {
-	gsSPLoadGeometryMode(G_LIGHTING | G_SHADE | G_TEXTURE_GEN | G_SHADING_SMOOTH | G_ZBUFFER),
+	gsSPGeometryMode(G_CULL_BACK, G_TEXTURE_GEN),
 	gsSPSetLights1(shopkeeper_shoe_phong_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, TEXEL0, 0, PRIMITIVE, 0, TEXEL0, 0, SHADE, 0, TEXEL0, 0, PRIMITIVE, 0),
-	gsSPSetOtherMode(G_SETOTHERMODE_H, 4, 20, G_CD_MAGICSQ | G_TF_BILERP | G_CYC_1CYCLE | G_TC_FILT | G_TD_CLAMP | G_TT_RGBA16 | G_CK_NONE | G_TL_TILE | G_TP_PERSP | G_AD_NOISE | G_PM_1PRIMITIVE),
-	gsSPSetOtherMode(G_SETOTHERMODE_L, 0, 3, G_AC_NONE | G_ZS_PIXEL),
+	gsDPSetAlphaDither(G_AD_NOISE),
+	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(960, 960, 0, 0, 1),
 	gsDPSetPrimColor(0, 0, 255, 255, 255, 255),
 	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, shopkeeper_tst__pal_rgba16),
@@ -940,13 +977,22 @@ Gfx mat_shopkeeper_shoe_phong[] = {
 	gsSPEndDisplayList(),
 };
 
+Gfx mat_revert_shopkeeper_shoe_phong[] = {
+	gsSPGeometryMode(G_TEXTURE_GEN, G_CULL_BACK),
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsDPSetTextureLUT(G_TT_NONE),
+	gsSPEndDisplayList(),
+};
+
 Gfx mat_shopkeeper_wood[] = {
-	gsSPLoadGeometryMode(G_CULL_BACK | G_LIGHTING | G_SHADE | G_SHADING_SMOOTH | G_ZBUFFER),
+	gsSPSetGeometryMode(G_FRESNEL_ALPHA_EXT),
 	gsSPSetLights1(shopkeeper_wood_lights),
 	gsDPPipeSync(),
-	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
-	gsSPSetOtherMode(G_SETOTHERMODE_H, 4, 20, G_CD_MAGICSQ | G_TF_BILERP | G_CYC_1CYCLE | G_TC_FILT | G_TD_CLAMP | G_TT_RGBA16 | G_CK_NONE | G_TL_TILE | G_TP_PERSP | G_AD_NOISE | G_PM_1PRIMITIVE),
-	gsSPSetOtherMode(G_SETOTHERMODE_L, 0, 3, G_AC_NONE | G_ZS_PIXEL),
+	gsDPSetCombineLERP(TEXEL0, SHADE_ALPHA, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, SHADE_ALPHA, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+	gsSPFresnel(0xff47, 0x0001),
+	gsDPSetAlphaDither(G_AD_NOISE),
+	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, shopkeeper_wood_pal_rgba16),
 	gsDPSetTile(0, 0, 0, 256, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
@@ -959,13 +1005,20 @@ Gfx mat_shopkeeper_wood[] = {
 	gsSPEndDisplayList(),
 };
 
+Gfx mat_revert_shopkeeper_wood[] = {
+	gsSPClearGeometryMode(G_FRESNEL_ALPHA_EXT),
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsDPSetTextureLUT(G_TT_NONE),
+	gsSPEndDisplayList(),
+};
+
 Gfx mat_shopkeeper_doohickeys[] = {
-	gsSPLoadGeometryMode(G_LIGHTING | G_SHADING_SMOOTH | G_ZBUFFER | G_SHADE),
+	gsSPClearGeometryMode(G_CULL_BACK),
 	gsSPSetLights1(shopkeeper_doohickeys_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, TEXEL0, 0, ENVIRONMENT, 0, TEXEL0, 0, SHADE, 0, TEXEL0, 0, ENVIRONMENT, 0),
-	gsSPSetOtherMode(G_SETOTHERMODE_H, 4, 20, G_CD_MAGICSQ | G_TF_BILERP | G_CYC_1CYCLE | G_TC_FILT | G_TD_CLAMP | G_CK_NONE | G_TT_NONE | G_TL_TILE | G_TP_PERSP | G_AD_NOISE | G_PM_1PRIMITIVE),
-	gsSPSetOtherMode(G_SETOTHERMODE_L, 0, 3, G_AC_NONE | G_ZS_PIXEL),
+	gsDPSetAlphaDither(G_AD_NOISE),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, shopkeeper_doohickeys_ia8),
 	gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
@@ -975,43 +1028,118 @@ Gfx mat_shopkeeper_doohickeys[] = {
 	gsSPEndDisplayList(),
 };
 
+Gfx mat_revert_shopkeeper_doohickeys[] = {
+	gsSPSetGeometryMode(G_CULL_BACK),
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_shopkeeper_face_closed[] = {
+	gsSPSetLights1(shopkeeper_face_closed_lights),
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+	gsDPSetAlphaDither(G_AD_NOISE),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, shopkeeper_face_closed_rgba16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 1023, 256),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 8, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_WRAP | G_TX_MIRROR, 5, 0),
+	gsDPSetTileSize(0, 0, 0, 124, 124),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_revert_shopkeeper_face_closed[] = {
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_shopkeeper_face_lift[] = {
+	gsSPSetLights1(shopkeeper_face_lift_lights),
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+	gsDPSetAlphaDither(G_AD_NOISE),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, shopkeeper_face_lift_rgba16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 1023, 256),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 8, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_WRAP | G_TX_MIRROR, 5, 0),
+	gsDPSetTileSize(0, 0, 0, 124, 124),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_revert_shopkeeper_face_lift[] = {
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsSPEndDisplayList(),
+};
+
 Gfx shopkeeper_body_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_sack_seam),
 	gsSPDisplayList(shopkeeper_body_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_sack_seam),
 	gsSPDisplayList(mat_shopkeeper_face_open),
 	gsSPDisplayList(shopkeeper_body_mesh_layer_1_tri_1),
+	gsSPDisplayList(mat_revert_shopkeeper_face_open),
+	gsSPEndDisplayList(),
+};
+
+Gfx shopkeeper_body_mesh_layer_1_opt_1[] = {
+	gsSPDisplayList(mat_shopkeeper_sack_seam),
+	gsSPDisplayList(shopkeeper_body_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_sack_seam),
+	gsSPDisplayList(mat_shopkeeper_face_closed),
+	gsSPDisplayList(shopkeeper_body_mesh_layer_1_tri_1),
+	gsSPDisplayList(mat_revert_shopkeeper_face_closed),
+	gsSPEndDisplayList(),
+};
+
+Gfx shopkeeper_body_mesh_layer_1_opt_2[] = {
+	gsSPDisplayList(mat_shopkeeper_sack_seam),
+	gsSPDisplayList(shopkeeper_body_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_sack_seam),
+	gsSPDisplayList(mat_shopkeeper_face_lift),
+	gsSPDisplayList(shopkeeper_body_mesh_layer_1_tri_1),
+	gsSPDisplayList(mat_revert_shopkeeper_face_lift),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_arm_l_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_sack_seam),
 	gsSPDisplayList(shopkeeper_arm_l_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_sack_seam),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_gameboy_dl_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_gameboy),
 	gsSPDisplayList(shopkeeper_gameboy_dl_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_gameboy),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_arm_r_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_sack_seam),
 	gsSPDisplayList(shopkeeper_arm_r_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_sack_seam),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_money_bag_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_shoe),
 	gsSPDisplayList(shopkeeper_money_bag_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_shoe),
 	gsSPDisplayList(mat_shopkeeper_bag),
 	gsSPDisplayList(shopkeeper_money_bag_mesh_layer_1_tri_1),
+	gsSPDisplayList(mat_revert_shopkeeper_bag),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_money_bag2_skinned_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_bag),
 	gsSPDisplayList(shopkeeper_money_bag2_skinned_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_bag),
 	gsSPEndDisplayList(),
 };
 
@@ -1019,30 +1147,35 @@ Gfx shopkeeper_money_bag2_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_bag),
 	gsSPDisplayList(shopkeeper_money_bag2_mesh_layer_1_tri_0),
 	gsSPDisplayList(shopkeeper_money_bag2_mesh_layer_1_tri_1),
+	gsSPDisplayList(mat_revert_shopkeeper_bag),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_foot_l_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_shoe),
 	gsSPDisplayList(shopkeeper_foot_l_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_shoe),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_foot_l_mesh_layer_5[] = {
 	gsSPDisplayList(mat_shopkeeper_shoe_phong),
 	gsSPDisplayList(shopkeeper_foot_l_mesh_layer_5_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_shoe_phong),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_foot_r_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_shoe),
 	gsSPDisplayList(shopkeeper_foot_r_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_shoe),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_foot_r_mesh_layer_5_with_revert[] = {
 	gsSPDisplayList(mat_shopkeeper_shoe_phong),
 	gsSPDisplayList(shopkeeper_foot_r_mesh_layer_5_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_shoe_phong),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
 	gsSPClearGeometryMode(G_TEXTURE_GEN),
@@ -1066,6 +1199,7 @@ Gfx shopkeeper_foot_r_mesh_layer_5_with_revert[] = {
 Gfx shopkeeper_hair_skinned_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_sack_seam),
 	gsSPDisplayList(shopkeeper_hair_skinned_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_sack_seam),
 	gsSPEndDisplayList(),
 };
 
@@ -1073,12 +1207,14 @@ Gfx shopkeeper_hair_mesh_layer_1[] = {
 	gsSPDisplayList(mat_shopkeeper_sack_seam),
 	gsSPDisplayList(shopkeeper_hair_mesh_layer_1_tri_0),
 	gsSPDisplayList(shopkeeper_hair_mesh_layer_1_tri_1),
+	gsSPDisplayList(mat_revert_shopkeeper_sack_seam),
 	gsSPEndDisplayList(),
 };
 
 Gfx shopkeeper_stand_mesh_layer_1_with_revert[] = {
 	gsSPDisplayList(mat_shopkeeper_wood),
 	gsSPDisplayList(shopkeeper_stand_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_wood),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
 	gsSPClearGeometryMode(G_TEXTURE_GEN),
@@ -1102,6 +1238,7 @@ Gfx shopkeeper_stand_mesh_layer_1_with_revert[] = {
 Gfx shopkeeper_stand_mesh_layer_6_with_revert[] = {
 	gsSPDisplayList(mat_shopkeeper_doohickeys),
 	gsSPDisplayList(shopkeeper_stand_mesh_layer_6_tri_0),
+	gsSPDisplayList(mat_revert_shopkeeper_doohickeys),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
 	gsSPClearGeometryMode(G_TEXTURE_GEN),
