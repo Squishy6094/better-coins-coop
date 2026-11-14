@@ -662,7 +662,8 @@ local function on_sync()
         local shopSpawn = master_cap_get_spawn("shopkeeper", spawn_req_shopkeeper)
         if shopSpawn then
             spawn_sync_object_if_not_exist(id_bhvShopkeeper, E_MODEL_SHOPKEEPER, shopSpawn.x, shopSpawn.y, shopSpawn.z, function (o)
-                
+                o.oMoveAngleYaw = shopSpawn.yaw
+                o.oFaceAngleYaw = shopSpawn.yaw
             end)
         end
     end

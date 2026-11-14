@@ -847,12 +847,20 @@ hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
 
 E_MODEL_SHOPKEEPER = smlua_model_util_get_id("shopkeeper_geo")
 
-function shopkeeper_money_bag_switch()
+function shopkeeper_money_bag_switch(node, matStackIndex)
+    local asSwitchNode = cast_graph_node(node)
+    local o = geo_get_current_object()
+    local toNode = 1
 
+    asSwitchNode.selectedCase = toNode
 end
 
-function shopkeeper_gameboy_switch()
+function shopkeeper_gameboy_switch(node, matStackIndex)
+    local asSwitchNode = cast_graph_node(node)
+    local o = geo_get_current_object()
+    local toNode = 0
 
+    asSwitchNode.selectedCase = toNode
 end
 
 ---@param o Object 
@@ -883,12 +891,12 @@ local function bhv_shopkeeper_loop(o)
         o.oBobombBuddyPosYCopy = o.oPosY;
         o.oBobombBuddyPosZCopy = o.oPosZ;
 
-        object_step();
-
+        --[[
         local player = nearest_player_to_object(o);
         if (player and dist_between_objects(o, player) < 1000.0) then
             o.oMoveAngleYaw = approach_s16_symmetric(o.oMoveAngleYaw, obj_angle_to_object(o, player), 0x140);
         end
+        ]]
 
         if (o.oInteractStatus == INT_STATUS_INTERACTED) then
             o.oAction = 1;

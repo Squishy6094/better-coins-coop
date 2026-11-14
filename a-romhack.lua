@@ -39,7 +39,8 @@ romhackData = {
         [LEVEL_CASTLE_GROUNDS] = {
             [1] = {
                 masterCap = 0,
-                masterDoor = {x = -5600, y = 260, z = 1990, yaw = 0x4000},
+                masterDoor = {x = -5626, y = 543, z = -3994, yaw = 0x2800},
+                shopkeeper = {x = 400, y = 810, z = -125, yaw = -0x1800}
             },
         },
         [LEVEL_CASTLE] = {
