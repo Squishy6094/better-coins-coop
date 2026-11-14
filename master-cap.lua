@@ -44,7 +44,7 @@ end
 local prevLevel = 0
 local function add_surface(surface, dynamic)
     if dynamic then return end
-    if surface.normal.y < 0.95 then return end
+    if surface.normal.y < 0.98 then return end
     local currLevel = gNetworkPlayers[0].currLevelNum*7 + gNetworkPlayers[0].currAreaIndex
     if prevLevel ~= currLevel then
         surfaceList = {}
@@ -639,6 +639,8 @@ end
 local function spawn_req_shopkeeper(surfData)
     if surfData.y < find_water_level(surfData.x, surfData.z) then return false end
     if surfData.smallEdge < 500 then return false end
+    local spawn = gMarioStates[0].pos
+    if math.sqrt((spawn.x - surfData.x)^2 + (spawn.y - surfData.y)^2 + (spawn.z - surfData.z)^2) > 2000 then return false end
     return true
 end
 
