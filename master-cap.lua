@@ -44,7 +44,7 @@ end
 local prevLevel = 0
 local function add_surface(surface, dynamic)
     if dynamic then return end
-    if surface.normal.y < 0.95 then return end
+    if surface.normal.y < 0.98 then return end
     local currLevel = gNetworkPlayers[0].currLevelNum*7 + gNetworkPlayers[0].currAreaIndex
     if prevLevel ~= currLevel then
         surfaceList = {}
