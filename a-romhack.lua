@@ -219,17 +219,6 @@ if not romhackData[CURR_ROMHACK] then
             levelMerge = LEVEL_BITS,
         },
     }
-    for i = 1, 7 do
-        romhackData[CURR_ROMHACK][LEVEL_CASTLE_GROUNDS][i] = {
-            masterCap = 0,
-        }
-        romhackData[CURR_ROMHACK][LEVEL_CASTLE][i] = {
-            masterCap = 0,
-        }
-        romhackData[CURR_ROMHACK][LEVEL_CASTLE_COURTYARD][i] = {
-            masterCap = 0,
-        }
-    end
 end
 
 function get_romhack_data(romhack)
@@ -417,7 +406,7 @@ local function check_bhv_for_star(behavior, bhvParams)
 
     local result = gStarBehaviors[behavior](bhvParams, count)
     if result and result ~= 0 then
-        log_to_console("      "..get_behavior_name_from_id(behavior).." - "..tostring(result))
+        --log_to_console("      "..get_behavior_name_from_id(behavior).." - "..tostring(result))
     end
 
     if result == true then return 1 end
@@ -436,7 +425,7 @@ local function get_all_possible_level_stars(level)
                 stars = stars + check_bhv_for_star(macroBhvId, macroBhvArgs[i])
             end
         else
-            if bhvData then
+            if bhvData and bhvData.behavior then
                 stars = stars + check_bhv_for_star(bhvData.behavior, bhvData.behaviorArg)
             end
         end
