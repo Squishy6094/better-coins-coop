@@ -406,7 +406,7 @@ local function check_bhv_for_star(behavior, bhvParams)
 
     local result = gStarBehaviors[behavior](bhvParams, count)
     if result and result ~= 0 then
-        log_to_console("      "..get_behavior_name_from_id(behavior).." - "..tostring(result))
+        --log_to_console("      "..get_behavior_name_from_id(behavior).." - "..tostring(result))
     end
 
     if result == true then return 1 end
@@ -425,7 +425,7 @@ local function get_all_possible_level_stars(level)
                 stars = stars + check_bhv_for_star(macroBhvId, macroBhvArgs[i])
             end
         else
-            if bhvData then
+            if bhvData and bhvData.behavior then
                 stars = stars + check_bhv_for_star(bhvData.behavior, bhvData.behaviorArg)
             end
         end

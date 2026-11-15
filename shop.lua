@@ -85,7 +85,7 @@ local shopItems = {
         description = function(item)
             desc = "A Red Coin in a small bag I found\nwashed up on shore, it keeps making\nfunky noises as if it's traveled\nacross an entire ocean! I found this\nthing ages ago and since then it\nseems to be able to count up like\nour Red Coins!\n\n"
             if item.stock == 0 then
-                desc = desc..item.name.." set to "
+                desc = desc.."JP Red Coin Sound set to "
                 if configJPReds == 2 then
                     desc = desc.."Pitched"
                 elseif configJPReds == 1 then
