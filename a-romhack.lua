@@ -219,17 +219,6 @@ if not romhackData[CURR_ROMHACK] then
             levelMerge = LEVEL_BITS,
         },
     }
-    for i = 1, 7 do
-        romhackData[CURR_ROMHACK][LEVEL_CASTLE_GROUNDS][i] = {
-            masterCap = 0,
-        }
-        romhackData[CURR_ROMHACK][LEVEL_CASTLE][i] = {
-            masterCap = 0,
-        }
-        romhackData[CURR_ROMHACK][LEVEL_CASTLE_COURTYARD][i] = {
-            masterCap = 0,
-        }
-    end
 end
 
 function get_romhack_data(romhack)
