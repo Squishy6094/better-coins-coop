@@ -444,13 +444,15 @@ function mul_random(a, b)
 end
 
 
-function spawn_sync_object_if_not_exist(behaviorId, modelId, x, y, z, objSetupFunction)
+function spawn_sync_object_if_not_exist(behaviorId, modelId, x, y, z, objSetupFunction, objDetectFunction)
     local o = obj_get_first_with_behavior_id(behaviorId)
-    if o then
-        return o
-    else
-        return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction)
+    while o ~= nil do
+        if not objDetectFunction or objDetectFunction(o) then
+            return o
+        end
+        o = obj_get_next_with_same_behavior_id(o)
     end
+    return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction)
 end
 
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'

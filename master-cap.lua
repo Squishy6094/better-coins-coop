@@ -22,16 +22,25 @@ local function add_surface_to_list(list, surface)
         local surfaceZ = (surface.vertex1.z + surface.vertex2.z + surface.vertex3.z)/3
 
         local smallestEdge = nil
-        for i = 0, 2 do
+        for i = 0, 6 do
             local currNum = (i%3) + 1
             local nextNum = ((i+1)%3) + 1
             local currPos = surface["vertex"..tostring(currNum)]
             local nextPos = surface["vertex"..tostring(nextNum)]
-            local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.z - nextPos.z)^2)
+            if i > 2 then
+                local nextNum2 = ((i+2)%3) + 1
+                nextPos = {
+                    x = (surface["vertex"..tostring(nextNum)].x + surface["vertex"..tostring(nextNum2)].x)*0.5,
+                    y = (surface["vertex"..tostring(nextNum)].y + surface["vertex"..tostring(nextNum2)].y)*0.5,
+                    z = (surface["vertex"..tostring(nextNum)].z + surface["vertex"..tostring(nextNum2)].z)*0.5,
+                }
+            end
+            local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.y - nextPos.y)^2 + (currPos.z - nextPos.z)^2)
             if not smallestEdge or smallestEdge > edgeDist then
                 smallestEdge = edgeDist
             end
         end
+
         table.insert(list, {
             x = surfaceX,
             y = surfaceY,
@@ -705,18 +714,10 @@ local function on_sync()
     local levelNum = gNetworkPlayers[0].currLevelNum
     local areaNum = gNetworkPlayers[0].currAreaIndex
 
-    -- Check if another door already exists
-    local doorCheck = false
-    local o = obj_get_first_with_behavior_id(id_bhvDoorWarp)
-    while o ~= nil and not doorCheck do
-        doorCheck = obj_get_model_id_extended(o) == E_MODEL_MASTER_DOOR
-        o = obj_get_next_with_same_behavior_id(o)
-    end
-
     -- Spawn Door
     local masterDoorSpawn = master_cap_get_spawn("masterDoor", spawn_req_master_door, levelNum, areaNum, nil, np.currLevelNum ~= gLevelValues.exitCastleLevel or master_cap_spawn_exists("masterDoor"))
     if not doorCheck and masterDoorSpawn then
-        spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
+        spawn_sync_object_if_not_exist(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
             o.oFaceAnglePitch = 0
             o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
             o.oFaceAngleRoll = 0
@@ -724,6 +725,8 @@ local function on_sync()
             o.oMoveAnglePitch = o.oFaceAnglePitch
             o.oMoveAngleYaw = o.oFaceAngleYaw
             o.oMoveAngleRoll = o.oFaceAngleRoll
+        end, function(o)
+            return obj_get_model_id_extended(o) == E_MODEL_MASTER_DOOR
         end)
     end
     
