@@ -85,7 +85,7 @@ local function update_save()
     gGlobalSyncTable.unlockedMasterCap = modfs_storage_load_bool(save_file_prefix("unlockedMasterCap"), false)
 
     local unlocked, reason = master_cap_allowed()
-    log_to_console(tostring(get_global_timer()).." Better Coins: Updated Save - Master Cap " .. (unlocked and "Unlocked" or "Locked - (" .. reason .. ")"))
+    log_to_console("Better Coins: Updated Save at "..get_global_timer().." - Master Cap " .. (unlocked and "Unlocked" or "Locked (" .. reason .. ")"))
 end
 
 ---@return boolean
