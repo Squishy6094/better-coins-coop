@@ -83,6 +83,9 @@ local function update_save()
 
     gGlobalSyncTable.defeatFinalBowser = modfs_storage_load_bool(save_file_prefix("defeatFinalBowser"), false)
     gGlobalSyncTable.unlockedMasterCap = modfs_storage_load_bool(save_file_prefix("unlockedMasterCap"), false)
+
+    local unlocked, reason = master_cap_allowed()
+    log_to_console(tostring(get_global_timer()).." Better Coins: Updated Save - Master Cap " .. (unlocked and "Unlocked" or "Locked - (" .. reason .. ")"))
 end
 
 ---@return boolean
@@ -799,7 +802,6 @@ local function master_cap_music_update(levelData)
 end
 
 local queueUnpause = false
-local prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
 local prevFileProgress = save_file_get_flags()
 local skyboxLight = 0
 local function master_cap_update()
@@ -829,14 +831,13 @@ local function master_cap_update()
     end
     if network_is_server() then
         -- Saves if someone has defeated bowser
-        if prevBowserBeat ~= gGlobalSyncTable.defeatFinalBowser then
-            prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
-            if modfs_storage_save_bool(save_file_prefix("defeatFinalBowser"), true) then
-                log_to_console("Better Coins: Saved Bowser Being Defeated")
-            else
-                log_to_console("Better Coins: Failed to Save Bowser Being Defeated")
+        if prevBowserBeat ~= nil then
+            if prevBowserBeat ~= gGlobalSyncTable.defeatFinalBowser then
+                modfs_storage_save_bool(save_file_prefix("defeatFinalBowser"), gGlobalSyncTable.defeatFinalBowser)
+                log_to_console("Better Coins: Saved Bowser"..(gGlobalSyncTable.defeatFinalBowser and "" or " Not").." Being Defeated")
             end
         end
+        prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
 
         -- Saves progress updating and saving
         if not get_save_file_modified() and save_file_get_flags() > prevFileProgress then

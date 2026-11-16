@@ -305,8 +305,8 @@ local sLevelTable = {
 
 local isRomhack = false
 
-for i = 1, #sLevelTable do
-    if not level_is_vanilla_level(sLevelTable[i]) then
+for _, levelNum in pairs(sLevelTable) do
+    if not level_is_vanilla_level(levelNum) then
         isRomhack = true
     end
 end
@@ -443,13 +443,13 @@ end
 local function get_max_possible_stars()
     log_to_console("Better Coins: Running Star Parser...")
     local count = 0
-    for i = 1, #sLevelTable do
-        if not (isRomhack and level_is_vanilla_level(i)) then
-            local courseNum = get_level_course_num(sLevelTable[i])
+    for _, levelNum in pairs(sLevelTable) do
+        if levelNum and not (isRomhack and level_is_vanilla_level(levelNum)) then
+            local courseNum = get_level_course_num(levelNum)
             local levelCollected = save_file_get_course_star_count(get_current_save_file_num() - 1, courseNum - 1)
-            local levelCount = get_all_possible_level_stars(sLevelTable[i])
+            local levelCount = get_all_possible_level_stars(levelNum)
             count = count + levelCount
-            log_to_console("   "..i.. " - " .. get_level_name(courseNum, sLevelTable[i], 1) .. " - " .. tostring(levelCollected) .. "/" .. tostring(levelCount) .. " ("..tostring(count)..")", (levelCollected < levelCount) and CONSOLE_MESSAGE_WARNING or CONSOLE_MESSAGE_INFO)
+            log_to_console("   "..levelNum.. " - " .. get_level_name(courseNum, levelNum, 1) .. " - " .. tostring(levelCollected) .. "/" .. tostring(levelCount) .. " ("..tostring(count)..")", (levelCollected < levelCount) and CONSOLE_MESSAGE_WARNING or CONSOLE_MESSAGE_INFO)
         end
     end
 
@@ -475,7 +475,7 @@ function get_romhack_star_count()
 end
 
 local unlocked, reason = master_cap_allowed()
-log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()).." ("..tostring(romhackData[CURR_ROMHACK].parsedStars)..") | Master Cap " .. (unlocked and "Unlocked" or "Locked - (" .. reason .. ")"))
+log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()).." ("..tostring(romhackData[CURR_ROMHACK].parsedStars)..")")
 end
 
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
