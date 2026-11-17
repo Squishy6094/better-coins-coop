@@ -1,20 +1,21 @@
-Lights1 master_door_Door_lights = gdSPDefLights1(
+Lights1 master_door_f3dlite_material_002_layer1_lights = gdSPDefLights1(
 	0x7F, 0x7F, 0x7F,
-	0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28);
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
 
-Lights1 master_door_Metal_lights = gdSPDefLights1(
+Lights1 master_door_f3dlite_material_003_layer1_lights = gdSPDefLights1(
 	0x7F, 0x7F, 0x7F,
-	0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28);
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
 
-Lights1 master_door_Door_Side_lights = gdSPDefLights1(
+Lights1 master_door_f3dlite_material_004_layer1_lights = gdSPDefLights1(
 	0x7F, 0x7F, 0x7F,
-	0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28);
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
 
-Lights1 master_door_Master_Door_Star_lights = gdSPDefLights1(
+Lights1 master_door_f3dlite_material_005_layer5_lights = gdSPDefLights1(
 	0x7F, 0x7F, 0x7F,
-	0xFF, 0xFF, 0xFF, 0x28, 0x28, 0x28);
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
 
-Texture master_door_Master_Door_ci8[] = {
+Gfx master_door_master_door_Master_Door_ci8_ci8_aligner[] = {gsSPEndDisplayList()};
+u8 master_door_master_door_Master_Door_ci8_ci8[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -274,7 +275,8 @@ Texture master_door_Master_Door_ci8[] = {
 	
 };
 
-Texture master_door_Master_Door_pal_rgba16[] = {
+Gfx master_door_master_door_Master_Door_ci8_pal_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 master_door_master_door_Master_Door_ci8_pal_rgba16[] = {
 	0x7b, 0xdf, 0xa5, 0x29, 0xad, 0x6b, 0xb5, 0xad, 
 	0xbd, 0xef, 0xce, 0x73, 0xd6, 0xb5, 0xde, 0xf7, 
 	0xe7, 0x39, 0xef, 0x7b, 0x9c, 0xe7, 0x94, 0xa5, 
@@ -282,7 +284,8 @@ Texture master_door_Master_Door_pal_rgba16[] = {
 	0x84, 0x21, 
 };
 
-Texture master_door_Metal_Shade_rgba16_rgba16[] = {
+Gfx master_door_master_door_Metal_Shade_rgba16_rgba16_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 master_door_master_door_Metal_Shade_rgba16_rgba16_rgba16[] = {
 	0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 
 	0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 
 	0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 
@@ -798,7 +801,8 @@ Texture master_door_Metal_Shade_rgba16_rgba16[] = {
 	
 };
 
-Texture master_door_Master_Door_Side_i8[] = {
+Gfx master_door_master_door_Master_Door_Side_i8_i8_aligner[] = {gsSPEndDisplayList()};
+u8 master_door_master_door_Master_Door_Side_i8_i8[] = {
 	0xf2, 0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 
 	0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 
 	0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 0xfb, 0xf2, 
@@ -1058,7 +1062,141 @@ Texture master_door_Master_Door_Side_i8[] = {
 	
 };
 
-Texture master_door_Master_Door_Star_ia8[] = {
+Gfx master_door_segment2_11C58_rgba16___Copy___Copy__2__i8_aligner[] = {gsSPEndDisplayList()};
+u8 master_door_segment2_11C58_rgba16___Copy___Copy__2__i8[] = {
+	0xed, 0xe3, 0xed, 0xff, 0xff, 0xed, 0xed, 0xed, 
+	0xfc, 0xff, 0xff, 0xfe, 0xfe, 0xff, 0xff, 0xff, 
+	0xff, 0xf6, 0xe3, 0xed, 0xfc, 0xff, 0xe7, 0xe7, 
+	0xe7, 0xe7, 0xf1, 0xf6, 0xf6, 0xf6, 0xfc, 0xfc, 
+	0xe3, 0xe3, 0xeb, 0xfc, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfc, 
+	0xff, 0xe3, 0xde, 0xde, 0xde, 0xe3, 0xe1, 0xe1, 
+	0xd8, 0xd8, 0xdc, 0xd8, 0xd8, 0xd8, 0xe1, 0xed, 
+	0xe3, 0xde, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xfc, 0xf3, 0xf8, 0xff, 
+	0xf3, 0xf3, 0xe3, 0xd8, 0xde, 0xd8, 0xd4, 0xce, 
+	0xce, 0xce, 0xce, 0xcc, 0xcc, 0xd4, 0xd8, 0xd8, 
+	0xd8, 0xd8, 0xea, 0xfc, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xed, 0xff, 0xfc, 0xfc, 
+	0xf6, 0xed, 0xe3, 0xd8, 0xd8, 0xd4, 0xce, 0xce, 
+	0xce, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xd4, 0xd8, 
+	0xd1, 0xd4, 0xd4, 0xe1, 0xfe, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xfc, 0xed, 0xed, 0xfc, 0xfc, 0xf6, 
+	0xed, 0xe7, 0xde, 0xd8, 0xd4, 0xce, 0xce, 0xce, 
+	0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xce, 0xd4, 
+	0xcc, 0xcc, 0xce, 0xe1, 0xf9, 0xfe, 0xff, 0xff, 
+	0xff, 0xf6, 0xed, 0xe3, 0xde, 0xde, 0xe7, 0xde, 
+	0xde, 0xd8, 0xd4, 0xd4, 0xd4, 0xce, 0xce, 0xce, 
+	0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xd1, 0xd1, 
+	0xce, 0xcc, 0xcc, 0xd4, 0xe1, 0xf1, 0xfc, 0xff, 
+	0xf6, 0xed, 0xde, 0xd8, 0xd8, 0xd8, 0xd8, 0xd8, 
+	0xd4, 0xd4, 0xd4, 0xd4, 0xce, 0xce, 0xce, 0xce, 
+	0xce, 0xd4, 0xd4, 0xd4, 0xcc, 0xcc, 0xd4, 0xd4, 
+	0xce, 0xce, 0xd4, 0xd4, 0xd4, 0xe1, 0xe7, 0xe1, 
+	0xd8, 0xe1, 0xde, 0xd8, 0xd8, 0xd8, 0xd4, 0xd4, 
+	0xd4, 0xd4, 0xd4, 0xd4, 0xce, 0xce, 0xce, 0xce, 
+	0xd4, 0xd8, 0xd8, 0xd8, 0xd4, 0xce, 0xd4, 0xd4, 
+	0xd4, 0xce, 0xd4, 0xd4, 0xd8, 0xd8, 0xed, 0xf1, 
+	0xe1, 0xe7, 0xd8, 0xde, 0xd8, 0xd4, 0xd4, 0xd4, 
+	0xd4, 0xd4, 0xd4, 0xd4, 0xce, 0xce, 0xce, 0xce, 
+	0xd4, 0xe7, 0xe7, 0xd8, 0xd8, 0xd4, 0xd4, 0xd4, 
+	0xd4, 0xd4, 0xd4, 0xd8, 0xe1, 0xe1, 0xf6, 0xf6, 
+	0xf1, 0xf3, 0xe1, 0xd8, 0xd4, 0xd4, 0xd4, 0xd4, 
+	0xd4, 0xd4, 0xd4, 0xd4, 0xce, 0xce, 0xce, 0xce, 
+	0xd4, 0xe7, 0xe7, 0xe7, 0xd8, 0xd4, 0xd4, 0xd4, 
+	0xd8, 0xe1, 0xd8, 0xea, 0xf1, 0xf1, 0xfe, 0xfe, 
+	0xf6, 0xf6, 0xe7, 0xe1, 0xd8, 0xd4, 0xd4, 0xd4, 
+	0xd4, 0xd4, 0xd4, 0xd4, 0xd4, 0xd4, 0xd4, 0xd8, 
+	0xdc, 0xe7, 0xf6, 0xe7, 0xd8, 0xd4, 0xd4, 0xd4, 
+	0xe7, 0xfe, 0xf1, 0xff, 0xf6, 0xf6, 0xff, 0xfe, 
+	0xfc, 0xf8, 0xfc, 0xf6, 0xe1, 0xd8, 0xd4, 0xd4, 
+	0xd4, 0xd4, 0xd4, 0xd4, 0xd4, 0xd8, 0xe1, 0xf1, 
+	0xf6, 0xf6, 0xf6, 0xe7, 0xd4, 0xd4, 0xd4, 0xd8, 
+	0xf6, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xf6, 0xf6, 0xf8, 0xed, 0xe1, 0xd8, 0xde, 
+	0xd8, 0xd8, 0xd8, 0xd8, 0xd8, 0xf6, 0xf9, 0xfe, 
+	0xfe, 0xfe, 0xfc, 0xf1, 0xd8, 0xd4, 0xd8, 0xe1, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xf6, 0xf6, 0xf6, 0xf8, 0xfc, 0xed, 0xf1, 0xe7, 
+	0xe1, 0xe1, 0xe1, 0xe7, 0xf1, 0xe7, 0xf6, 0xff, 
+	0xff, 0xf6, 0xf6, 0xed, 0xd8, 0xe1, 0xe1, 0xf1, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xf6, 0xf3, 0xf6, 
+	0xf6, 0xf6, 0xf2, 0xff, 0xff, 0xfc, 0xe7, 0xea, 
+	0xff, 0xfe, 0xf9, 0xf1, 0xed, 0xe7, 0xf1, 0xf1, 
+	0xff, 0xff, 0xf6, 0xf6, 0xe7, 0xde, 0xed, 0xf6, 
+	0xfe, 0xff, 0xfe, 0xea, 0xe1, 0xe1, 0xe7, 0xeb, 
+	0xf0, 0xf6, 0xff, 0xff, 0xff, 0xf3, 0xf6, 0xff, 
+	0xff, 0xff, 0xff, 0xfe, 0xf6, 0xed, 0xf6, 0xfe, 
+	0xff, 0xff, 0xf6, 0xf3, 0xde, 0xd4, 0xe1, 0xf3, 
+	0xfc, 0xed, 0xe1, 0xe1, 0xd8, 0xd8, 0xd8, 0xde, 
+	0xe7, 0xf6, 0xff, 0xff, 0xf3, 0xf3, 0xfe, 0xfe, 
+	0xff, 0xff, 0xff, 0xfc, 0xed, 0xe7, 0xff, 0xed, 
+	0xe3, 0xf3, 0xed, 0xe1, 0xde, 0xe7, 0xde, 0xed, 
+	0xe7, 0xd8, 0xd4, 0xd8, 0xd8, 0xd8, 0xd8, 0xd8, 
+	0xd8, 0xe1, 0xfc, 0xf8, 0xf8, 0xfc, 0xff, 0xff, 
+	0xff, 0xff, 0xfc, 0xe7, 0xe3, 0xde, 0xed, 0xde, 
+	0xd8, 0xde, 0xe3, 0xde, 0xe7, 0xe7, 0xed, 0xd8, 
+	0xd4, 0xd4, 0xd8, 0xd8, 0xd8, 0xd8, 0xd8, 0xd8, 
+	0xd8, 0xdc, 0xf1, 0xed, 0xf3, 0xfc, 0xff, 0xf6, 
+	0xf2, 0xff, 0xf3, 0xde, 0xde, 0xdc, 0xd6, 0xd8, 
+	0xd4, 0xd4, 0xd8, 0xde, 0xe7, 0xe3, 0xd8, 0xd4, 
+	0xe7, 0xd4, 0xd4, 0xd4, 0xd4, 0xd8, 0xd8, 0xd8, 
+	0xd8, 0xdc, 0xe7, 0xe7, 0xf3, 0xf3, 0xf6, 0xf6, 
+	0xf6, 0xf0, 0xe3, 0xde, 0xd8, 0xd8, 0xd8, 0xd4, 
+	0xd4, 0xd1, 0xcc, 0xd8, 0xde, 0xde, 0xe7, 0xe7, 
+	0xd8, 0xd8, 0xdc, 0xd4, 0xd4, 0xd8, 0xd8, 0xd8, 
+	0xd8, 0xd8, 0xdc, 0xe1, 0xe1, 0xed, 0xed, 0xed, 
+	0xf0, 0xe7, 0xde, 0xd8, 0xd8, 0xd8, 0xd8, 0xd4, 
+	0xd1, 0xd1, 0xd1, 0xd1, 0xd1, 0xd8, 0xe7, 0xed, 
+	0xfc, 0xe1, 0xd4, 0xd8, 0xd8, 0xd8, 0xd8, 0xd8, 
+	0xd8, 0xd8, 0xdc, 0xdc, 0xe1, 0xe1, 0xe7, 0xde, 
+	0xd8, 0xde, 0xd8, 0xd4, 0xd4, 0xd8, 0xd4, 0xd4, 
+	0xd4, 0xd4, 0xd1, 0xd1, 0xd1, 0xe1, 0xd8, 0xde, 
+	0xf6, 0xeb, 0xf1, 0xea, 0xe1, 0xdc, 0xd8, 0xd8, 
+	0xd8, 0xd8, 0xdc, 0xe1, 0xe7, 0xe1, 0xe7, 0xe7, 
+	0xde, 0xd8, 0xd8, 0xd8, 0xd8, 0xd4, 0xd4, 0xd4, 
+	0xd1, 0xd4, 0xd8, 0xd6, 0xde, 0xea, 0xf9, 0xf6, 
+	0xf1, 0xd6, 0xf9, 0xf9, 0xf1, 0xea, 0xe1, 0xe1, 
+	0xdc, 0xe1, 0xe1, 0xe7, 0xe1, 0xf1, 0xe7, 0xe7, 
+	0xde, 0xd8, 0xd8, 0xd8, 0xd1, 0xd1, 0xd4, 0xd4, 
+	0xd4, 0xd4, 0xd8, 0xde, 0xea, 0xf1, 0xff, 0xfc, 
+	0xde, 0xe7, 0xf6, 0xf9, 0xff, 0xff, 0xf9, 0xf1, 
+	0xea, 0xf1, 0xe1, 0xde, 0xe7, 0xe3, 0xde, 0xe7, 
+	0xe7, 0xde, 0xe7, 0xde, 0xd8, 0xd4, 0xd1, 0xd4, 
+	0xd1, 0xde, 0xf1, 0xde, 0xf1, 0xff, 0xf9, 0xfc, 
+	0xe7, 0xde, 0xde, 0xe7, 0xf1, 0xf1, 0xff, 0xfe, 
+	0xfe, 0xf9, 0xf1, 0xe1, 0xde, 0xe7, 0xe7, 0xe3, 
+	0xed, 0xed, 0xed, 0xed, 0xed, 0xde, 0xd6, 0xd8, 
+	0xf0, 0xf6, 0xf6, 0xf1, 0xf3, 0xff, 0xff, 0xf1, 
+	0xe1, 0xde, 0xe1, 0xe1, 0xe7, 0xe7, 0xfe, 0xf9, 
+	0xf9, 0xf9, 0xf1, 0xe7, 0xe1, 0xe3, 0xe7, 0xed, 
+	0xe7, 0xed, 0xed, 0xff, 0xff, 0xf8, 0xfe, 0xf8, 
+	0xf8, 0xff, 0xff, 0xf9, 0xff, 0xff, 0xf9, 0xe1, 
+	0xe7, 0xe1, 0xe1, 0xde, 0xe1, 0xe1, 0xe1, 0xf1, 
+	0xf6, 0xf1, 0xea, 0xe1, 0xe1, 0xe3, 0xe7, 0xe7, 
+	0xe7, 0xe7, 0xf3, 0xf3, 0xff, 0xfe, 0xff, 0xff, 
+	0xf8, 0xff, 0xff, 0xfc, 0xfe, 0xfc, 0xf6, 0xf1, 
+	0xe1, 0xd8, 0xe1, 0xde, 0xde, 0xe1, 0xe1, 0xe1, 
+	0xe7, 0xe7, 0xe1, 0xde, 0xde, 0xe1, 0xe1, 0xe1, 
+	0xe1, 0xe7, 0xf3, 0xfc, 0xf6, 0xf6, 0xff, 0xf2, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf9, 0xf6, 
+	0xd8, 0xd8, 0xde, 0xde, 0xde, 0xde, 0xde, 0xe1, 
+	0xe7, 0xe7, 0xed, 0xe3, 0xde, 0xde, 0xe3, 0xe7, 
+	0xe7, 0xe7, 0xfc, 0xf6, 0xf6, 0xf2, 0xf2, 0xf2, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xed, 0xde, 
+	0xd8, 0xde, 0xde, 0xde, 0xde, 0xde, 0xde, 0xe1, 
+	0xe7, 0xed, 0xed, 0xe7, 0xe7, 0xe7, 0xe7, 0xed, 
+	0xfe, 0xff, 0xff, 0xf6, 0xf6, 0xf6, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xed, 0xd8, 
+	0xde, 0xe7, 0xe7, 0xe7, 0xe1, 0xde, 0xde, 0xe1, 
+	0xe7, 0xf6, 0xfc, 0xed, 0xf3, 0xfc, 0xfc, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xfe, 0xf6, 0xff, 0xff, 
+	0xf6, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xed, 
+	
+};
+
+Gfx master_door_master_door_Master_Door_Star_ia8_ia8_aligner[] = {gsSPEndDisplayList()};
+u8 master_door_master_door_Master_Door_Star_ia8_ia8[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 
 	0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -1190,127 +1328,262 @@ Texture master_door_Master_Door_Star_ia8[] = {
 	
 };
 
-Vtx master_door_000_offset_001_mesh_layer_1_vtx_0[8] = {
-	{{{604, 0, -58}, 0, {1008, 1840}, {0x00, 0x00, 0x81, 0xFF}}},
-	{{{-12, 0, -58}, 0, {-16, 1840}, {0x00, 0x00, 0x81, 0xFF}}},
-	{{{-12, 1024, -58}, 0, {-16, 144}, {0x00, 0x00, 0x81, 0xFF}}},
-	{{{604, 1024, -58}, 0, {1008, 144}, {0x00, 0x00, 0x81, 0xFF}}},
-	{{{-12, 0, 59}, 0, {-16, 1840}, {0x00, 0x00, 0x7F, 0xFF}}},
-	{{{604, 0, 59}, 0, {1008, 1840}, {0x00, 0x00, 0x7F, 0xFF}}},
-	{{{604, 1024, 59}, 0, {1008, 144}, {0x00, 0x00, 0x7F, 0xFF}}},
-	{{{-12, 1024, 59}, 0, {-16, 144}, {0x00, 0x00, 0x7F, 0xFF}}},
+Vtx master_door_004_offset_mesh_layer_1_vtx_0[8] = {
+	{{ {604, 0, -58}, 0, {1008, 1840}, {0, 0, 129, 255} }},
+	{{ {-12, 0, -58}, 0, {-16, 1840}, {0, 0, 129, 255} }},
+	{{ {-12, 1024, -58}, 0, {-16, 144}, {0, 0, 129, 255} }},
+	{{ {604, 1024, -58}, 0, {1008, 144}, {0, 0, 129, 255} }},
+	{{ {-12, 0, 59}, 0, {-16, 1840}, {0, 0, 127, 255} }},
+	{{ {604, 0, 59}, 0, {1008, 1840}, {0, 0, 127, 255} }},
+	{{ {604, 1024, 59}, 0, {1008, 144}, {0, 0, 127, 255} }},
+	{{ {-12, 1024, 59}, 0, {-16, 144}, {0, 0, 127, 255} }},
 };
 
-Gfx master_door_000_offset_001_mesh_layer_1_tri_0[] = {
-	gsSPVertex(master_door_000_offset_001_mesh_layer_1_vtx_0 + 0, 8, 0),
-	gsSP2Triangles(0, 1, 2, 0, 0, 2, 3, 0),
-	gsSP2Triangles(4, 5, 6, 0, 4, 6, 7, 0),
+Gfx master_door_004_offset_mesh_layer_1_tri_0[] = {
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_0 + 0, 8, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 2, 3, 0),
+	gsSP1Triangle(4, 5, 6, 0),
+	gsSP1Triangle(4, 6, 7, 0),
 	gsSPEndDisplayList(),
 };
 
-Vtx master_door_000_offset_001_mesh_layer_1_vtx_1[24] = {
-	{{{512, 488, 44}, 0, {-228, -522}, {0xFE, 0x76, 0xD1, 0xFF}}},
-	{{{456, 432, 44}, 0, {-228, -522}, {0x8A, 0x02, 0xD1, 0xFF}}},
-	{{{432, 432, 104}, 0, {-228, -522}, {0x81, 0x01, 0x01, 0xFF}}},
-	{{{512, 348, 104}, 0, {-228, -522}, {0xFF, 0x81, 0x01, 0xFF}}},
-	{{{512, 372, 44}, 0, {-228, -522}, {0xFE, 0x8A, 0xD1, 0xFF}}},
-	{{{596, 432, 104}, 0, {-228, -522}, {0x7F, 0x01, 0x02, 0xFF}}},
-	{{{572, 432, 44}, 0, {-228, -522}, {0x76, 0x02, 0xD0, 0xFF}}},
-	{{{512, 512, 104}, 0, {-228, -522}, {0xFF, 0x7F, 0x02, 0xFF}}},
-	{{{456, 432, 160}, 0, {-228, -522}, {0xA9, 0x02, 0x5C, 0xFF}}},
-	{{{512, 372, 160}, 0, {-228, -522}, {0xFF, 0xA9, 0x5C, 0xFF}}},
-	{{{572, 432, 160}, 0, {-228, -522}, {0x58, 0x02, 0x5C, 0xFF}}},
-	{{{512, 488, 160}, 0, {-228, -522}, {0xFF, 0x57, 0x5C, 0xFF}}},
-	{{{432, 432, -100}, 0, {-228, -522}, {0x81, 0x01, 0xFE, 0xFF}}},
-	{{{512, 372, -40}, 0, {-228, -522}, {0xFE, 0x8A, 0x30, 0xFF}}},
-	{{{456, 432, -40}, 0, {-228, -522}, {0x8A, 0x02, 0x2F, 0xFF}}},
-	{{{512, 348, -100}, 0, {-228, -522}, {0xFF, 0x81, 0xFE, 0xFF}}},
-	{{{456, 432, -156}, 0, {-228, -522}, {0xA9, 0x01, 0xA4, 0xFF}}},
-	{{{512, 488, -156}, 0, {-228, -522}, {0xFE, 0x57, 0xA4, 0xFF}}},
-	{{{512, 512, -100}, 0, {-228, -522}, {0xFF, 0x7F, 0xFF, 0xFF}}},
-	{{{512, 488, -40}, 0, {-228, -522}, {0xFE, 0x76, 0x2F, 0xFF}}},
-	{{{596, 432, -100}, 0, {-228, -522}, {0x7F, 0x01, 0xFF, 0xFF}}},
-	{{{572, 432, -40}, 0, {-228, -522}, {0x76, 0x02, 0x2F, 0xFF}}},
-	{{{512, 372, -156}, 0, {-228, -522}, {0xFE, 0xA8, 0xA4, 0xFF}}},
-	{{{572, 432, -156}, 0, {-228, -522}, {0x57, 0x01, 0xA4, 0xFF}}},
+Vtx master_door_004_offset_mesh_layer_1_vtx_1[108] = {
+	{{ {512, 488, 44}, 0, {-472, -1035}, {254, 118, 209, 255} }},
+	{{ {456, 432, 44}, 0, {-472, -1035}, {138, 2, 209, 255} }},
+	{{ {432, 432, 104}, 0, {-472, -1035}, {129, 1, 1, 255} }},
+	{{ {572, 432, 44}, 0, {-472, -1035}, {118, 2, 208, 255} }},
+	{{ {512, 488, 44}, 0, {-472, -1035}, {254, 118, 209, 255} }},
+	{{ {512, 512, 104}, 0, {-472, -1035}, {255, 127, 2, 255} }},
+	{{ {512, 488, 44}, 0, {-472, -1035}, {254, 118, 209, 255} }},
+	{{ {432, 432, 104}, 0, {-472, -1035}, {129, 1, 1, 255} }},
+	{{ {512, 512, 104}, 0, {-472, -1035}, {255, 127, 2, 255} }},
+	{{ {456, 432, 44}, 0, {-472, -1035}, {138, 2, 209, 255} }},
+	{{ {512, 348, 104}, 0, {-472, -1035}, {255, 129, 1, 255} }},
+	{{ {432, 432, 104}, 0, {-472, -1035}, {129, 1, 1, 255} }},
+	{{ {456, 432, 44}, 0, {-472, -1035}, {138, 2, 209, 255} }},
+	{{ {512, 372, 44}, 0, {-472, -1035}, {254, 138, 209, 255} }},
+	{{ {512, 348, 104}, 0, {-472, -1035}, {255, 129, 1, 255} }},
+	{{ {512, 372, 44}, 0, {-472, -1035}, {254, 138, 209, 255} }},
+	{{ {596, 432, 104}, 0, {-472, -1035}, {127, 1, 2, 255} }},
+	{{ {512, 348, 104}, 0, {-472, -1035}, {255, 129, 1, 255} }},
+	{{ {512, 372, 44}, 0, {-472, -1035}, {254, 138, 209, 255} }},
+	{{ {572, 432, 44}, 0, {-472, -1035}, {118, 2, 208, 255} }},
+	{{ {596, 432, 104}, 0, {-472, -1035}, {127, 1, 2, 255} }},
+	{{ {432, 432, 104}, 0, {-472, -1035}, {129, 1, 1, 255} }},
+	{{ {512, 348, 104}, 0, {-472, -1035}, {255, 129, 1, 255} }},
+	{{ {512, 372, 160}, 0, {-472, -1035}, {255, 169, 92, 255} }},
+	{{ {512, 348, 104}, 0, {-472, -1035}, {255, 129, 1, 255} }},
+	{{ {572, 432, 160}, 0, {-472, -1035}, {88, 2, 92, 255} }},
+	{{ {512, 372, 160}, 0, {-472, -1035}, {255, 169, 92, 255} }},
+	{{ {512, 348, 104}, 0, {-472, -1035}, {255, 129, 1, 255} }},
+	{{ {596, 432, 104}, 0, {-472, -1035}, {127, 1, 2, 255} }},
+	{{ {572, 432, 160}, 0, {-472, -1035}, {88, 2, 92, 255} }},
+	{{ {572, 432, 44}, 0, {-472, -1035}, {118, 2, 208, 255} }},
+	{{ {512, 512, 104}, 0, {-472, -1035}, {255, 127, 2, 255} }},
+	{{ {596, 432, 104}, 0, {-472, -1035}, {127, 1, 2, 255} }},
+	{{ {596, 432, 104}, 0, {-472, -1035}, {127, 1, 2, 255} }},
+	{{ {512, 488, 160}, 0, {-472, -1035}, {255, 87, 92, 255} }},
+	{{ {572, 432, 160}, 0, {-472, -1035}, {88, 2, 92, 255} }},
+	{{ {596, 432, 104}, 0, {-472, -1035}, {127, 1, 2, 255} }},
+	{{ {512, 512, 104}, 0, {-472, -1035}, {255, 127, 2, 255} }},
+	{{ {512, 488, 160}, 0, {-472, -1035}, {255, 87, 92, 255} }},
+	{{ {512, 512, 104}, 0, {-472, -1035}, {255, 127, 2, 255} }},
+	{{ {432, 432, 104}, 0, {-472, -1035}, {129, 1, 1, 255} }},
+	{{ {456, 432, 160}, 0, {-472, -1035}, {169, 2, 92, 255} }},
+	{{ {432, 432, 104}, 0, {-472, -1035}, {129, 1, 1, 255} }},
+	{{ {512, 372, 160}, 0, {-472, -1035}, {255, 169, 92, 255} }},
+	{{ {456, 432, 160}, 0, {-472, -1035}, {169, 2, 92, 255} }},
+	{{ {512, 488, 160}, 0, {-472, -1035}, {255, 87, 92, 255} }},
+	{{ {456, 432, 160}, 0, {-472, -1035}, {169, 2, 92, 255} }},
+	{{ {512, 372, 160}, 0, {-472, -1035}, {255, 169, 92, 255} }},
+	{{ {512, 488, 160}, 0, {-472, -1035}, {255, 87, 92, 255} }},
+	{{ {512, 372, 160}, 0, {-472, -1035}, {255, 169, 92, 255} }},
+	{{ {572, 432, 160}, 0, {-472, -1035}, {88, 2, 92, 255} }},
+	{{ {512, 512, 104}, 0, {-472, -1035}, {255, 127, 2, 255} }},
+	{{ {456, 432, 160}, 0, {-472, -1035}, {169, 2, 92, 255} }},
+	{{ {512, 488, 160}, 0, {-472, -1035}, {255, 87, 92, 255} }},
+	{{ {432, 432, -100}, 0, {-472, -1035}, {129, 1, 254, 255} }},
+	{{ {512, 372, -40}, 0, {-472, -1035}, {254, 138, 48, 255} }},
+	{{ {456, 432, -40}, 0, {-472, -1035}, {138, 2, 47, 255} }},
+	{{ {432, 432, -100}, 0, {-472, -1035}, {129, 1, 254, 255} }},
+	{{ {512, 348, -100}, 0, {-472, -1035}, {255, 129, 254, 255} }},
+	{{ {512, 372, -40}, 0, {-472, -1035}, {254, 138, 48, 255} }},
+	{{ {456, 432, -156}, 0, {-472, -1035}, {169, 1, 164, 255} }},
+	{{ {512, 348, -100}, 0, {-472, -1035}, {255, 129, 254, 255} }},
+	{{ {432, 432, -100}, 0, {-472, -1035}, {129, 1, 254, 255} }},
+	{{ {512, 488, -156}, 0, {-472, -1035}, {254, 87, 164, 255} }},
+	{{ {456, 432, -156}, 0, {-472, -1035}, {169, 1, 164, 255} }},
+	{{ {432, 432, -100}, 0, {-472, -1035}, {129, 1, 254, 255} }},
+	{{ {512, 488, -156}, 0, {-472, -1035}, {254, 87, 164, 255} }},
+	{{ {432, 432, -100}, 0, {-472, -1035}, {129, 1, 254, 255} }},
+	{{ {512, 512, -100}, 0, {-472, -1035}, {255, 127, 255, 255} }},
+	{{ {512, 512, -100}, 0, {-472, -1035}, {255, 127, 255, 255} }},
+	{{ {432, 432, -100}, 0, {-472, -1035}, {129, 1, 254, 255} }},
+	{{ {456, 432, -40}, 0, {-472, -1035}, {138, 2, 47, 255} }},
+	{{ {512, 348, -100}, 0, {-472, -1035}, {255, 129, 254, 255} }},
+	{{ {572, 432, -40}, 0, {-472, -1035}, {118, 2, 47, 255} }},
+	{{ {512, 372, -40}, 0, {-472, -1035}, {254, 138, 48, 255} }},
+	{{ {512, 488, -156}, 0, {-472, -1035}, {254, 87, 164, 255} }},
+	{{ {512, 372, -156}, 0, {-472, -1035}, {254, 168, 164, 255} }},
+	{{ {456, 432, -156}, 0, {-472, -1035}, {169, 1, 164, 255} }},
+	{{ {456, 432, -156}, 0, {-472, -1035}, {169, 1, 164, 255} }},
+	{{ {512, 372, -156}, 0, {-472, -1035}, {254, 168, 164, 255} }},
+	{{ {512, 348, -100}, 0, {-472, -1035}, {255, 129, 254, 255} }},
+	{{ {512, 488, -156}, 0, {-472, -1035}, {254, 87, 164, 255} }},
+	{{ {572, 432, -156}, 0, {-472, -1035}, {87, 1, 164, 255} }},
+	{{ {512, 372, -156}, 0, {-472, -1035}, {254, 168, 164, 255} }},
+	{{ {572, 432, -156}, 0, {-472, -1035}, {87, 1, 164, 255} }},
+	{{ {512, 488, -156}, 0, {-472, -1035}, {254, 87, 164, 255} }},
+	{{ {512, 512, -100}, 0, {-472, -1035}, {255, 127, 255, 255} }},
+	{{ {512, 512, -100}, 0, {-472, -1035}, {255, 127, 255, 255} }},
+	{{ {456, 432, -40}, 0, {-472, -1035}, {138, 2, 47, 255} }},
+	{{ {512, 488, -40}, 0, {-472, -1035}, {254, 118, 47, 255} }},
+	{{ {596, 432, -100}, 0, {-472, -1035}, {127, 1, 255, 255} }},
+	{{ {512, 512, -100}, 0, {-472, -1035}, {255, 127, 255, 255} }},
+	{{ {512, 488, -40}, 0, {-472, -1035}, {254, 118, 47, 255} }},
+	{{ {572, 432, -156}, 0, {-472, -1035}, {87, 1, 164, 255} }},
+	{{ {512, 512, -100}, 0, {-472, -1035}, {255, 127, 255, 255} }},
+	{{ {596, 432, -100}, 0, {-472, -1035}, {127, 1, 255, 255} }},
+	{{ {596, 432, -100}, 0, {-472, -1035}, {127, 1, 255, 255} }},
+	{{ {512, 488, -40}, 0, {-472, -1035}, {254, 118, 47, 255} }},
+	{{ {572, 432, -40}, 0, {-472, -1035}, {118, 2, 47, 255} }},
+	{{ {512, 348, -100}, 0, {-472, -1035}, {255, 129, 254, 255} }},
+	{{ {596, 432, -100}, 0, {-472, -1035}, {127, 1, 255, 255} }},
+	{{ {572, 432, -40}, 0, {-472, -1035}, {118, 2, 47, 255} }},
+	{{ {512, 372, -156}, 0, {-472, -1035}, {254, 168, 164, 255} }},
+	{{ {596, 432, -100}, 0, {-472, -1035}, {127, 1, 255, 255} }},
+	{{ {512, 348, -100}, 0, {-472, -1035}, {255, 129, 254, 255} }},
+	{{ {512, 372, -156}, 0, {-472, -1035}, {254, 168, 164, 255} }},
+	{{ {572, 432, -156}, 0, {-472, -1035}, {87, 1, 164, 255} }},
+	{{ {596, 432, -100}, 0, {-472, -1035}, {127, 1, 255, 255} }},
 };
 
-Gfx master_door_000_offset_001_mesh_layer_1_tri_1[] = {
-	gsSPVertex(master_door_000_offset_001_mesh_layer_1_vtx_1 + 0, 24, 0),
-	gsSP2Triangles(0, 1, 2, 0, 1, 3, 2, 0),
-	gsSP2Triangles(1, 4, 3, 0, 4, 5, 3, 0),
-	gsSP2Triangles(4, 6, 5, 0, 6, 7, 5, 0),
-	gsSP2Triangles(6, 0, 7, 0, 0, 2, 7, 0),
-	gsSP2Triangles(7, 2, 8, 0, 2, 9, 8, 0),
-	gsSP2Triangles(2, 3, 9, 0, 3, 10, 9, 0),
-	gsSP2Triangles(3, 5, 10, 0, 5, 11, 10, 0),
-	gsSP2Triangles(5, 7, 11, 0, 7, 8, 11, 0),
-	gsSP2Triangles(11, 8, 9, 0, 11, 9, 10, 0),
-	gsSP2Triangles(12, 13, 14, 0, 12, 15, 13, 0),
-	gsSP2Triangles(16, 15, 12, 0, 17, 16, 12, 0),
-	gsSP2Triangles(17, 12, 18, 0, 18, 12, 14, 0),
-	gsSP2Triangles(18, 14, 19, 0, 20, 18, 19, 0),
-	gsSP2Triangles(20, 19, 21, 0, 15, 20, 21, 0),
-	gsSP2Triangles(15, 21, 13, 0, 22, 20, 15, 0),
-	gsSP2Triangles(22, 23, 20, 0, 17, 23, 22, 0),
-	gsSP2Triangles(17, 22, 16, 0, 16, 22, 15, 0),
-	gsSP2Triangles(23, 17, 18, 0, 23, 18, 20, 0),
+Gfx master_door_004_offset_mesh_layer_1_tri_1[] = {
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_1 + 0, 15, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(3, 4, 5, 0),
+	gsSP1Triangle(6, 7, 8, 0),
+	gsSP1Triangle(9, 10, 11, 0),
+	gsSP1Triangle(12, 13, 14, 0),
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_1 + 15, 15, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(3, 4, 5, 0),
+	gsSP1Triangle(6, 7, 8, 0),
+	gsSP1Triangle(9, 10, 11, 0),
+	gsSP1Triangle(12, 13, 14, 0),
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_1 + 30, 15, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(3, 4, 5, 0),
+	gsSP1Triangle(6, 7, 8, 0),
+	gsSP1Triangle(9, 10, 11, 0),
+	gsSP1Triangle(12, 13, 14, 0),
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_1 + 45, 15, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(3, 4, 5, 0),
+	gsSP1Triangle(6, 7, 8, 0),
+	gsSP1Triangle(9, 10, 11, 0),
+	gsSP1Triangle(12, 13, 14, 0),
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_1 + 60, 15, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(3, 4, 5, 0),
+	gsSP1Triangle(6, 7, 8, 0),
+	gsSP1Triangle(9, 10, 11, 0),
+	gsSP1Triangle(12, 13, 14, 0),
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_1 + 75, 15, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(3, 4, 5, 0),
+	gsSP1Triangle(6, 7, 8, 0),
+	gsSP1Triangle(9, 10, 11, 0),
+	gsSP1Triangle(12, 13, 14, 0),
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_1 + 90, 15, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(3, 4, 5, 0),
+	gsSP1Triangle(6, 7, 8, 0),
+	gsSP1Triangle(9, 10, 11, 0),
+	gsSP1Triangle(12, 13, 14, 0),
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_1 + 105, 3, 0),
+	gsSP1Triangle(0, 1, 2, 0),
 	gsSPEndDisplayList(),
 };
 
-Vtx master_door_000_offset_001_mesh_layer_1_vtx_2[16] = {
-	{{{604, 0, -58}, 0, {-16, -16}, {0x00, 0x81, 0x00, 0xFF}}},
-	{{{-12, 0, 59}, 0, {1008, 2032}, {0x00, 0x81, 0x00, 0xFF}}},
-	{{{-12, 0, -58}, 0, {-16, 2032}, {0x00, 0x81, 0x00, 0xFF}}},
-	{{{604, 0, 59}, 0, {1008, -16}, {0x00, 0x81, 0x00, 0xFF}}},
-	{{{604, 0, 59}, 0, {-16, -16}, {0x7F, 0x00, 0x00, 0xFF}}},
-	{{{604, 0, -58}, 0, {1008, -16}, {0x7F, 0x00, 0x00, 0xFF}}},
-	{{{604, 1024, -58}, 0, {1008, 2032}, {0x7F, 0x00, 0x00, 0xFF}}},
-	{{{604, 1024, 59}, 0, {-16, 2032}, {0x7F, 0x00, 0x00, 0xFF}}},
-	{{{-12, 1024, -58}, 0, {1008, 2032}, {0x00, 0x7F, 0x00, 0xFF}}},
-	{{{-12, 1024, 59}, 0, {-16, 2032}, {0x00, 0x7F, 0x00, 0xFF}}},
-	{{{604, 1024, 59}, 0, {-16, -16}, {0x00, 0x7F, 0x00, 0xFF}}},
-	{{{604, 1024, -58}, 0, {1008, -16}, {0x00, 0x7F, 0x00, 0xFF}}},
-	{{{-12, 0, -58}, 0, {-16, -16}, {0x81, 0x00, 0x00, 0xFF}}},
-	{{{-12, 1024, 59}, 0, {1008, 2032}, {0x81, 0x00, 0x00, 0xFF}}},
-	{{{-12, 1024, -58}, 0, {-16, 2032}, {0x81, 0x00, 0x00, 0xFF}}},
-	{{{-12, 0, 59}, 0, {1008, -16}, {0x81, 0x00, 0x00, 0xFF}}},
+Vtx master_door_004_offset_mesh_layer_1_vtx_2[16] = {
+	{{ {-12, 1024, -58}, 0, {1008, 2032}, {0, 127, 0, 255} }},
+	{{ {-12, 1024, 59}, 0, {-16, 2032}, {0, 127, 0, 255} }},
+	{{ {604, 1024, 59}, 0, {-16, -16}, {0, 127, 0, 255} }},
+	{{ {604, 1024, -58}, 0, {1008, -16}, {0, 127, 0, 255} }},
+	{{ {-12, 0, -58}, 0, {-16, -16}, {129, 0, 0, 255} }},
+	{{ {-12, 1024, 59}, 0, {1008, 2032}, {129, 0, 0, 255} }},
+	{{ {-12, 1024, -58}, 0, {-16, 2032}, {129, 0, 0, 255} }},
+	{{ {-12, 0, 59}, 0, {1008, -16}, {129, 0, 0, 255} }},
+	{{ {604, 0, 59}, 0, {-16, -16}, {127, 0, 0, 255} }},
+	{{ {604, 0, -58}, 0, {1008, -16}, {127, 0, 0, 255} }},
+	{{ {604, 1024, -58}, 0, {1008, 2032}, {127, 0, 0, 255} }},
+	{{ {604, 1024, 59}, 0, {-16, 2032}, {127, 0, 0, 255} }},
+	{{ {604, 0, -58}, 0, {-16, -16}, {0, 129, 0, 255} }},
+	{{ {-12, 0, 59}, 0, {1008, 2032}, {0, 129, 0, 255} }},
+	{{ {-12, 0, -58}, 0, {-16, 2032}, {0, 129, 0, 255} }},
+	{{ {604, 0, 59}, 0, {1008, -16}, {0, 129, 0, 255} }},
 };
 
-Gfx master_door_000_offset_001_mesh_layer_1_tri_2[] = {
-	gsSPVertex(master_door_000_offset_001_mesh_layer_1_vtx_2 + 0, 16, 0),
-	gsSP2Triangles(0, 1, 2, 0, 0, 3, 1, 0),
-	gsSP2Triangles(4, 5, 6, 0, 4, 6, 7, 0),
-	gsSP2Triangles(8, 9, 10, 0, 8, 10, 11, 0),
-	gsSP2Triangles(12, 13, 14, 0, 12, 15, 13, 0),
+Gfx master_door_004_offset_mesh_layer_1_tri_2[] = {
+	gsSPVertex(master_door_004_offset_mesh_layer_1_vtx_2 + 0, 16, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 2, 3, 0),
+	gsSP1Triangle(4, 5, 6, 0),
+	gsSP1Triangle(4, 7, 5, 0),
+	gsSP1Triangle(8, 9, 10, 0),
+	gsSP1Triangle(8, 10, 11, 0),
+	gsSP1Triangle(12, 13, 14, 0),
+	gsSP1Triangle(12, 15, 13, 0),
 	gsSPEndDisplayList(),
 };
 
-Vtx master_door_000_displaylist_mesh_layer_5_vtx_0[4] = {
-	{{{441, 850, 64}, 0, {1008, -16}, {0x00, 0x00, 0x7F, 0xFF}}},
-	{{{141, 550, 64}, 0, {-16, 1008}, {0x00, 0x00, 0x7F, 0xFF}}},
-	{{{441, 550, 64}, 0, {1008, 1008}, {0x00, 0x00, 0x7F, 0xFF}}},
-	{{{141, 850, 64}, 0, {-16, -16}, {0x00, 0x00, 0x7F, 0xFF}}},
+Vtx master_door_004_offset_mesh_layer_6_vtx_0[6] = {
+	{{ {604, 0, 59}, 0, {-400, 1008}, {255, 255, 255, 255} }},
+	{{ {-12, 0, 59}, 0, {1392, 1008}, {255, 255, 255, 255} }},
+	{{ {-80, 0, 403}, 0, {1392, 720}, {255, 255, 255, 132} }},
+	{{ {672, 0, 403}, 0, {-400, 720}, {255, 255, 255, 132} }},
+	{{ {-147, 0, 747}, 0, {1392, 432}, {255, 255, 255, 0} }},
+	{{ {739, 0, 747}, 0, {-400, 432}, {255, 255, 255, 0} }},
 };
 
-Gfx master_door_000_displaylist_mesh_layer_5_tri_0[] = {
-	gsSPVertex(master_door_000_displaylist_mesh_layer_5_vtx_0 + 0, 4, 0),
-	gsSP2Triangles(0, 1, 2, 0, 0, 3, 1, 0),
+Gfx master_door_004_offset_mesh_layer_6_tri_0[] = {
+	gsSPVertex(master_door_004_offset_mesh_layer_6_vtx_0 + 0, 6, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 2, 3, 0),
+	gsSP1Triangle(3, 2, 4, 0),
+	gsSP1Triangle(3, 4, 5, 0),
+	gsSPEndDisplayList(),
+};
+
+Vtx master_door_005_displaylist_mesh_layer_5_vtx_0[4] = {
+	{{ {441, 850, 64}, 0, {1008, -16}, {0, 0, 127, 255} }},
+	{{ {141, 550, 64}, 0, {-16, 1008}, {0, 0, 127, 255} }},
+	{{ {441, 550, 64}, 0, {1008, 1008}, {0, 0, 127, 255} }},
+	{{ {141, 850, 64}, 0, {-16, -16}, {0, 0, 127, 255} }},
+};
+
+Gfx master_door_005_displaylist_mesh_layer_5_tri_0[] = {
+	gsSPVertex(master_door_005_displaylist_mesh_layer_5_vtx_0 + 0, 4, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 3, 1, 0),
 	gsSPEndDisplayList(),
 };
 
 
-Gfx mat_master_door_Door[] = {
-	gsSPSetLights1(master_door_Door_lights),
+Gfx mat_master_door_f3dlite_material_002_layer1[] = {
+	gsSPSetLights1(master_door_f3dlite_material_002_layer1_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
 	gsDPSetAlphaDither(G_AD_NOISE),
 	gsDPSetTextureLUT(G_TT_RGBA16),
+	gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, master_door_Master_Door_pal_rgba16),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, master_door_master_door_Master_Door_ci8_pal_rgba16),
 	gsDPSetTile(0, 0, 0, 256, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadTLUTCmd(5, 16),
-	gsDPSetTextureImage(G_IM_FMT_CI, G_IM_SIZ_8b_LOAD_BLOCK, 1, master_door_Master_Door_ci8),
+	gsDPSetTextureImage(G_IM_FMT_CI, G_IM_SIZ_8b_LOAD_BLOCK, 1, master_door_master_door_Master_Door_ci8_ci8),
 	gsDPSetTile(G_IM_FMT_CI, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadBlock(7, 0, 0, 1023, 512),
 	gsDPSetTile(G_IM_FMT_CI, G_IM_SIZ_8b, 4, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0, G_TX_WRAP | G_TX_NOMIRROR, 5, 0),
@@ -1318,21 +1591,23 @@ Gfx mat_master_door_Door[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_revert_master_door_Door[] = {
+Gfx mat_revert_master_door_f3dlite_material_002_layer1[] = {
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsDPSetTextureLUT(G_TT_NONE),
+	gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_master_door_Metal[] = {
+Gfx mat_master_door_f3dlite_material_003_layer1[] = {
 	gsSPSetGeometryMode(G_TEXTURE_GEN),
-	gsSPSetLights1(master_door_Metal_lights),
+	gsSPSetLights1(master_door_f3dlite_material_003_layer1_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
 	gsDPSetAlphaDither(G_AD_NOISE),
+	gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
 	gsSPTexture(4032, 1984, 0, 0, 1),
-	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, master_door_Metal_Shade_rgba16_rgba16),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, master_door_master_door_Metal_Shade_rgba16_rgba16_rgba16),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadBlock(7, 0, 0, 2047, 128),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 16, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0),
@@ -1340,20 +1615,22 @@ Gfx mat_master_door_Metal[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_revert_master_door_Metal[] = {
+Gfx mat_revert_master_door_f3dlite_material_003_layer1[] = {
 	gsSPClearGeometryMode(G_TEXTURE_GEN),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_master_door_Door_Side[] = {
-	gsSPSetLights1(master_door_Door_Side_lights),
+Gfx mat_master_door_f3dlite_material_004_layer1[] = {
+	gsSPSetLights1(master_door_f3dlite_material_004_layer1_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
 	gsDPSetAlphaDither(G_AD_NOISE),
+	gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsDPSetTextureImage(G_IM_FMT_I, G_IM_SIZ_8b_LOAD_BLOCK, 1, master_door_Master_Door_Side_i8),
+	gsDPSetTextureImage(G_IM_FMT_I, G_IM_SIZ_8b_LOAD_BLOCK, 1, master_door_master_door_Master_Door_Side_i8_i8),
 	gsDPSetTile(G_IM_FMT_I, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadBlock(7, 0, 0, 1023, 512),
 	gsDPSetTile(G_IM_FMT_I, G_IM_SIZ_8b, 4, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0, G_TX_WRAP | G_TX_NOMIRROR, 5, 0),
@@ -1361,21 +1638,44 @@ Gfx mat_master_door_Door_Side[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_revert_master_door_Door_Side[] = {
+Gfx mat_revert_master_door_f3dlite_material_004_layer1[] = {
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_master_door_SCROLL[] = {
+	gsSPClearGeometryMode(G_LIGHTING),
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, ENVIRONMENT, 0, SHADE, 0, TEXEL0, 0, SHADE, 0, ENVIRONMENT, 0, SHADE, 0),
+	gsDPSetAlphaDither(G_AD_NOISE),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsDPSetTextureImage(G_IM_FMT_I, G_IM_SIZ_8b_LOAD_BLOCK, 1, master_door_segment2_11C58_rgba16___Copy___Copy__2__i8),
+	gsDPSetTile(G_IM_FMT_I, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 511, 512),
+	gsDPSetTile(G_IM_FMT_I, G_IM_SIZ_8b, 4, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 5, 0),
+	gsDPSetTileSize(0, 0, 0, 124, 124),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_revert_master_door_SCROLL[] = {
+	gsSPSetGeometryMode(G_LIGHTING),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_master_door_Master_Door_Star[] = {
+Gfx mat_master_door_f3dlite_material_005_layer5[] = {
 	gsSPClearGeometryMode(G_CULL_BACK),
-	gsSPSetLights1(master_door_Master_Door_Star_lights),
+	gsSPSetLights1(master_door_f3dlite_material_005_layer5_lights),
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, TEXEL0, 0, PRIMITIVE, 0, TEXEL0, 0, SHADE, 0, TEXEL0, 0, PRIMITIVE, 0),
 	gsDPSetAlphaDither(G_AD_NOISE),
+	gsDPSetRenderMode(G_RM_AA_ZB_XLU_SURF, G_RM_AA_ZB_XLU_SURF2),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsDPSetPrimColor(0, 0, 255, 255, 255, 255),
-	gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, master_door_Master_Door_Star_ia8),
+	gsDPSetTextureImage(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 1, master_door_master_door_Master_Door_Star_ia8_ia8),
 	gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_8b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadBlock(7, 0, 0, 511, 512),
 	gsDPSetTile(G_IM_FMT_IA, G_IM_SIZ_8b, 4, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0, G_TX_CLAMP | G_TX_NOMIRROR, 5, 0),
@@ -1383,23 +1683,24 @@ Gfx mat_master_door_Master_Door_Star[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_revert_master_door_Master_Door_Star[] = {
+Gfx mat_revert_master_door_f3dlite_material_005_layer5[] = {
 	gsSPSetGeometryMode(G_CULL_BACK),
 	gsDPPipeSync(),
 	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsDPSetRenderMode(G_RM_AA_ZB_XLU_SURF, G_RM_AA_ZB_XLU_SURF2),
 	gsSPEndDisplayList(),
 };
 
-Gfx master_door_000_offset_001_mesh_layer_1_with_revert[] = {
-	gsSPDisplayList(mat_master_door_Door),
-	gsSPDisplayList(master_door_000_offset_001_mesh_layer_1_tri_0),
-	gsSPDisplayList(mat_revert_master_door_Door),
-	gsSPDisplayList(mat_master_door_Metal),
-	gsSPDisplayList(master_door_000_offset_001_mesh_layer_1_tri_1),
-	gsSPDisplayList(mat_revert_master_door_Metal),
-	gsSPDisplayList(mat_master_door_Door_Side),
-	gsSPDisplayList(master_door_000_offset_001_mesh_layer_1_tri_2),
-	gsSPDisplayList(mat_revert_master_door_Door_Side),
+Gfx master_door_004_offset_mesh_layer_1_with_revert[] = {
+	gsSPDisplayList(mat_master_door_f3dlite_material_002_layer1),
+	gsSPDisplayList(master_door_004_offset_mesh_layer_1_tri_0),
+	gsSPDisplayList(mat_revert_master_door_f3dlite_material_002_layer1),
+	gsSPDisplayList(mat_master_door_f3dlite_material_003_layer1),
+	gsSPDisplayList(master_door_004_offset_mesh_layer_1_tri_1),
+	gsSPDisplayList(mat_revert_master_door_f3dlite_material_003_layer1),
+	gsSPDisplayList(mat_master_door_f3dlite_material_004_layer1),
+	gsSPDisplayList(master_door_004_offset_mesh_layer_1_tri_2),
+	gsSPDisplayList(mat_revert_master_door_f3dlite_material_004_layer1),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
 	gsSPClearGeometryMode(G_TEXTURE_GEN),
@@ -1410,10 +1711,24 @@ Gfx master_door_000_offset_001_mesh_layer_1_with_revert[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx master_door_000_displaylist_mesh_layer_5_with_revert[] = {
-	gsSPDisplayList(mat_master_door_Master_Door_Star),
-	gsSPDisplayList(master_door_000_displaylist_mesh_layer_5_tri_0),
-	gsSPDisplayList(mat_revert_master_door_Master_Door_Star),
+Gfx master_door_004_offset_mesh_layer_6_with_revert[] = {
+	gsSPDisplayList(mat_master_door_SCROLL),
+	gsSPDisplayList(master_door_004_offset_mesh_layer_6_tri_0),
+	gsSPDisplayList(mat_revert_master_door_SCROLL),
+	gsDPPipeSync(),
+	gsSPSetGeometryMode(G_LIGHTING),
+	gsSPClearGeometryMode(G_TEXTURE_GEN),
+	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 0),
+	gsDPSetEnvColor(255, 255, 255, 255),
+	gsDPSetAlphaCompare(G_AC_NONE),
+	gsSPEndDisplayList(),
+};
+
+Gfx master_door_005_displaylist_mesh_layer_5_with_revert[] = {
+	gsSPDisplayList(mat_master_door_f3dlite_material_005_layer5),
+	gsSPDisplayList(master_door_005_displaylist_mesh_layer_5_tri_0),
+	gsSPDisplayList(mat_revert_master_door_f3dlite_material_005_layer5),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
 	gsSPClearGeometryMode(G_TEXTURE_GEN),
