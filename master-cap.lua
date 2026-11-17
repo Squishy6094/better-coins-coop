@@ -16,22 +16,31 @@ local surfaceList = {}
 ---@param list table
 ---@param surface Surface
 local function add_surface_to_list(list, surface)
-    if surface and not evilFloorTypes[surface.type] and surface.normal.y > 0.9 then
+    if surface and not evilFloorTypes[surface.type] then
         local surfaceX = (surface.vertex1.x + surface.vertex2.x + surface.vertex3.x)/3
         local surfaceY = (surface.vertex1.y + surface.vertex2.y + surface.vertex3.y)/3
         local surfaceZ = (surface.vertex1.z + surface.vertex2.z + surface.vertex3.z)/3
 
         local smallestEdge = nil
-        for i = 0, 2 do
+        for i = 0, 6 do
             local currNum = (i%3) + 1
             local nextNum = ((i+1)%3) + 1
             local currPos = surface["vertex"..tostring(currNum)]
             local nextPos = surface["vertex"..tostring(nextNum)]
-            local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.z - nextPos.z)^2)
+            if i > 2 then
+                local nextNum2 = ((i+2)%3) + 1
+                nextPos = {
+                    x = (surface["vertex"..tostring(nextNum)].x + surface["vertex"..tostring(nextNum2)].x)*0.5,
+                    y = (surface["vertex"..tostring(nextNum)].y + surface["vertex"..tostring(nextNum2)].y)*0.5,
+                    z = (surface["vertex"..tostring(nextNum)].z + surface["vertex"..tostring(nextNum2)].z)*0.5,
+                }
+            end
+            local edgeDist = math.sqrt((currPos.x - nextPos.x)^2 + (currPos.y - nextPos.y)^2 + (currPos.z - nextPos.z)^2)
             if not smallestEdge or smallestEdge > edgeDist then
                 smallestEdge = edgeDist
             end
         end
+
         table.insert(list, {
             x = surfaceX,
             y = surfaceY,
@@ -44,7 +53,7 @@ end
 local prevLevel = 0
 local function add_surface(surface, dynamic)
     if dynamic then return end
-    if surface.normal.y < 0.1 then return end
+    if surface.normal.y < 0.98 then return end
     local currLevel = gNetworkPlayers[0].currLevelNum*7 + gNetworkPlayers[0].currAreaIndex
     if prevLevel ~= currLevel then
         surfaceList = {}
@@ -73,18 +82,20 @@ end
 
 local function update_save()
     if not network_is_server() then return end
-    if save_file_get_flags() < mod_storage_load_number(save_file_prefix("progress"), 0) then
+    if save_file_get_flags() < modfs_storage_load_integer(save_file_prefix("progress"), 0) then
         -- Assume if progress is lost, that the save had been deleted
         log_to_console("Better Coins: Save Data Lost, Deleting Custom Save Flags!", CONSOLE_MESSAGE_WARNING)
-        mod_storage_remove(save_file_prefix("defeatFinalBowser"))
-        mod_storage_remove(save_file_prefix("unlockedMasterCap"))
+        modfs_storage_remove(save_file_prefix("defeatFinalBowser"))
+        modfs_storage_remove(save_file_prefix("unlockedMasterCap"))
     end
-    mod_storage_save_integer(save_file_prefix("progress"), save_file_get_flags())
+    modfs_storage_save_integer(save_file_prefix("progress"), save_file_get_flags())
 
-    gGlobalSyncTable.defeatFinalBowser = mod_storage_load_bool(save_file_prefix("defeatFinalBowser"), false)
-    gGlobalSyncTable.unlockedMasterCap = mod_storage_load_bool(save_file_prefix("unlockedMasterCap"), false)
+    gGlobalSyncTable.defeatFinalBowser = modfs_storage_load_bool(save_file_prefix("defeatFinalBowser"), false)
+    gGlobalSyncTable.unlockedMasterCap = modfs_storage_load_bool(save_file_prefix("unlockedMasterCap"), false)
+
+    local unlocked, reason = master_cap_allowed()
+    log_to_console("Better Coins: Updated Save at "..get_global_timer().." - Master Cap " .. (unlocked and "Unlocked" or "Locked (" .. reason .. ")"))
 end
-update_save()
 
 ---@return boolean
 ---@return string
@@ -169,8 +180,8 @@ function master_cap_init_level(levelNum)
     if network_is_server() then
         local coinSave = save.."coins"
         local timeSave = save.."time"
-        gGlobalSyncTable[coinSave] = mod_storage_load_number(coinSave, 0)
-        gGlobalSyncTable[timeSave] = mod_storage_load_number(timeSave, 0)
+        gGlobalSyncTable[coinSave] = modfs_storage_load_integer(coinSave, 0)
+        gGlobalSyncTable[timeSave] = modfs_storage_load_integer(timeSave, 0)
     end
 end
 
@@ -190,8 +201,8 @@ function master_cap_set_record(levelNum, coins, time)
     local timeSave = levelData.save.."time"
     gGlobalSyncTable[coinSave] = coins
     gGlobalSyncTable[timeSave] = time
-    mod_storage_save(coinSave, tostring(math.round(coins)))
-    mod_storage_save(timeSave, tostring(math.round(time)))
+    modfs_storage_save(coinSave, tostring(math.round(coins)))
+    modfs_storage_save(timeSave, tostring(math.round(time)))
 end
 
 ---@param m MarioState
@@ -336,7 +347,7 @@ function master_cap_switch_press(value, noSync)
         play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 45, 230, 230, 230)
         gGlobalSyncTable.unlockedMasterCap = true
         if network_is_server() then
-            mod_storage_save_bool(save_file_prefix("unlockedMasterCap"), true)
+            modfs_storage_save_bool(save_file_prefix("unlockedMasterCap"), true)
             log_to_console("Better Coins: Saved Master Cap Being Unlocked")
         end
     end
@@ -598,20 +609,35 @@ function master_cap_box_active()
     return true, o
 end
 
-function master_cap_get_spawn(spawnName, spawnFunc, level, area, offsetY)
+function master_cap_get_spawn(spawnName, spawnFunc, level, area, offsetY, blockNewSpawns)
     level = level or gNetworkPlayers[0].currLevelNum
     area = area or gNetworkPlayers[0].currAreaIndex
     mul_random_seed(hash(spawnName)*level*area)
     local _, levelData = get_romhack_level_data(level, area)
-    if not levelData[spawnName] and level < LEVEL_COUNT and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
+    if not blockNewSpawns and not levelData[spawnName] and level < LEVEL_COUNT and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
         local surfData = find_surface_from_list(surfaceList, spawnFunc)
         levelData[spawnName] = {
             x = surfData.x,
             y = surfData.y + (offsetY or 0),
             z = surfData.z,
         }
+        log_to_console("Better Coins: Created new spawn for '"..spawnName.."' at ("..math.round(levelData[spawnName].x)..", "..math.round(levelData[spawnName].y)..", "..math.round(levelData[spawnName].z)..")")
     end
     return levelData[spawnName]
+end
+
+function master_cap_spawn_exists(spawnName)
+    local _, hackData = get_romhack_data()
+    for _, hackLevelData in pairs(hackData) do
+        if type(hackLevelData) == "table" then
+            for i = 1, 7 do
+                if hackLevelData[i] and hackLevelData[i][spawnName] then
+                    return true
+                end
+            end
+        end
+    end
+    return false
 end
 
 local function spawn_req_master_cap(surfInfo)
@@ -636,6 +662,17 @@ local function spawn_req_scarecrow()
     return true
 end
 
+local function spawn_req_shopkeeper(surfData)
+    local startPos = gMarioStates[0].spawnInfo.startPos
+    local startFloorHeight, startFloor = find_floor(startPos.x, startPos.y, startPos.z)
+    if surfData.y < find_water_level(surfData.x, surfData.z) then return false end
+    if surfData.smallEdge < 500 then return false end
+    local dist = math.sqrt((surfData.x - startPos.x)^2 + (surfData.y - startFloorHeight)^2 + (surfData.z - startPos.z)^2)
+    if dist < 2000 and dist > 300 then
+        return true
+    end
+end
+
 -- Handles only spawning one scarecrow
 function master_cap_request_scarecrow_spawn()
     local scarecrowSpawnPos = master_cap_get_spawn("scarecrow")
@@ -650,14 +687,16 @@ local prevCoinsBest = 0
 local prevTimeBest = 0
 local entranceAreaNum = 1
 local function on_sync()
+    local m = gMarioStates[0]
     local np = gNetworkPlayers[0]
-    if np.currLevelNum == gLevelValues.entryLevel then
-        local shopSpawn = master_cap_get_spawn("shop", nil)
-        if shopSpawn then
-            spawn_sync_object_if_not_exist(id_bhvShopkeeper, E_MODEL_STAR, shopSpawn.x, shopSpawn.y, shopSpawn.z, function (o)
-                
-            end)
-        end
+
+    local shopSpawn = master_cap_get_spawn("shopkeeper", spawn_req_shopkeeper, nil, nil, nil, np.currLevelNum ~= gLevelValues.exitCastleLevel or master_cap_spawn_exists("shopkeeper"))
+    if shopSpawn then
+        spawn_sync_object_if_not_exist(id_bhvShopkeeper, E_MODEL_SHOPKEEPER, shopSpawn.x, shopSpawn.y, shopSpawn.z, function (o)
+            shopSpawn.yaw = shopSpawn.yaw or atan2s(m.pos.z - shopSpawn.z, m.pos.x - shopSpawn.x)
+            o.oMoveAngleYaw = shopSpawn.yaw
+            o.oFaceAngleYaw = shopSpawn.yaw
+        end)
     end
 
     if not master_cap_allowed(true) then return end
@@ -675,48 +714,26 @@ local function on_sync()
     local levelNum = gNetworkPlayers[0].currLevelNum
     local areaNum = gNetworkPlayers[0].currAreaIndex
 
-    local doorSpawnsExist = false
-    local _, hackData = get_romhack_data()
-    for _, hackLevelData in pairs(hackData) do
-        if type(hackLevelData) == "table" then
-            for i = 1, 7 do
-                if hackLevelData[i] and hackLevelData[i].masterDoor then
-                    doorSpawnsExist = true
-                    break
-                end
-            end
-        end
-    end
-
-    -- Check if another door already exists
-    local doorCheck = false
-    local o = obj_get_first_with_behavior_id(id_bhvDoorWarp)
-    while o ~= nil and not doorCheck do
-        doorCheck = obj_get_model_id_extended(o) == E_MODEL_MASTER_DOOR
-        o = obj_get_next_with_same_behavior_id(o)
-    end
-
     -- Spawn Door
-    local _, hackLevelData, levelNum = get_romhack_level_data(levelNum, areaNum)
-    if (not doorCheck and not doorSpawnsExist or (hackLevelData.masterDoor)) then
-        local masterDoorSpawn = master_cap_get_spawn("masterDoor", spawn_req_master_door, levelNum, areaNum)
-        if masterDoorSpawn then
-            spawn_sync_object(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
-                o.oFaceAnglePitch = 0
-                o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
-                o.oFaceAngleRoll = 0
+    local masterDoorSpawn = master_cap_get_spawn("masterDoor", spawn_req_master_door, levelNum, areaNum, nil, np.currLevelNum ~= gLevelValues.exitCastleLevel or master_cap_spawn_exists("masterDoor"))
+    if not doorCheck and masterDoorSpawn then
+        spawn_sync_object_if_not_exist(id_bhvDoorWarp, E_MODEL_MASTER_DOOR, masterDoorSpawn.x, masterDoorSpawn.y, masterDoorSpawn.z, function(o)
+            o.oFaceAnglePitch = 0
+            o.oFaceAngleYaw = masterDoorSpawn.yaw or 0
+            o.oFaceAngleRoll = 0
 
-                o.oMoveAnglePitch = o.oFaceAnglePitch
-                o.oMoveAngleYaw = o.oFaceAngleYaw
-                o.oMoveAngleRoll = o.oFaceAngleRoll
-            end)
-        end
+            o.oMoveAnglePitch = o.oFaceAnglePitch
+            o.oMoveAngleYaw = o.oFaceAngleYaw
+            o.oMoveAngleRoll = o.oFaceAngleRoll
+        end, function(o)
+            return obj_get_model_id_extended(o) == E_MODEL_MASTER_DOOR
+        end)
     end
     
     -- Spawn Cap
-    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and (levelNum ~= -1 and hackLevelData.masterCap ~= 0) and np.currAreaIndex == entranceAreaNum and hud_get_value(HUD_DISPLAY_COINS) == 0 then
-        local masterCapSpawn = master_cap_get_spawn("masterCap", spawn_req_master_cap, levelNum, areaNum, 400)
-        if masterCapSpawn and levelData ~= nil and levelData.runState == 0 then
+    if (master_cap_allowed() or np.currLevelNum == LEVEL_MASTER_CAP_STAGE) and hud_get_value(HUD_DISPLAY_COINS) == 0 then
+        local masterCapSpawn = master_cap_get_spawn("masterCap", spawn_req_master_cap, levelNum, areaNum, 400, get_level_course_num(levelNum) == 0 or np.currAreaIndex ~= entranceAreaNum)
+        if masterCapSpawn and masterCapSpawn ~= 0 and levelData ~= nil and levelData.runState == 0 then
             spawn_sync_object_if_not_exist(id_bhvMasterCapBox, E_MODEL_MASTER_CAP, masterCapSpawn.x, masterCapSpawn.y, masterCapSpawn.z, function (o)
                 o.oFaceAnglePitch = 0
                 o.oFaceAngleYaw = masterCapSpawn.yaw or 0
@@ -788,7 +805,6 @@ local function master_cap_music_update(levelData)
 end
 
 local queueUnpause = false
-local prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
 local prevFileProgress = save_file_get_flags()
 local skyboxLight = 0
 local function master_cap_update()
@@ -818,11 +834,13 @@ local function master_cap_update()
     end
     if network_is_server() then
         -- Saves if someone has defeated bowser
-        if prevBowserBeat ~= gGlobalSyncTable.defeatFinalBowser then
-            prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
-            mod_storage_save_bool(save_file_prefix("defeatFinalBowser"), true)
-            log_to_console("Better Coins: Saved Bowser Being Defeated")
+        if prevBowserBeat ~= nil then
+            if prevBowserBeat ~= gGlobalSyncTable.defeatFinalBowser then
+                modfs_storage_save_bool(save_file_prefix("defeatFinalBowser"), gGlobalSyncTable.defeatFinalBowser)
+                log_to_console("Better Coins: Saved Bowser"..(gGlobalSyncTable.defeatFinalBowser and "" or " Not").." Being Defeated")
+            end
         end
+        prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
 
         -- Saves progress updating and saving
         if not get_save_file_modified() and save_file_get_flags() > prevFileProgress then
@@ -1124,6 +1142,9 @@ local function check_late_entry()
 end
 
 local function on_mods_loaded()
+    -- Update save stuff on mods loaded maybe
+    update_save()
+
     -- Block Character Select from Opening Mid-Run
     if _G.charSelectExists then
         _G.charSelect.hook_allow_menu_open(function ()

@@ -4,7 +4,6 @@ local TEX_JP_RED_COIN_BAG_CLOSED = get_texture_info("red_coin_jp_bag_closed")
 local TEX_JP_RED_COIN_BAG_OPEN = get_texture_info("red_coin_jp_bag_open")
 local TEX_JP_RED_COIN_BAG_COIN = get_texture_info("red_coin_jp_bag_coin")
 
-
 local currShopPage = 0
 local shopItems = {
     --[[
@@ -20,7 +19,7 @@ local shopItems = {
         name = "Pink Companion",
         key = "pinkCoin",
         stockDefault = 1,
-        coins = mod_storage_load_bool("redeem"..redeemPinkCoin, false) and 1000 or 30000,
+        coins = modfs_storage_load_bool("redeem"..redeemPinkCoin, false) and 1000 or 30000,
         texture = gTextures.coin,
         color = function(item)
             if item.stock ~= 0 then
@@ -61,7 +60,7 @@ local shopItems = {
         before_interact = function(item)
             if item.stock == 0 then
                 gPlayerSyncTable[0].pinkCoinActive = not gPlayerSyncTable[0].pinkCoinActive
-                mod_storage_save_bool("pinkCoinToggle", gPlayerSyncTable[0].pinkCoinActive)
+                modfs_storage_save_bool("pinkCoinToggle", gPlayerSyncTable[0].pinkCoinActive)
                 play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + (gPlayerSyncTable[0].pinkCoinActive and 0.2 or 0))
                 return
             end
@@ -86,7 +85,7 @@ local shopItems = {
         description = function(item)
             desc = "A Red Coin in a small bag I found\nwashed up on shore, it keeps making\nfunky noises as if it's traveled\nacross an entire ocean! I found this\nthing ages ago and since then it\nseems to be able to count up like\nour Red Coins!\n\n"
             if item.stock == 0 then
-                desc = desc..item.name.." set to "
+                desc = desc.."JP Red Coin Sound set to "
                 if configJPReds == 2 then
                     desc = desc.."Pitched"
                 elseif configJPReds == 1 then
@@ -102,7 +101,7 @@ local shopItems = {
         before_interact = function(item)
             if item.stock == 0 then
                 configJPReds = (configJPReds + 1)%3
-                mod_storage_save_integer("configJPReds", configJPReds)
+                modfs_storage_save_integer("configJPReds", configJPReds)
                 play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + configJPReds*0.1)
                 if configJPReds == 0 then
                     play_sound(SOUND_GENERAL_RED_COIN, gGlobalSoundSource)
@@ -170,7 +169,7 @@ local shopItems = {
 
 local function setup_item(item)
     item.stockDefault = item.stockDefault or -1
-    item.stock = item.stockDefault ~= -1 and mod_storage_load_integer("shop"..item.key.."Stock", item.stockDefault) or -1
+    item.stock = item.stockDefault ~= -1 and modfs_storage_load_integer("shop"..item.key.."Stock", item.stockDefault) or -1
     item.color = item.color or function()
         local color = (item.stock ~= 0 or item.before_interact) and 255 or 150
         return {
@@ -247,7 +246,7 @@ local function init_shop_items()
                     gPlayerSyncTable[0].cosmeticActive = gPlayerSyncTable[0].cosmeticActive == id and 0 or id
                     play_sound(gPlayerSyncTable[0].cosmeticActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
                     play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].cosmeticActive*0.2)
-                    mod_storage_save_integer("configCosmetic", gPlayerSyncTable[0].cosmeticActive)
+                    modfs_storage_save_integer("configCosmetic", gPlayerSyncTable[0].cosmeticActive)
                     return
                 end
                 return true
@@ -257,10 +256,10 @@ local function init_shop_items()
 
     -- Load toggle if unlocked
     pinkCoinItem = get_shop_item_from_name("Pink Companion")
-    gPlayerSyncTable[0].pinkCoinActive = pinkCoinItem.stock == 0 and mod_storage_load_bool("pinkCoinToggle", false) or false
+    gPlayerSyncTable[0].pinkCoinActive = pinkCoinItem.stock == 0 and modfs_storage_load_bool("pinkCoinToggle", false) or false
 
     jpRedCoinItem = get_shop_item_from_name("Pink Companion")
-    configJPReds = jpRedCoinItem.stock == 0 and mod_storage_load_integer("configJPReds", 0) or 0
+    configJPReds = jpRedCoinItem.stock == 0 and modfs_storage_load_integer("configJPReds", 0) or 0
 end
 
 hook_event(HOOK_ON_MODS_LOADED, init_shop_items)
@@ -507,7 +506,7 @@ local function hud_render()
                             save_coin_count()
                             if item.stock ~= -1 then
                                 item.stock = item.stock - 1
-                                mod_storage_save_integer("shop"..item.key.."Stock", item.stock)
+                                modfs_storage_save_integer("shop"..item.key.."Stock", item.stock)
                             end
                             if item.interact then
                                 item.interact(item) 

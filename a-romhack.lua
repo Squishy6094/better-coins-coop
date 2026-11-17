@@ -39,7 +39,8 @@ romhackData = {
         [LEVEL_CASTLE_GROUNDS] = {
             [1] = {
                 masterCap = 0,
-                masterDoor = {x = -5600, y = 260, z = 1990, yaw = 0x4000},
+                masterDoor = {x = -5626, y = 543, z = -3994, yaw = 0x2800},
+                shopkeeper = {x = 400, y = 810, z = -125, yaw = -0x1800}
             },
         },
         [LEVEL_CASTLE] = {
@@ -218,17 +219,6 @@ if not romhackData[CURR_ROMHACK] then
             levelMerge = LEVEL_BITS,
         },
     }
-    for i = 1, 7 do
-        romhackData[CURR_ROMHACK][LEVEL_CASTLE_GROUNDS][i] = {
-            masterCap = 0,
-        }
-        romhackData[CURR_ROMHACK][LEVEL_CASTLE][i] = {
-            masterCap = 0,
-        }
-        romhackData[CURR_ROMHACK][LEVEL_CASTLE_COURTYARD][i] = {
-            masterCap = 0,
-        }
-    end
 end
 
 function get_romhack_data(romhack)
@@ -315,8 +305,8 @@ local sLevelTable = {
 
 local isRomhack = false
 
-for i = 1, #sLevelTable do
-    if not level_is_vanilla_level(sLevelTable[i]) then
+for _, levelNum in pairs(sLevelTable) do
+    if not level_is_vanilla_level(levelNum) then
         isRomhack = true
     end
 end
@@ -416,7 +406,7 @@ local function check_bhv_for_star(behavior, bhvParams)
 
     local result = gStarBehaviors[behavior](bhvParams, count)
     if result and result ~= 0 then
-        log_to_console("      "..get_behavior_name_from_id(behavior).." - "..tostring(result))
+        --log_to_console("      "..get_behavior_name_from_id(behavior).." - "..tostring(result))
     end
 
     if result == true then return 1 end
@@ -435,7 +425,7 @@ local function get_all_possible_level_stars(level)
                 stars = stars + check_bhv_for_star(macroBhvId, macroBhvArgs[i])
             end
         else
-            if bhvData then
+            if bhvData and bhvData.behavior then
                 stars = stars + check_bhv_for_star(bhvData.behavior, bhvData.behaviorArg)
             end
         end
@@ -453,13 +443,13 @@ end
 local function get_max_possible_stars()
     log_to_console("Better Coins: Running Star Parser...")
     local count = 0
-    for i = 1, #sLevelTable do
-        if not (isRomhack and level_is_vanilla_level(i)) then
-            local courseNum = get_level_course_num(sLevelTable[i])
+    for _, levelNum in pairs(sLevelTable) do
+        if levelNum and not (isRomhack and level_is_vanilla_level(levelNum)) then
+            local courseNum = get_level_course_num(levelNum)
             local levelCollected = save_file_get_course_star_count(get_current_save_file_num() - 1, courseNum - 1)
-            local levelCount = get_all_possible_level_stars(sLevelTable[i])
+            local levelCount = get_all_possible_level_stars(levelNum)
             count = count + levelCount
-            log_to_console("   "..i.. " - " .. get_level_name(courseNum, sLevelTable[i], 1) .. " - " .. tostring(levelCollected) .. "/" .. tostring(levelCount) .. " ("..tostring(count)..")", (levelCollected < levelCount) and CONSOLE_MESSAGE_WARNING or CONSOLE_MESSAGE_INFO)
+            log_to_console("   "..levelNum.. " - " .. get_level_name(courseNum, levelNum, 1) .. " - " .. tostring(levelCollected) .. "/" .. tostring(levelCount) .. " ("..tostring(count)..")", (levelCollected < levelCount) and CONSOLE_MESSAGE_WARNING or CONSOLE_MESSAGE_INFO)
         end
     end
 
@@ -485,7 +475,7 @@ function get_romhack_star_count()
 end
 
 local unlocked, reason = master_cap_allowed()
-log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()).." ("..tostring(romhackData[CURR_ROMHACK].parsedStars)..") | Master Cap " .. (unlocked and "Unlocked" or "Locked - (" .. reason .. ")"))
+log_to_console('Better Coins: Hack - "'..CURR_ROMHACK..'" | Stars - '..tostring(get_romhack_star_count()).." ("..tostring(romhackData[CURR_ROMHACK].parsedStars)..")")
 end
 
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
