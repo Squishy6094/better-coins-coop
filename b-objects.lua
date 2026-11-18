@@ -1168,7 +1168,7 @@ local function bhv_retro_secret_loop(o)
         end
     elseif o.oAction == 1 then
         if o.oTimer > 30 then
-            reward_coins(o.oNumLootCoins)
+            reward_user_coins(o.oNumLootCoins)
             modfs_storage_save_bool(retro_secret_get_save_flag(), true)
             o.oAction = 2
         end

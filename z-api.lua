@@ -14,6 +14,8 @@ _G.betterCoins = {
     hook_range_multiplier = hook_range_multiplier,
     hook_attract_object = hook_attract_object,
 
+    reward_user_coins = reward_user_coins,
+
     -- Master Cap Funcs
     master_cap_init_level = master_cap_init_level,
     master_cap_get_merged_level_num = master_cap_get_merged_level_num,

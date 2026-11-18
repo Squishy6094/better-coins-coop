@@ -313,10 +313,10 @@ local arrowSize = 10
 local perColumn = 8
 local shakeTimer = 0
 
--- RRewards the local player with a given amount of coins, these coins go directly into the user coin counter rather than the level's coin counter
-function reward_coins(amount)
+-- Rewards the local player with a given amount of coins, these coins go directly into the user coin counter rather than the level's coin counter
+function reward_user_coins(amount)
     savedCoinCount = savedCoinCount + amount
-    coinCountShowTimer = amount
+    coinCountShowTimer = 60
 end
 
 -- Vanilla anim vars
@@ -342,7 +342,7 @@ local function hud_render()
         coinPitch = math.lerp(1.5, 0.95, math.clamp((coinCountLerp - savedCoinCount)/prevCoinAmount, 0, 1))
     end
 
-    -- Show bank count in pause menu
+    -- Show user coin count in pause menu
     if is_game_paused() or coinCountShowTimer > 0 then
         if not djui_hud_is_pause_menu_created() then
             djui_hud_set_font(FONT_HUD)
