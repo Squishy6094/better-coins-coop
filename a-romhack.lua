@@ -46,6 +46,7 @@ romhackData = {
         [LEVEL_CASTLE] = {
             [1] = {
                 masterCap = 0,
+                retroSecret = {x = -1021, y = -50, z = 715},
             },
             [2] = {
                 masterCap = 0,

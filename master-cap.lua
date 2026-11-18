@@ -702,8 +702,7 @@ local function on_sync()
     local retroSpawn = master_cap_get_spawn("retroSecret", nil, nil, nil, nil)
     if retroSpawn then
         spawn_non_sync_object(id_bhvRetroSecret, E_MODEL_RETRO_SECRET, retroSpawn.x, retroSpawn.y, retroSpawn.z, function (o)
-            o.oNumLootCoins = modfs_storage_load_bool(retro_secret_get_save_flag(), false) and 10 or 500
-            djui_chat_message_create(tostring(o.oNumLootCoins))
+            o.oNumLootCoins = modfs_storage_load_bool(retro_secret_get_save_flag(), false) and 10 or 250
         end)
     end
 
