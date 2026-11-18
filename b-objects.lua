@@ -1152,7 +1152,7 @@ end
 local function bhv_retro_secret_loop(o)
     if o.oAction == 0 then
         local m = gMarioStates[0]
-        if m and  obj_check_hitbox_overlap(m.marioObj, o) and determine_interaction(m, o) == INT_GROUND_POUND and m.action & ACT_FLAG_AIR == 0 then
+        if m and obj_check_hitbox_overlap(m.marioObj, o) and determine_interaction(m, o) == INT_GROUND_POUND and m.action & ACT_FLAG_AIR == 0 then
             cur_obj_unhide()
             audio_sample_play(SOUND_RETRO_DEATH, {x = o.oPosX, y = o.oPosY, z = o.oPosZ}, 1)
 
@@ -1162,6 +1162,9 @@ local function bhv_retro_secret_loop(o)
             o.oFriction = 1
 
             o.oAction = 1
+        end
+        if o.oNumLootCoins > 10 and random_float() > 0.99 then
+            spawn_non_sync_object(id_bhvSparkleSpawn, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function() end)
         end
     elseif o.oAction == 1 then
         if o.oTimer > 30 then

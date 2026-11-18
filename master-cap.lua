@@ -673,6 +673,13 @@ local function spawn_req_shopkeeper(surfData)
     end
 end
 
+local function spawn_req_retro(surfData)
+    local startPos = gMarioStates[0].spawnInfo.startPos
+    local startFloorHeight, startFloor = find_floor(startPos.x, startPos.y, startPos.z)
+    if surfData.y < find_water_level(surfData.x, surfData.z) then return false end
+    return true
+end
+
 -- Handles only spawning one scarecrow
 function master_cap_request_scarecrow_spawn()
     local scarecrowSpawnPos = master_cap_get_spawn("scarecrow")
@@ -699,7 +706,7 @@ local function on_sync()
         end)
     end
 
-    local retroSpawn = master_cap_get_spawn("retroSecret", nil, nil, nil, nil)
+    local retroSpawn = master_cap_get_spawn("retroSecret", spawn_req_retro, nil, nil, nil)
     if retroSpawn then
         spawn_non_sync_object(id_bhvRetroSecret, E_MODEL_RETRO_SECRET, retroSpawn.x, retroSpawn.y, retroSpawn.z, function (o)
             o.oNumLootCoins = modfs_storage_load_bool(retro_secret_get_save_flag(), false) and 10 or 250
