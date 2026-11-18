@@ -307,10 +307,17 @@ local cursorX = 0
 local cursorY = 0
 local itemSpacing = 20
 local coinCountLerp = savedCoinCount
+local coinCountShowTimer = 0
 local prevCoinAmount = 1000
 local arrowSize = 10
 local perColumn = 8
 local shakeTimer = 0
+
+-- RRewards the local player with a given amount of coins, these coins go directly into the user coin counter rather than the level's coin counter
+function reward_coins(amount)
+    savedCoinCount = savedCoinCount + amount
+    coinCountShowTimer = amount
+end
 
 -- Vanilla anim vars
 gShopBoxState = 3
@@ -324,15 +331,31 @@ local function hud_render()
     local sW = djui_hud_get_screen_width()
     local sH = djui_hud_get_screen_height()
 
+    coinCountLerp = math.lerp(coinCountLerp, savedCoinCount, 0.1)
+
+    local coinPitch = 1
+    if coinCountLerp > savedCoinCount then
+        coinCountLerp = math.floor(coinCountLerp)
+        coinPitch = math.lerp(0.70, 1.25, math.clamp((coinCountLerp - savedCoinCount)/prevCoinAmount, 0, 1))
+    else
+        coinCountLerp = math.ceil(coinCountLerp)
+        coinPitch = math.lerp(1.5, 0.95, math.clamp((coinCountLerp - savedCoinCount)/prevCoinAmount, 0, 1))
+    end
+
     -- Show bank count in pause menu
-    if is_game_paused() then
+    if is_game_paused() or coinCountShowTimer > 0 then
         if not djui_hud_is_pause_menu_created() then
             djui_hud_set_font(FONT_HUD)
+            if coinCountLerp ~= savedCoinCount then
+                coinCountShowTimer = 60
+            else
+                coinCountShowTimer = coinCountShowTimer - 1
+            end
             local coinString = tostring(coinCountLerp):gsub("-", "M")
             local tW, tH = djui_hud_measure_text(coinString)
             tW = tW
             local x, y = sW*0.5 - tW*0.5 - 16, sH - 31
-            djui_hud_set_color(255, 255, 255, gPauseMenuAlpha)
+            djui_hud_set_color(255, 255, 255, gPauseMenuAlpha * (is_game_paused() and 1 or (math.min(coinCountShowTimer, 20)/20)))
             djui_hud_render_texture(gTextures.coin, x, y, 1, 1)
             djui_hud_print_text("@", x + 16, y, 1, 1)
             djui_hud_print_text(coinString, x + 32, y, 1, 1)
@@ -341,6 +364,11 @@ local function hud_render()
         if gPauseMenuAlpha < 250 then
             gPauseMenuAlpha = gPauseMenuAlpha + 25
         end
+
+        if coinCountLerp ~= savedCoinCount then
+            customCoinSound = true
+            play_sound_with_freq_scale(SOUND_GENERAL_COIN, gGlobalSoundSource, coinPitch)
+        end
         return
     else
         gPauseMenuAlpha = 0
@@ -348,6 +376,11 @@ local function hud_render()
             coinCountLerp = savedCoinCount
             return
         end
+    end
+
+    if coinCountLerp ~= savedCoinCount then
+        customCoinSound = true
+        play_sound_with_freq_scale(SOUND_GENERAL_COIN, gGlobalSoundSource, coinPitch)
     end
 
     -- anim logic
@@ -538,20 +571,6 @@ local function hud_render()
     if c.buttonDown & B_BUTTON ~= 0 then
         gShopBoxState = 2
         play_sound(SOUND_MENU_MESSAGE_DISAPPEAR, gGlobalSoundSource)
-    end
-
-    coinCountLerp = math.lerp(coinCountLerp, savedCoinCount, 0.1)
-    local coinPitch = 1
-    if coinCountLerp > savedCoinCount then
-        coinCountLerp = math.floor(coinCountLerp)
-        coinPitch = math.lerp(0.70, 1.25, math.clamp((coinCountLerp - savedCoinCount)/prevCoinAmount, 0, 1))
-    else
-        coinCountLerp = math.ceil(coinCountLerp)
-        coinPitch = math.lerp(1.5, 0.95, math.clamp((coinCountLerp - savedCoinCount)/prevCoinAmount, 0, 1))
-    end
-    if coinCountLerp ~= savedCoinCount then
-        customCoinSound = true
-        play_sound_with_freq_scale(SOUND_GENERAL_COIN, gGlobalSoundSource, coinPitch)
     end
 end
 

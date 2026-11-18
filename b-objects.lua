@@ -1128,3 +1128,63 @@ hook_event(HOOK_UPDATE, function()
         end)
     end
 end)
+
+E_MODEL_RETRO_SECRET = smlua_model_util_get_id("retro_secret_geo")
+local SOUND_RETRO_DEATH = audio_sample_load("smb_death.ogg")
+
+local function bhv_retro_secret_init(o)
+    o.oFlags = OBJ_FLAG_SET_FACE_ANGLE_TO_MOVE_ANGLE | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    obj_set_billboard(o)
+    cur_obj_hide()
+    local hitbox = get_temp_object_hitbox()
+    hitbox.height = 120
+    hitbox.radius = 40
+    o.oGravity = 2
+end
+
+function retro_secret_get_save_flag()
+    local np = gNetworkPlayers[0]
+    local levelName = get_level_name(get_level_course_num(np.currLevelNum), np.currLevelNum, 1)
+    return "retroSecret"..CURR_ROMHACK..string_abbriviate(levelName)..np.currAreaIndex
+end
+
+---@param o Object
+local function bhv_retro_secret_loop(o)
+    if o.oAction == 0 then
+        local m = gMarioStates[0]
+        if m and  obj_check_hitbox_overlap(m.marioObj, o) and determine_interaction(m, o) == INT_GROUND_POUND and m.action & ACT_FLAG_AIR == 0 then
+            cur_obj_unhide()
+            audio_sample_play(SOUND_RETRO_DEATH, {x = o.oPosX, y = o.oPosY, z = o.oPosZ}, 1)
+
+            o.oMoveAngleYaw = random_u16()
+            o.oForwardVel = 5
+            o.oVelY = 40
+            o.oFriction = 1
+
+            o.oAction = 1
+        end
+    elseif o.oAction == 1 then
+        if o.oTimer > 30 then
+            reward_coins(o.oNumLootCoins)
+            modfs_storage_save_bool(retro_secret_get_save_flag(), true)
+            o.oAction = 2
+        end
+    elseif o.oAction == 2 then
+        o.oVelX = sins(o.oMoveAngleYaw)*o.oForwardVel
+        o.oVelY = o.oVelY - o.oGravity
+        o.oVelZ = coss(o.oMoveAngleYaw)*o.oForwardVel
+
+        o.oPosX = o.oPosX + o.oVelX
+        o.oPosY = o.oPosY + o.oVelY
+        o.oPosZ = o.oPosZ + o.oVelZ
+        
+        o.oAnimState = math.floor(o.oTimer*0.5 % 2) + 1
+
+        obj_scale(o, 1 - math.max(o.oTimer - 80, 0)/10)
+        if o.oTimer > 90 then
+            obj_mark_for_deletion(o)
+        end
+    end
+end
+
+id_bhvRetroSecret = hook_behavior(id_bhvRetroSecret, OBJ_LIST_DEFAULT, true, bhv_retro_secret_init, bhv_retro_secret_loop, "bhvRetroSecret")

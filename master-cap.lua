@@ -699,6 +699,14 @@ local function on_sync()
         end)
     end
 
+    local retroSpawn = master_cap_get_spawn("retroSecret", nil, nil, nil, nil)
+    if retroSpawn then
+        spawn_non_sync_object(id_bhvRetroSecret, E_MODEL_RETRO_SECRET, retroSpawn.x, retroSpawn.y, retroSpawn.z, function (o)
+            o.oNumLootCoins = modfs_storage_load_bool(retro_secret_get_save_flag(), false) and 10 or 500
+            djui_chat_message_create(tostring(o.oNumLootCoins))
+        end)
+    end
+
     if not master_cap_allowed(true) then return end
     local levelNum, levelData = master_cap_get_level()
     local hackData = get_romhack_data()
