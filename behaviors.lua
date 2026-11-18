@@ -1243,6 +1243,7 @@ local function prevent_star_dance(m, nextAct)
     end
 end
 
+-- note fix gamemode no interact bullshit or something idk
 local function allow_interact(m, o, int)
     if o.oIntangibleTimer ~= 0 then return end
     local nonStop = gServerSettings.stayInLevelAfterStar == STAR_NON_STOP

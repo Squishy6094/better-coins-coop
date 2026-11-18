@@ -614,6 +614,7 @@ function master_cap_get_spawn(spawnName, spawnFunc, level, area, offsetY, blockN
     area = area or gNetworkPlayers[0].currAreaIndex
     mul_random_seed(hash(spawnName)*level*area)
     local _, levelData = get_romhack_level_data(level, area)
+    if levelData[spawnName] == 0 then return end
     if not blockNewSpawns and not levelData[spawnName] and level < LEVEL_COUNT and gNetworkPlayers[0].currLevelNum == level and gNetworkPlayers[0].currAreaIndex == area then
         local surfData = find_surface_from_list(surfaceList, spawnFunc)
         levelData[spawnName] = {

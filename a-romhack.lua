@@ -40,7 +40,8 @@ romhackData = {
             [1] = {
                 masterCap = 0,
                 masterDoor = {x = -5626, y = 543, z = -3994, yaw = 0x2800},
-                shopkeeper = {x = 400, y = 810, z = -125, yaw = -0x1800}
+                shopkeeper = {x = 400, y = 810, z = -125, yaw = -0x1800},
+                retroSecret = {x = 1394, y = 3174, z = -4072},
             },
         },
         [LEVEL_CASTLE] = {
@@ -50,54 +51,65 @@ romhackData = {
             },
             [2] = {
                 masterCap = 0,
+                retroSecret = {x = 3159, y = 1613, z = 3159},
             },
             [3] = {
                 masterCap = 0,
+                retroSecret = {x = 7000, y = -1586, z = -510},
             },
         },
         [LEVEL_CASTLE_COURTYARD] = {
             [1] = {
                 masterCap = 0,
+                retroSecret = {x = 0, y = 512, z = 462},
             },
         },
         [LEVEL_BOB] = {
             [1] = {
-                masterCap = {x = -6700, y = 350, z = 4600, yaw = 0x4000}
+                masterCap = {x = -6700, y = 350, z = 4600, yaw = 0x4000},
+                retroSecret = {x = 7152, y = 2030, z = -6718},
             }
         },
         [LEVEL_WF] = {
             [1] = {
-                masterCap = {x = 3000, y = 600, z = 4610, yaw = 0x8000}
+                masterCap = {x = 3000, y = 600, z = 4610, yaw = 0x8000},
+                retroSecret = {x = 4000, y = 1075, z = -4000},
             }
         },
         [LEVEL_CCM] = {
             [1] = {
-                masterCap = {x = -1350, y = 2900, z = -1600, yaw = 0x8000}
+                masterCap = {x = -1350, y = 2900, z = -1600, yaw = 0x8000},
+                retroSecret = {x = 2211, y = -3887, z = 4138},
             }
         },
         [LEVEL_JRB] = {
             [1] = {
-                masterCap = {x = -6800, y = 1500, z = -500, yaw = 0x2000}
+                masterCap = {x = -6800, y = 1500, z = -500, yaw = 0x2000},
+                retroSecret = {x = -4154, y = -2966, z = -2940},
             }
         },
         [LEVEL_SA] = {
             [1] = {
-                masterCap = {x = 800, y = -1800, z = 800, yaw = 0x2000}
+                masterCap = {x = 800, y = -1800, z = 800, yaw = 0x2000},
+                retroSecret = 0,
             }
         },
         [LEVEL_PSS] = {
             [1] = {
-                masterCap = {x = 5423, y = 6400, z = -4754, yaw = 0}
+                masterCap = {x = 5423, y = 6400, z = -4754, yaw = 0},
+                retroSecret = {x = -4740, y = -3057, z = -2980},
             }
         },
         [LEVEL_TOTWC] = {
             [1] = {
-                masterCap = {x = 0, y = 2400, z = 0, yaw = 0x4000}
+                masterCap = {x = 0, y = 2400, z = 0, yaw = 0x4000},
+                retroSecret = {x = -999, y = -2047, z = 1012},
             }
         },
         [LEVEL_BITDW] = {
             [1] = {
-                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0x4000}
+                masterCap = {x = -7150, y = -2700, z = 3550, yaw = 0x4000},
+                retroSecret = {x = 2370, y = 1024, z = -165},
             }
         },
         [LEVEL_BOWSER_1] = {
@@ -106,22 +118,35 @@ romhackData = {
 
         [LEVEL_LLL] = {
             [1] = {
-                masterCap = {x = -2558, y = 500, z = 6278, yaw = 0x4000}
+                masterCap = {x = -2558, y = 500, z = 6278, yaw = 0x4000},
+                retroSecret = {x = 4172, y = 563, z = 4793},
+            },
+            [2] = {
+                retroSecret = {x = 2325, y = 3862, z = -1683},
             },
         },
         [LEVEL_SSL] = {
             [1] = {
-                masterCap = {x = -400, y = 400, z = 6522, yaw = 0x4000}
+                masterCap = {x = -400, y = 400, z = 6522, yaw = 0x4000},
+                retroSecret = {x = 7106, y = 0, z = -3524},
+            },
+            [2] = {
+                retroSecret = {x = -3223, y = 0, z = -3280},
             },
         },
         [LEVEL_HMC] = {
             [1] = {
-                masterCap = {x = -7346, y = 2425, z = 6923, yaw = 0x6000}
+                masterCap = {x = -7346, y = 2425, z = 6923, yaw = 0x6000},
+                retroSecret = {x = 6439, y = -357, z = -1578},
             },
         },
         [LEVEL_DDD] = {
             [1] = {
-                masterCap = {x = -3000, y = 200, z = 500, yaw = 0}
+                masterCap = {x = -3000, y = 200, z = 500, yaw = 0},
+                retroSecret = 0,
+            },
+            [2] = {
+                retroSecret = {x = 1765, y = 929, z = -1792},
             },
         },
         [LEVEL_COTMC] = {
