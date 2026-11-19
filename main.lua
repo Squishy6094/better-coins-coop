@@ -7,7 +7,8 @@
 ]]
 
 savedCoinCount = modfs_storage_load_integer("coins", 0)
-log_to_console("Better Coins Count: " .. tostring(savedCoinCount))
+log_to_console("Better Coins: User Coins - " .. tostring(savedCoinCount))
+savedCoinCountStart = savedCoinCount
 
 function save_coin_count()
     modfs_storage_save_integer("coins", savedCoinCount)
@@ -356,13 +357,19 @@ local function mario_update(m)
     end
 end
 
+local function on_exit()
+    save_coin_count()
+    local profit = savedCoinCount - savedCoinCountStart
+    log_to_console("Better Coins: Saved Coin Count, "..(profit >= 0 and "Profited " or "Lost ") .. math.abs(profit) .. " Coin"..(math.abs(profit) ~= 1 and "s" or "").." this Session.")
+end
+
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, coin_counter)
 hook_event(HOOK_ON_INTERACT, interact)
 hook_event(HOOK_ON_PLAY_SOUND, on_coin_sound)
 hook_event(HOOK_ON_LEVEL_INIT, level_init)
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
-hook_event(HOOK_ON_EXIT, save_coin_count)
+hook_event(HOOK_ON_EXIT, on_exit)
 
 local resetConfirm = false
 local function chat_command(msg)
