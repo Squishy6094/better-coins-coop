@@ -199,7 +199,7 @@ hook_coins_behavior(id_bhvSignOnWall, false, bhv_message_panel_set_coins, bhv_me
 ]]
 
 local blowUpYoshi = false
-gPlayerSyncTable[0].blewUpYoshi = modfs_storage_load_bool("blewUpYoshi", false)
+gPlayerSyncTable[0].blewUpYoshi = modfs_storage_load_bool("blewUpYoshi"..CURR_ROMHACK, false)
 
 ---@param o Object
 local function bhv_coins_yoshi_init(o)
@@ -250,16 +250,20 @@ hook_coins_behavior(id_bhvYoshi, false, bhv_coins_yoshi_init, bhv_coins_yoshi_lo
 local function bhv_yoshi_cutscene_bomb_init(o)
     o.oFlags = OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_HOLDABLE | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW
     o.oAnimations = gObjectAnimations.bobomb_seg8_anims_0802396C
-    cur_obj_init_animation(0)
+    cur_obj_init_animation(1)
     bhv_bobomb_buddy_init()
-    camera_freeze()
+    local m = nearest_interacting_mario_state_to_object(o)
+    if m and m.playerIndex == 0 then
+        camera_freeze()
+    end
 end
 
 ---@param o Object
 local function bhv_yoshi_cutscene_bomb_loop(o)
     o.oIntangibleTimer = 0
+    local m = nearest_interacting_mario_state_to_object(o)
 
-    if CURR_ROMHACK == "sm64" then
+    if CURR_ROMHACK == "sm64" and m and m.playerIndex == 0 then
         local focusWeight = math.clamp(o.oVelY/75*0.3 + 0.7, 0, 1)
         local focusSpeed = o.oAction == 0 and 0.04 or 0.1
         gLakituState.focus.x = math.lerp(gLakituState.focus.x, math.lerp(o.parentObj.oPosX, o.oPosX, focusWeight), focusSpeed)
@@ -299,14 +303,17 @@ local function bhv_yoshi_cutscene_bomb_loop(o)
     elseif o.oAction == 2 then
         cur_obj_scale(1 + (o.oTimer / 5))
         if o.oTimer >= 7 then
-            local m = nearest_interacting_mario_state_to_object(o)
             local p = gPlayerSyncTable[m.playerIndex]
-
-            spawn_coin_spawner(o.parentObj, p.blewUpYoshi and 15 or (100 * (gBetterCoinValues.numCoinsToLife or 50)), p.blewUpYoshi)
+            local rewardCoins = 100 * (gBetterCoinValues.numCoinsToLife or 50)
+            local rewardCoinsSub = 5 * (gBetterCoinValues.numCoinsToLife or 50)
+            if m.playerIndex == 0 and not p.blewUpYoshi then
+                reward_user_coins(rewardCoins - rewardCoinsSub)
+            end
+            spawn_coin_spawner(o.parentObj, p.blewUpYoshi and 25 or rewardCoinsSub, p.blewUpYoshi)
             obj_mark_for_deletion(o.parentObj)
 
             p.blewUpYoshi = true
-            modfs_storage_save_bool("blewUpYoshi", true)
+            modfs_storage_save_bool("blewUpYoshi"..CURR_ROMHACK, true)
             blowUpYoshi = false
             camera_unfreeze()
             set_mario_action(m, ACT_IDLE, 0)
