@@ -820,7 +820,6 @@ local function master_cap_music_update(levelData)
 end
 
 local queueUnpause = false
-local prevFileProgress = save_file_get_flags()
 local skyboxLight = 0
 local function master_cap_update()
     local levelNum, levelData = master_cap_get_level()
@@ -856,11 +855,6 @@ local function master_cap_update()
             end
         end
         prevBowserBeat = gGlobalSyncTable.defeatFinalBowser
-
-        -- Saves progress updating and saving
-        if not get_save_file_modified() and save_file_get_flags() > prevFileProgress then
-            update_save()
-        end
     end
     
     -- Actual Master Cap Stuffs
@@ -1141,19 +1135,48 @@ local function easier_mario_viewing_expirience(m)
 end
 
 local prevLevel = 0
-local function check_late_entry()
-    if not master_cap_allowed() then return end
+local wasMasterCap = false
+local skyboxReplace = {}
+for i = 0, 63 do
+    local hex = num_to_hex(i)
+    hex = string.sub(hex, 3, #hex)
+    if #hex < 2 then
+        hex = "0"..hex
+    end
+    skyboxReplace["ccm_skybox_texture_000" .. hex] = get_texture_info("pink_cloud_sky." .. string.format("%02d", i))
+end
+local function on_level_init()
+    update_save() -- Just update save here i'm too lazyy
+    entranceAreaNum = gNetworkPlayers[0].currAreaIndex
+
+    -- Set skybox dependant on level
+    if gNetworkPlayers[0].currLevelNum == LEVEL_MASTER_CAP_STAGE then
+        set_skybox_color(0, 0)
+        set_skybox_color(1, 0)
+        set_skybox_color(2, 0)
+        for name, tex in pairs(skyboxReplace) do
+            texture_override_set(name, tex)
+        end
+        wasMasterCap = true
+    elseif wasMasterCap then
+        set_skybox_color(0, 255)
+        set_skybox_color(1, 255)
+        set_skybox_color(2, 255)
+        for name, _ in pairs(skyboxReplace) do
+            texture_override_reset(name)
+        end
+        wasMasterCap = false
+    end
+
     local levelNum, levelData = master_cap_get_level()
-    set_skybox_color(0, 255)
-    set_skybox_color(1, 255)
-    set_skybox_color(2, 255)
+    if not master_cap_allowed() then return end
     gLevelValues.disableActs = true
     set_ttc_speed_setting(TTC_SPEED_STOPPED)
-
-    if levelNum == master_cap_get_merged_level_num() and levelData.runState == 1 and prevLevel ~= prevLevel then
+    -- Punish late master cap entry
+    if levelNum == master_cap_get_merged_level_num() and levelData.runState == 1 and prevLevel ~= levelNum then
         gPlayerSyncTable[0].diedInRun = true
     end
-    prevLevel = prevLevel
+    prevLevel = levelNum
 end
 
 local function on_mods_loaded()
@@ -1179,44 +1202,15 @@ local function on_pause_exit()
     end
 end
 
-
-local skyboxReplace = {}
-
-for i = 0, 63 do
-    local hex = num_to_hex(i)
-    hex = string.sub(hex, 3, #hex)
-    if #hex < 2 then
-        hex = "0"..hex
-    end
-    skyboxReplace["ccm_skybox_texture_000" .. hex] = get_texture_info("pink_cloud_sky." .. string.format("%02d", i))
-end
-
-local wasMasterCap = false
-local function replace_skybox()
-    entranceAreaNum = gNetworkPlayers[0].currAreaIndex
-
-    if gNetworkPlayers[0].currLevelNum == LEVEL_MASTER_CAP_STAGE then
-        for name, tex in pairs(skyboxReplace) do
-            texture_override_set(name, tex)
-        end
-        wasMasterCap = true
-    elseif wasMasterCap then
-        for name, _ in pairs(skyboxReplace) do
-            texture_override_reset(name)
-        end
-        wasMasterCap = false
-    end
-end
-
-hook_event(HOOK_ON_LEVEL_INIT, replace_skybox)
 hook_event(HOOK_ON_SYNC_VALID, on_sync)
 hook_event(HOOK_UPDATE, master_cap_update)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, master_cap_render)
 hook_event(HOOK_ON_DEATH, on_death)
 hook_event(HOOK_MARIO_UPDATE, easier_mario_viewing_expirience)
 hook_event(HOOK_ALLOW_FORCE_WATER_ACTION, allow_force_water_interaction)
-hook_event(HOOK_ON_LEVEL_INIT, check_late_entry)
+hook_event(HOOK_ON_LEVEL_INIT, on_level_init)
 hook_event(HOOK_ON_MODS_LOADED, on_mods_loaded)
 hook_event(HOOK_ON_PAUSE_EXIT, on_pause_exit)
 hook_event(HOOK_ON_ADD_SURFACE, add_surface)
 hook_event(HOOK_ON_SEQ_LOAD, on_seq_load)
+hook_event(HOOK_ON_EXIT, update_save)

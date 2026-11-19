@@ -28,7 +28,7 @@ for i in pairs(gActiveMods) do
 end
 
 romhackData = {
-    ["better-coins"] = {
+    ["bettercoins"] = {
         [LEVEL_MASTER_CAP_STAGE] = {
             [1] = {
                 masterCap = {x = -6700, y = 400, z = -900, yaw = 0x4000}
@@ -217,7 +217,7 @@ romhackData = {
             levelMerge = LEVEL_BITS
         },
     },
-    ["super-mario-74-(+ee)"] = {
+    ["supermario74ee"] = {
         starCount = 151,
         [LEVEL_CASTLE_COURTYARD] = {
             [1] = {
