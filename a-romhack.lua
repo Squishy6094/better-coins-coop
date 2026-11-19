@@ -22,8 +22,9 @@ for i in pairs(gActiveMods) do
         end
     end
     CURR_ROMHACK = CURR_ROMHACK:gsub("\\(.-)\\", "")
-    CURR_ROMHACK = CURR_ROMHACK:gsub(" ", "-")
-    CURR_ROMHACK = string.lower(CURR_ROMHACK)
+    CURR_ROMHACK = CURR_ROMHACK:gsub('%W','')
+    CURR_ROMHACK = CURR_ROMHACK:gsub('v%d+','')
+    CURR_ROMHACK = CURR_ROMHACK:lower()
 end
 
 romhackData = {
