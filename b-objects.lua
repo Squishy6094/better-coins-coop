@@ -1150,10 +1150,17 @@ end
 
 ---@param o Object
 local function bhv_retro_secret_loop(o)
+    local spawnData = master_cap_get_spawn("retroSecret")
+    local squishScale = 1
+    if spawnData and spawnData.scale then
+        squishScale = spawnData.scale
+    end
+    cur_obj_scale(squishScale)
     if o.oAction == 0 then
         local m = gMarioStates[0]
         if m and obj_check_hitbox_overlap(m.marioObj, o) and determine_interaction(m, o) == INT_GROUND_POUND and m.action & ACT_FLAG_AIR == 0 then
             cur_obj_unhide()
+            -- note, pitch in 1.6 based on size
             audio_sample_play(SOUND_RETRO_DEATH, {x = o.oPosX, y = o.oPosY, z = o.oPosZ}, 1)
 
             o.oMoveAngleYaw = random_u16()
@@ -1183,7 +1190,7 @@ local function bhv_retro_secret_loop(o)
         
         o.oAnimState = math.floor(o.oTimer*0.5 % 2) + 1
 
-        obj_scale(o, 1 - math.max(o.oTimer - 80, 0)/10)
+        cur_obj_scale(squishScale*(1 - math.max(o.oTimer - 80, 0)/10))
         if o.oTimer > 90 then
             obj_mark_for_deletion(o)
         end
