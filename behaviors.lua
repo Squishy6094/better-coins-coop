@@ -1250,18 +1250,23 @@ local function prevent_star_dance(m, nextAct)
     end
 end
 
--- note fix gamemode no interact bullshit or something idk
+-- Make Already Collected Stars give you coins
 local function allow_interact(m, o, int)
     if o.oIntangibleTimer ~= 0 then return end
-    local nonStop = gServerSettings.stayInLevelAfterStar == STAR_NON_STOP
-    if int == INTERACT_STAR_OR_KEY and (obj_is_star_collected(o) or nonStop) then
+    if int == INTERACT_STAR_OR_KEY and (obj_is_star_collected(o)) then
         o.oInteractionSubtype = INT_SUBTYPE_NO_EXIT
-        if nonStop then
-            m.interactObj = o
-            prevent_star_dance(m, ACT_FALL_AFTER_STAR_GRAB)
-        end
     end
 end
+
+-- Run prevent star dance on nonstop interact
+local function on_interact(m, o, int)
+    local nonStop = gServerSettings.stayInLevelAfterStar == STAR_NON_STOP
+    if int == INTERACT_STAR_OR_KEY and nonStop then
+        m.interactObj = o
+        prevent_star_dance(m, ACT_FALL_AFTER_STAR_GRAB)
+    end
+end
+
 
 local function bhv_stars_give_coins_init(o)
     obj_init_custom_coins(o, 10)
@@ -1289,8 +1294,8 @@ local function bhv_celebration_stars_give_coins_loop(o)
         o.oCustomCoins = 0
     end
 end
-
 hook_event(HOOK_ALLOW_INTERACT, allow_interact)
+hook_event(HOOK_ON_INTERACT, on_interact)
 hook_event(HOOK_BEFORE_SET_MARIO_ACTION, prevent_star_dance)
 hook_coins_behavior(id_bhvCelebrationStar, false, bhv_stars_give_coins_init, bhv_celebration_stars_give_coins_loop)
 
