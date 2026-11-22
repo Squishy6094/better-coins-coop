@@ -219,19 +219,25 @@ local id_bhvCoinSpawner = hook_behavior(nil, OBJ_LIST_SPAWNER, true, coin_spawne
 ---@param rZ integer?
 ---@return Object?
 function spawn_coin_spawner(o, coins, forceYellow, rX, rY, rZ)
-    if coins < 1 then return end
+    if not coins or coins < 1 then return end
     rX = rX or 0
     rY = rY or 0
     rZ = rZ or 0
     if o then
-        --if not sync_object_is_owned_locally(o.oSyncID) then return end
-        local m = nearest_mario_state_to_object(o)
-        if not m or m.playerIndex ~= 0 then return end
+        if o.oSyncID ~= 0 then
+            djui_chat_message_create("stinkID "..o.oSyncID)
+            if not sync_object_is_owned_locally(o.oSyncID) then return end
+        else
+            local m = nearest_mario_state_to_object(o)
+            djui_chat_message_create("nearestM "..m.playerIndex)
+            if not m or m.playerIndex ~= 0 then return end
+        end
         rX = rX + o.oPosX
         rY = rY + o.oPosY
         rZ = rZ + o.oPosZ
     else
         local m = nearest_mario_state_to_pos(rX, rY, rZ)
+        djui_chat_message_create("noObj nearestM "..m.playerIndex)
         if not m or m.playerIndex ~= 0 then return end
     end
     --- @param oCoins Object
