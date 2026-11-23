@@ -1136,6 +1136,10 @@ hook_event(HOOK_UPDATE, function()
 end)
 
 E_MODEL_RETRO_SECRET = smlua_model_util_get_id("retro_secret_geo")
+local retroSecretIDs = {
+    [0] = {0, 1, 2}, -- Squishy
+    {3} -- walt_theFan
+}
 local SOUND_RETRO_DEATH = audio_sample_load("smb_death.ogg")
 
 local function bhv_retro_secret_init(o)
@@ -1146,6 +1150,13 @@ local function bhv_retro_secret_init(o)
     hitbox.height = 120
     hitbox.radius = 40
     o.oGravity = 2
+
+    -- Show donaters when re-finding secret
+    if o.oNumLootCoins == 10 then
+        o.oBehParams2ndByte = math.random(0, #retroSecretIDs)
+    end
+
+    o.oAnimState = retroSecretIDs[o.oBehParams2ndByte][1]
 end
 
 function retro_secret_get_save_flag()
@@ -1194,7 +1205,11 @@ local function bhv_retro_secret_loop(o)
         o.oPosY = o.oPosY + o.oVelY
         o.oPosZ = o.oPosZ + o.oVelZ
         
-        o.oAnimState = math.floor(o.oTimer*0.5 % 2) + 1
+        local animTable = retroSecretIDs[o.oBehParams2ndByte]
+        if #animTable > 1 then
+            o.oAnimState = animTable[math.floor(o.oTimer*0.5 % (#animTable - 1)) + 2]
+            djui_chat_message_create(tostring(o.oAnimState))
+        end
 
         cur_obj_scale(squishScale*(1 - math.max(o.oTimer - 80, 0)/10))
         if o.oTimer > 90 then

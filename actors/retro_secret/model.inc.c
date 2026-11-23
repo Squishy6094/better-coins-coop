@@ -73,6 +73,31 @@ Texture retro_secret_squishy_death3_pal_rgba16[] = {
 	0xa1, 0x85, 
 };
 
+Texture retro_secret_retro_walt_death1_ci4[] = {
+	0x00, 0x01, 0x11, 0x10, 0x01, 0x11, 0x10, 0x00, 
+	0x01, 0x11, 0x12, 0x22, 0x22, 0x21, 0x11, 0x10, 
+	0x11, 0x11, 0x22, 0x22, 0x22, 0x22, 0x11, 0x11, 
+	0x11, 0x12, 0x22, 0x22, 0x22, 0x22, 0x21, 0x11, 
+	0x00, 0x02, 0x22, 0x32, 0x21, 0x32, 0x20, 0x00, 
+	0x00, 0x11, 0x23, 0x13, 0x13, 0x13, 0x11, 0x00, 
+	0x00, 0x11, 0x31, 0x11, 0x31, 0x11, 0x31, 0x00, 
+	0x00, 0x11, 0x13, 0x13, 0x13, 0x13, 0x11, 0x00, 
+	0x01, 0x11, 0x01, 0x31, 0x11, 0x30, 0x11, 0x10, 
+	0x11, 0x11, 0x12, 0x23, 0x32, 0x21, 0x11, 0x11, 
+	0x01, 0x11, 0x02, 0x23, 0x32, 0x20, 0x11, 0x10, 
+	0x00, 0x10, 0x33, 0x23, 0x32, 0x33, 0x01, 0x00, 
+	0x00, 0x03, 0x33, 0x33, 0x33, 0x33, 0x30, 0x00, 
+	0x00, 0x03, 0x30, 0x00, 0x00, 0x03, 0x30, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	
+};
+
+Texture retro_secret_retro_walt_death1_pal_rgba16[] = {
+	0x00, 0x00, 0x2e, 0x7f, 0x10, 0xe9, 0x00, 0x01, 
+	
+};
+
 Vtx retro_secret_dl_mesh_layer_7_vtx_0[4] = {
 	{{{-50, -1, 0}, 0, {0, 512}, {0x00, 0x00, 0x7F, 0xFF}}},
 	{{{51, -1, 0}, 0, {512, 512}, {0x00, 0x00, 0x7F, 0xFF}}},
@@ -171,6 +196,34 @@ Gfx mat_revert_retro_secret_Squishy_Death_3[] = {
 	gsSPEndDisplayList(),
 };
 
+Gfx mat_retro_secret_Walt_Death_1[] = {
+	gsSPClearGeometryMode(G_CULL_BACK | G_ZBUFFER),
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0, 0, 0, 0, TEXEL0),
+	gsDPSetAlphaDither(G_AD_NOISE),
+	gsDPSetTextureFilter(G_TF_POINT),
+	gsDPSetTextureLUT(G_TT_RGBA16),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, retro_secret_retro_walt_death1_pal_rgba16),
+	gsDPSetTile(0, 0, 0, 256, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadTLUTCmd(5, 3),
+	gsDPSetTextureImage(G_IM_FMT_CI, G_IM_SIZ_16b, 1, retro_secret_retro_walt_death1_ci4),
+	gsDPSetTile(G_IM_FMT_CI, G_IM_SIZ_16b, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 63, 2048),
+	gsDPSetTile(G_IM_FMT_CI, G_IM_SIZ_4b, 1, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 4, 0, G_TX_WRAP | G_TX_NOMIRROR, 4, 0),
+	gsDPSetTileSize(0, 0, 0, 60, 60),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_revert_retro_secret_Walt_Death_1[] = {
+	gsSPSetGeometryMode(G_CULL_BACK | G_ZBUFFER),
+	gsDPPipeSync(),
+	gsDPSetAlphaDither(G_AD_DISABLE),
+	gsDPSetTextureFilter(G_TF_BILERP),
+	gsDPSetTextureLUT(G_TT_NONE),
+	gsSPEndDisplayList(),
+};
+
 Gfx retro_secret_dl_mesh_layer_7_with_revert[] = {
 	gsSPDisplayList(mat_retro_secret_Squishy_Death_1),
 	gsSPDisplayList(retro_secret_dl_mesh_layer_7_tri_0),
@@ -203,6 +256,20 @@ Gfx retro_secret_dl_mesh_layer_7_opt_2_with_revert[] = {
 	gsSPDisplayList(mat_retro_secret_Squishy_Death_3),
 	gsSPDisplayList(retro_secret_dl_mesh_layer_7_tri_0),
 	gsSPDisplayList(mat_revert_retro_secret_Squishy_Death_3),
+	gsDPPipeSync(),
+	gsSPSetGeometryMode(G_LIGHTING),
+	gsSPClearGeometryMode(G_TEXTURE_GEN),
+	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 0),
+	gsDPSetEnvColor(255, 255, 255, 255),
+	gsDPSetAlphaCompare(G_AC_NONE),
+	gsSPEndDisplayList(),
+};
+
+Gfx retro_secret_dl_mesh_layer_7_opt_3_with_revert[] = {
+	gsSPDisplayList(mat_retro_secret_Walt_Death_1),
+	gsSPDisplayList(retro_secret_dl_mesh_layer_7_tri_0),
+	gsSPDisplayList(mat_revert_retro_secret_Walt_Death_1),
 	gsDPPipeSync(),
 	gsSPSetGeometryMode(G_LIGHTING),
 	gsSPClearGeometryMode(G_TEXTURE_GEN),
