@@ -225,11 +225,9 @@ function spawn_coin_spawner(o, coins, forceYellow, rX, rY, rZ)
     rZ = rZ or 0
     if o then
         if o.oSyncID ~= 0 then
-            djui_chat_message_create("stinkID "..o.oSyncID)
             if not sync_object_is_owned_locally(o.oSyncID) then return end
         else
             local m = nearest_mario_state_to_object(o)
-            djui_chat_message_create("nearestM "..m.playerIndex)
             if not m or m.playerIndex ~= 0 then return end
         end
         rX = rX + o.oPosX
@@ -237,7 +235,6 @@ function spawn_coin_spawner(o, coins, forceYellow, rX, rY, rZ)
         rZ = rZ + o.oPosZ
     else
         local m = nearest_mario_state_to_pos(rX, rY, rZ)
-        djui_chat_message_create("noObj nearestM "..m.playerIndex)
         if not m or m.playerIndex ~= 0 then return end
     end
     --- @param oCoins Object
@@ -1208,7 +1205,6 @@ local function bhv_retro_secret_loop(o)
         local animTable = retroSecretIDs[o.oBehParams2ndByte]
         if #animTable > 1 then
             o.oAnimState = animTable[math.floor(o.oTimer*0.5 % (#animTable - 1)) + 2]
-            djui_chat_message_create(tostring(o.oAnimState))
         end
 
         cur_obj_scale(squishScale*(1 - math.max(o.oTimer - 80, 0)/10))
