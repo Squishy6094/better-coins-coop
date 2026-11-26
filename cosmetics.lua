@@ -1,9 +1,5 @@
 local E_MODEL_FLOWER = smlua_model_util_get_id("unused_flower_geo")
 
-COSMETIC_HOT_FOOT = 1
-COSMETIC_AIR_HEAD = 2
-COSMETIC_GARDEN_GROWER = 3
-
 local l = gLakituState
 local prevMarioGfxPos = {}
 for i = 0, MAX_PLAYERS - 1 do
@@ -138,135 +134,172 @@ end
 
 id_bhvCosmeticFlower = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, bhv_particle_flower_init, bhv_particle_flower_loop)
 
-local function mario_update(m)
-    if not m or is_player_active(m) == 0 then return end
-    local p = gPlayerSyncTable[m.playerIndex]
-    local vel = math.sqrt(m.vel.x^2 + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y or 0)^2 + m.vel.z^2)
-    local latVel = math.sqrt(m.vel.x^2 + m.vel.z^2)
-    if p.cosmeticActive == COSMETIC_HOT_FOOT then
-        if vel < 10 then return end
-        local flameModel = vel > (80 + 20*random_float()) and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME
-        spawn_non_sync_object(id_bhvCosmeticFireFoot, flameModel, 
-            get_hand_foot_pos_x(m, 2) + m.vel.x,
-            get_hand_foot_pos_y(m, 2) + m.vel.y,
-            get_hand_foot_pos_z(m, 2) + m.vel.z, 
-        function(o)
-            o.oForwardVel = 5 + random_float()*2
-            o.oMoveAngleYaw = m.faceAngle.y - 0x4000 - 0x2000*random_float()
-        end)
-
-        spawn_non_sync_object(id_bhvCosmeticFireFoot, flameModel, 
-            get_hand_foot_pos_x(m, 3) + m.vel.x,
-            get_hand_foot_pos_y(m, 3) + m.vel.y,
-            get_hand_foot_pos_z(m, 3) + m.vel.z,
-        function(o)
-            o.oForwardVel = 5 + random_float()*2
-            o.oMoveAngleYaw = m.faceAngle.y + 0x4000 + 0x2000*random_float()
-        end)
-    end
-
-    if p.cosmeticActive == COSMETIC_GARDEN_GROWER and get_global_timer()%3 == 0 then
-        local randRot = random_u16()
-        local randDist = random_float()*150 + 150
-        local randX = m.pos.x + sins(m.faceAngle.y)*latVel*5 + sins(randRot)*randDist
-        local randZ = m.pos.z + coss(m.faceAngle.y)*latVel*5 + coss(randRot)*randDist
-        local floorHeight = find_floor(randX, m.pos.y, randZ)
-        spawn_non_sync_object(id_bhvCosmeticFlower, E_MODEL_FLOWER, 
-            randX,
-            floorHeight,
-            randZ,
-        function(o)
-        end)
-        
-    end
-end
-
----@param m MarioState
-local function before_set_mario_action(m, nextAct)
-    local p = gPlayerSyncTable[m.playerIndex]
-    if p.cosmeticActive == COSMETIC_HOT_FOOT then
-        -- Wall Kick Flames
-        if m.particleFlags & PARTICLE_VERTICAL_STAR ~= 0 or (nextAct == ACT_WALL_KICK_AIR and m.action & ACT_FLAG_ON_POLE == 0) then
-            m.particleFlags = m.particleFlags & ~PARTICLE_VERTICAL_STAR
-            for i = 0, 7 do
-                spawn_non_sync_object(id_bhvCosmeticFireFoot, m.wallKickTimer == 0 and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME, 
-                    m.pos.x,
-                    m.pos.y,
-                    m.pos.z,
+cosmeticList = {
+    {
+        name = "Hot Footed",
+        key = "HotFoot",
+        desc = "A Cosmetic that causes your\nboots to catch ablaze! This gives\nmovement and impacts a little\nmore spice!",
+        hooks = {
+            [HOOK_MARIO_UPDATE] = function(m)
+                local vel = math.sqrt(m.vel.x^2 + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y or 0)^2 + m.vel.z^2)
+                if vel < 10 then return end
+                local flameModel = vel > (80 + 20*random_float()) and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME
+                spawn_non_sync_object(id_bhvCosmeticFireFoot, flameModel, 
+                    get_hand_foot_pos_x(m, 2) + m.vel.x,
+                    get_hand_foot_pos_y(m, 2) + m.vel.y,
+                    get_hand_foot_pos_z(m, 2) + m.vel.z, 
                 function(o)
-                    o.oIntangibleTimer = i
-                    o.oBehParams = 25
-                    local circleAngle = 0x2000*i
-                    local wallAngle = atan2s(m.wallNormal.z, m.wallNormal.x)
-                    o.oVelX = sins(circleAngle)*30*sins(wallAngle+0x4000) + coss(wallAngle-0x4000)*5
-                    o.oVelY = coss(circleAngle)*30
-                    o.oVelZ = sins(circleAngle)*30*coss(wallAngle+0x4000) + sins(wallAngle-0x4000)*5
+                    o.oForwardVel = 5 + random_float()*2
+                    o.oMoveAngleYaw = m.faceAngle.y - 0x4000 - 0x2000*random_float()
                 end)
-            end
-        end
 
-        -- Ground Pound Flames
-        if m.particleFlags & PARTICLE_HORIZONTAL_STAR ~= 0 then
-            m.particleFlags = m.particleFlags & ~PARTICLE_HORIZONTAL_STAR
-            for c = 1, 5 do
-                for i = 0, 7 do
-                    local circleAngle = 0x2000*i + 0x800*c
-                    local circleDist = 50*c
-                    spawn_non_sync_object(id_bhvCosmeticFireFoot, m.wallKickTimer == 0 and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME, 
-                        m.pos.x + sins(circleAngle)*circleDist,
-                        m.pos.y,
-                        m.pos.z + coss(circleAngle)*circleDist,
+                spawn_non_sync_object(id_bhvCosmeticFireFoot, flameModel, 
+                    get_hand_foot_pos_x(m, 3) + m.vel.x,
+                    get_hand_foot_pos_y(m, 3) + m.vel.y,
+                    get_hand_foot_pos_z(m, 3) + m.vel.z,
+                function(o)
+                    o.oForwardVel = 5 + random_float()*2
+                    o.oMoveAngleYaw = m.faceAngle.y + 0x4000 + 0x2000*random_float()
+                end)
+            end,
+            [HOOK_BEFORE_SET_MARIO_ACTION] = function(m, nextAct)
+                -- Wall Kick Flames
+                if m.particleFlags & PARTICLE_VERTICAL_STAR ~= 0 or (nextAct == ACT_WALL_KICK_AIR and m.action & ACT_FLAG_ON_POLE == 0) then
+                    m.particleFlags = m.particleFlags & ~PARTICLE_VERTICAL_STAR
+                    for i = 0, 7 do
+                        spawn_non_sync_object(id_bhvCosmeticFireFoot, m.wallKickTimer == 0 and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME, 
+                            m.pos.x,
+                            m.pos.y,
+                            m.pos.z,
+                        function(o)
+                            o.oIntangibleTimer = i
+                            o.oBehParams = 25
+                            local circleAngle = 0x2000*i
+                            local wallAngle = atan2s(m.wallNormal.z, m.wallNormal.x)
+                            o.oVelX = sins(circleAngle)*30*sins(wallAngle+0x4000) + coss(wallAngle-0x4000)*5
+                            o.oVelY = coss(circleAngle)*30
+                            o.oVelZ = sins(circleAngle)*30*coss(wallAngle+0x4000) + sins(wallAngle-0x4000)*5
+                        end)
+                    end
+                end
+
+                -- Ground Pound Flames
+                if m.particleFlags & PARTICLE_HORIZONTAL_STAR ~= 0 then
+                    m.particleFlags = m.particleFlags & ~PARTICLE_HORIZONTAL_STAR
+                    for c = 1, 5 do
+                        for i = 0, 7 do
+                            local circleAngle = 0x2000*i + 0x800*c
+                            local circleDist = 50*c
+                            spawn_non_sync_object(id_bhvCosmeticFireFoot, m.wallKickTimer == 0 and E_MODEL_BLUE_FLAME or E_MODEL_RED_FLAME, 
+                                m.pos.x + sins(circleAngle)*circleDist,
+                                m.pos.y,
+                                m.pos.z + coss(circleAngle)*circleDist,
+                            function(o)
+                                o.oIntangibleTimer = c
+                                o.oBehParams = 5*c
+                                o.oVelY = 5*c
+                            end)
+                        end
+                    end
+                end
+            end
+        },
+    },
+    {
+        name = "Garden Grower",
+        key = "Flowers",
+        desc = "A Cosmetic that grows flowers\nwherever you step!",
+        hooks = {
+            [HOOK_MARIO_UPDATE] = function(m)
+                if get_global_timer()%3 == 0 then
+                    local latVel = math.sqrt(m.vel.x^2 + m.vel.z^2)
+                    local randRot = random_u16()
+                    local randDist = random_float()*150 + 150
+                    local randX = m.pos.x + sins(m.faceAngle.y)*latVel*5 + sins(randRot)*randDist
+                    local randZ = m.pos.z + coss(m.faceAngle.y)*latVel*5 + coss(randRot)*randDist
+                    local floorHeight = find_floor(randX, m.pos.y, randZ)
+                    spawn_non_sync_object(id_bhvCosmeticFlower, E_MODEL_FLOWER, 
+                        randX,
+                        floorHeight,
+                        randZ,
                     function(o)
-                        o.oIntangibleTimer = c
-                        o.oBehParams = 5*c
-                        o.oVelY = 5*c
                     end)
                 end
             end
-        end
-    end
-end
-
-local function spawn_cosmetics()
-    local m = gMarioStates[0]
-    if gPlayerSyncTable[0].cosmeticActive == COSMETIC_AIR_HEAD then
-        local oBubble = obj_get_first_with_behavior_id(id_bhvCosmeticBubbleHelmet)
-        while oBubble do
-            if network_local_index_from_global(oBubble.globalPlayerIndex) == 0 then
-                return
-            end
-            oBubble = obj_get_next_with_same_behavior_id(oBubble)
-        end
-
-        spawn_sync_object(id_bhvCosmeticBubbleHelmet, E_MODEL_BUBBLE, m.pos.x, m.pos.y, m.pos.z, function(oBubble)
-            oBubble.globalPlayerIndex = network_global_index_from_local(0)
-        end)
-    end
-end
-
-local function on_sync()
-    gPlayerSyncTable[0].cosmeticActive = modfs_storage_load_integer("configCosmetic", 0)
-end
-
-hook_event(HOOK_UPDATE, spawn_cosmetics)
-hook_event(HOOK_BEFORE_SET_MARIO_ACTION, before_set_mario_action)
-hook_event(HOOK_MARIO_UPDATE, mario_update)
-hook_event(HOOK_ON_SYNC_VALID, on_sync)
-
-cosmeticShopEntries = {
-    [COSMETIC_HOT_FOOT] = {
-        name = "Hot Footed",
-        key = "HotFoot",
-        desc = "A Cosmetic Badge that causes your\nboots to catch ablaze! This gives\nmovement and impacts a little\nmore spice!"
-    },
-    [COSMETIC_AIR_HEAD] = {
-        name = "Air Headed",
-        key = "AirHead",
-        desc = "A Cosmetic Badge that surrounds\nyour head in a bubble!"
-    },
-    [COSMETIC_GARDEN_GROWER] = {
-        name = "Garden Grower",
-        key = "Flowers",
-        desc = "A Cosmetic Badge that grows flowers\nwherever you step!"
+        }
     },
 }
+
+-- Adds a cosmetic to the shop, running the associated hooks and restricting use of other cosmetics while active
+function add_cosmetic(cosmetic)
+    if not cosmetic then return end
+    table.insert(cosmeticList, cosmetic)
+end
+
+local function get_cosmetic_from_name(name)
+    for id, cosmetic in pairs(cosmeticList) do
+        if cosmetic.name == name or cosmetic.key == name then
+            return id, cosmetic
+        end
+    end
+end
+
+local function get_mario_state(m) return m end
+local function run_cosmetic_func(m, hook, ...)
+    if not m then return end
+    local cosmetic = gPlayerSyncTable[m.playerIndex].cosmeticActive
+    if cosmetic == 0 then return end
+    if cosmeticList[cosmetic] and cosmeticList[cosmetic].hooks and cosmeticList[cosmetic].hooks[hook] then
+        return cosmeticList[cosmetic].hooks[hook](...)
+    end
+end
+
+local getIndex = {
+    [HOOK_MARIO_UPDATE] = get_mario_state,
+    [HOOK_BEFORE_MARIO_UPDATE] = get_mario_state,
+    [HOOK_ON_SET_MARIO_ACTION] = get_mario_state,
+    [HOOK_BEFORE_PHYS_STEP] = get_mario_state,
+    [HOOK_ON_PLAYER_CONNECTED] = get_mario_state,
+    [HOOK_ON_PLAYER_DISCONNECTED] = get_mario_state,
+    [HOOK_ALLOW_INTERACT] = get_mario_state,
+    [HOOK_ON_INTERACT] = get_mario_state,
+    [HOOK_ON_DEATH] = get_mario_state,
+    [HOOK_ALLOW_HAZARD_SURFACE] = get_mario_state,
+    [HOOK_ON_CHAT_MESSAGE] = get_mario_state,
+    [HOOK_CHARACTER_SOUND] = get_mario_state,
+    [HOOK_BEFORE_SET_MARIO_ACTION] = get_mario_state,
+    [HOOK_ON_COLLIDE_LEVEL_BOUNDS] = get_mario_state,
+    [HOOK_MARIO_OVERRIDE_PHYS_STEP_DEFACTO_SPEED] = get_mario_state,
+    [HOOK_ON_ATTACK_OBJECT] = get_mario_state,
+    [HOOK_MARIO_OVERRIDE_GEOMETRY_INPUTS] = get_mario_state,
+    [HOOK_ON_INTERACTIONS] = get_mario_state,
+    [HOOK_ALLOW_FORCE_WATER_ACTION] = get_mario_state,
+    [HOOK_MARIO_OVERRIDE_FLOOR_CLASS] = get_mario_state,
+}
+
+-- Hook everything after other mods
+hook_event(HOOK_ON_MODS_LOADED, function ()
+    for hookId = 0, HOOK_MAX - 1 do
+        hook_event(hookId, function (...)
+            -- special case for PVP
+            if hookId == HOOK_ALLOW_PVP_ATTACK or hookId == HOOK_ON_PVP_ATTACK then
+                local a, v = ...
+                local rtrnVar = run_cosmetic_func(a, hookId, ...)
+                local rtrnVarV = run_cosmetic_func(v, hookId, ...)
+                if rtrnVarV ~= nil then return rtrnVarV
+                else return rtrnVar end
+            else
+                local get = getIndex[hookId]
+                local m = get and get(...) or gMarioStates[0]
+
+                run_cosmetic_func(m, hookId, ...)
+            end
+        end)
+    end
+end)
+
+local function on_sync()
+    gPlayerSyncTable[0].cosmeticActive = get_cosmetic_from_name(modfs_storage_load("configCosmetic")) or 0
+end
+
+hook_event(HOOK_ON_SYNC_VALID, on_sync)

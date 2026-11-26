@@ -181,7 +181,13 @@ local function setup_item(item)
     end
 end
 
+local betterCoinsModIndex = get_active_mod().index
 function add_shop_item(item)
+    if not item then return end
+    local mod = get_active_mod()
+    if not item.fromMod and mod.index ~= betterCoinsModIndex then
+        item.fromMod = mod.name
+    end
     setup_item(item)
     table.insert(shopItems, item)
 end
@@ -201,7 +207,7 @@ local function init_shop_items()
     end
 
     -- Add Cosmetics automatically
-    for id, data in ipairs(cosmeticShopEntries) do
+    for id, data in ipairs(cosmeticList) do
         add_shop_item({
             name = "Cosmetic "..data.name,
             key = "cosmetic"..data.key,
@@ -239,14 +245,14 @@ local function init_shop_items()
                 else
                     desc = desc.."Purchase to Enable"
                 end
-                return desc.."\n\nNote: Cosmetic Badge Items do not\naffect your moveset, only one\ncosmetic badge can be applied\nat a time."
+                return desc.."\n\nCosmetic Items do not affect\nyour moveset, only one cosmetic\ncan be applied at a time."
             end,
             before_interact = function(item)
                 if item.stock == 0 then
                     gPlayerSyncTable[0].cosmeticActive = gPlayerSyncTable[0].cosmeticActive == id and 0 or id
                     play_sound(gPlayerSyncTable[0].cosmeticActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
                     play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].cosmeticActive*0.2)
-                    modfs_storage_save_integer("configCosmetic", gPlayerSyncTable[0].cosmeticActive)
+                    modfs_storage_save_integer("configCosmetic", item.key:gsub("cosmetic", ""))
                     return
                 end
                 return true
@@ -258,7 +264,7 @@ local function init_shop_items()
     pinkCoinItem = get_shop_item_from_name("Pink Companion")
     gPlayerSyncTable[0].pinkCoinActive = pinkCoinItem.stock == 0 and modfs_storage_load_bool("pinkCoinToggle", false) or false
 
-    jpRedCoinItem = get_shop_item_from_name("Pink Companion")
+    jpRedCoinItem = get_shop_item_from_name("Japanese Red Coin Sound")
     configJPReds = jpRedCoinItem.stock == 0 and modfs_storage_load_integer("configJPReds", 0) or 0
 end
 
@@ -526,6 +532,14 @@ local function hud_render()
                 djui_hud_print_text(descText, x, y, 0.25*s, 0.25*s)
                 tW, tH = djui_hud_measure_text(descText)
                 y = y + tH*0.25
+
+                -- From Mod
+                if item.fromMod then
+                    djui_hud_set_color(dialogTextR, dialogTextG, dialogTextB, dialogTextA*0.75)
+                    tW, tH = djui_hud_measure_text(item.fromMod)
+                    djui_hud_print_text("Item from "..item.fromMod, x, shopY + shopH*0.9 - tH*0.25, 0.25*s, 0.25*s)
+                end
+                djui_hud_set_color(dialogTextR, dialogTextG, dialogTextB, dialogTextA)
 
                 if c.buttonPressed & A_BUTTON ~= 0 then
                     local beforeInteract = true

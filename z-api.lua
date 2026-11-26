@@ -15,10 +15,11 @@ _G.betterCoins = {
     hook_attract_object = hook_attract_object,
 
     reward_user_coins = reward_user_coins,
+    add_shop_item = add_shop_item,
+    add_cosmetic = add_cosmetic,
 
     -- Master Cap Funcs
     master_cap_init_level = master_cap_init_level,
     master_cap_get_merged_level_num = master_cap_get_merged_level_num,
     master_cap_allow_spawn = master_cap_allow_spawn,
-    add_shop_item = add_shop_item,
 }
