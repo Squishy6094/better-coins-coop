@@ -240,9 +240,13 @@ local function init_shop_items()
             before_interact = function(item)
                 if item.stock == 0 then
                     gPlayerSyncTable[0].cosmeticActive = gPlayerSyncTable[0].cosmeticActive == id and 0 or id
-                    play_sound(gPlayerSyncTable[0].cosmeticActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
+                    --play_sound(gPlayerSyncTable[0].cosmeticActive and SOUND_MENU_CAMERA_ZOOM_IN or SOUND_MENU_CAMERA_ZOOM_OUT, gGlobalSoundSource)
                     play_sound_with_freq_scale(SOUND_MENU_CLICK_FILE_SELECT, gGlobalSoundSource, 0.9 + gPlayerSyncTable[0].cosmeticActive*0.2)
-                    modfs_storage_save_integer("configCosmetic", item.key:gsub("cosmetic", ""))
+                    if gPlayerSyncTable[0].cosmeticActive ~= 0 then
+                        modfs_storage_save("configCosmetic", item.key:gsub("cosmetic", ""))
+                    else
+                        modfs_storage_save("configCosmetic", "None")
+                    end
                     return
                 end
                 return true
