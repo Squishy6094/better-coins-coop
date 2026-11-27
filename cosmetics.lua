@@ -2,6 +2,9 @@ local E_MODEL_FLOWER = smlua_model_util_get_id("unused_flower_geo")
 
 local TEX_COSMETIC_DEFAULT = get_texture_info("cosmetic_default")
 local TEX_COSMETIC_RAINBOW = get_texture_info("cosmetic_rainbow")
+local TEX_COSMETIC_FLOWER = get_texture_info("cosmetic_flower")
+local TEX_COSMETIC_HOT_FOOTED = get_texture_info("cosmetic_hot_footed")
+local TEX_COSMETIC_COTTON_CANDY_CLOUDS = get_texture_info("cosmetic_trans")
 
 local l = gLakituState
 local prevMarioGfxPos = {}
@@ -142,7 +145,7 @@ cosmeticList = {
         name = "Hot Footed",
         key = "HotFoot",
         desc = "A Cosmetic that causes your\nboots to catch ablaze! This gives\nmovement and impacts a little\nmore spice!",
-        texture = TEX_COSMETIC_DEFAULT,
+        texture = TEX_COSMETIC_HOT_FOOTED,
         hooks = {
             [HOOK_MARIO_UPDATE] = function(m)
                 local vel = math.sqrt(m.vel.x^2 + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y or 0)^2 + m.vel.z^2)
@@ -213,7 +216,7 @@ cosmeticList = {
         name = "Garden Grower",
         key = "Flowers",
         desc = "A Cosmetic that grows flowers\nwherever you step!",
-        texture = TEX_COSMETIC_DEFAULT,
+        texture = TEX_COSMETIC_FLOWER,
         hooks = {
             [HOOK_MARIO_UPDATE] = function(m)
                 if get_global_timer()%3 == 0 then
@@ -239,7 +242,7 @@ cosmeticList = {
         desc = "A Cosmetic that shines\na colorful prism!",
         texture = function(item, x, y, scale)
             local djuiColor = djui_hud_get_color()
-            local rainbowColor = color_rainbow(get_global_timer()/90)
+            local rainbowColor = color_rainbow(get_global_timer()/300)
             djui_hud_set_color((rainbowColor.r*0.6 + 100) * (djuiColor.r/255), (rainbowColor.g*0.6 + 100) * (djuiColor.g/255), (rainbowColor.b*0.6 + 100) * (djuiColor.b/255), djuiColor.a)
             djui_hud_render_texture(TEX_COSMETIC_RAINBOW, x, y, scale, scale)
         end,
@@ -249,7 +252,7 @@ cosmeticList = {
         name = "Cotton Candy Clouds",
         key = "TransClouds",
         desc = "A Cosmetic that leaves a trail\nof soft colored clouds behind you!",
-        texture = TEX_COSMETIC_DEFAULT,
+        texture = TEX_COSMETIC_COTTON_CANDY_CLOUDS,
         hooks = {}
     },
 }
