@@ -1135,7 +1135,9 @@ end)
 E_MODEL_RETRO_SECRET = smlua_model_util_get_id("retro_secret_geo")
 local retroSecretIDs = {
     [0] = {0, 1, 2}, -- Squishy
-    {3} -- walt_theFan
+    {3}, -- walt_theFan
+    {4, 5, 4}, -- WootInABoot
+    {6, 7}, -- mrPorkchop
 }
 local SOUND_RETRO_DEATH = audio_sample_load("smb_death.ogg")
 

@@ -19,6 +19,34 @@ const GeoLayout retro_secret_geo_opt_3[] = {
 	GEO_CLOSE_NODE(),
 	GEO_RETURN(),
 };
+const GeoLayout retro_secret_geo_opt_4[] = {
+	GEO_NODE_START(),
+	GEO_OPEN_NODE(),
+		GEO_DISPLAY_LIST(LAYER_TRANSPARENT_INTER, retro_secret_dl_mesh_layer_7_opt_4_with_revert),
+	GEO_CLOSE_NODE(),
+	GEO_RETURN(),
+};
+const GeoLayout retro_secret_geo_opt_5[] = {
+	GEO_NODE_START(),
+	GEO_OPEN_NODE(),
+		GEO_DISPLAY_LIST(LAYER_TRANSPARENT_INTER, retro_secret_dl_mesh_layer_7_opt_5_with_revert),
+	GEO_CLOSE_NODE(),
+	GEO_RETURN(),
+};
+const GeoLayout retro_secret_geo_opt_6[] = {
+	GEO_NODE_START(),
+	GEO_OPEN_NODE(),
+		GEO_DISPLAY_LIST(LAYER_TRANSPARENT_INTER, retro_secret_dl_mesh_layer_7_opt_6_with_revert),
+	GEO_CLOSE_NODE(),
+	GEO_RETURN(),
+};
+const GeoLayout retro_secret_geo_opt_7[] = {
+	GEO_NODE_START(),
+	GEO_OPEN_NODE(),
+		GEO_DISPLAY_LIST(LAYER_TRANSPARENT_INTER, retro_secret_dl_mesh_layer_7_opt_7_with_revert),
+	GEO_CLOSE_NODE(),
+	GEO_RETURN(),
+};
 const GeoLayout retro_secret_geo[] = {
 	GEO_NODE_START(),
 	GEO_OPEN_NODE(),
@@ -33,6 +61,10 @@ const GeoLayout retro_secret_geo[] = {
 				GEO_BRANCH(1, retro_secret_geo_opt_1),
 				GEO_BRANCH(1, retro_secret_geo_opt_2),
 				GEO_BRANCH(1, retro_secret_geo_opt_3),
+				GEO_BRANCH(1, retro_secret_geo_opt_4),
+				GEO_BRANCH(1, retro_secret_geo_opt_5),
+				GEO_BRANCH(1, retro_secret_geo_opt_6),
+				GEO_BRANCH(1, retro_secret_geo_opt_7),
 			GEO_CLOSE_NODE(),
 		GEO_CLOSE_NODE(),
 	GEO_CLOSE_NODE(),
