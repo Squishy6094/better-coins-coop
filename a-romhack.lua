@@ -81,7 +81,10 @@ romhackData = {
             [1] = {
                 masterCap = {x = -1350, y = 2900, z = -1600, yaw = 0x8000},
                 retroSecret = {x = 2211, y = -3887, z = 4138},
-            }
+            },
+            [2] = {
+                retroSecret = {x = -6567, y = -4812, z = -7526},
+            },
         },
         [LEVEL_JRB] = {
             [1] = {
