@@ -455,6 +455,27 @@ function spawn_sync_object_if_not_exist(behaviorId, modelId, x, y, z, objSetupFu
     return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction)
 end
 
+function color_rainbow(v)
+    -- bring into [0,1)
+    local h = v % 1
+    if h < 0 then h = h + 1 end
+
+    -- which of the six "sectors" we're in
+    local i = math.floor(h * 6)
+    local f = (h * 6) - i       -- position within the sector
+    local r,g,b
+
+    if     i == 0 then r,g,b = 1,       f,       0
+    elseif i == 1 then r,g,b = 1 - f,   1,       0
+    elseif i == 2 then r,g,b = 0,       1,       f
+    elseif i == 3 then r,g,b = 0,       1 - f,   1
+    elseif i == 4 then r,g,b = f,       0,       1
+    else               r,g,b = 1,       0,       1 - f
+    end
+
+    return { r = r*255, g = g*255, b = b*255 }
+end
+
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 function enc(data)
     return ((data:gsub('.', function(x) 

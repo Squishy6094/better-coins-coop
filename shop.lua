@@ -79,7 +79,7 @@ local shopItems = {
                 if configJPReds == 2 then
                     y = y + math.round(-0.5 + 1.5*math.sin(get_global_timer()/10))
                 end
-                djui_hud_render_texture(TEX_JP_RED_COIN_BAG_COIN, x, y, 1, 1)
+                djui_hud_render_texture(TEX_JP_RED_COIN_BAG_COIN, x, y, scale, scale)
             end
         end,
         description = function(item)
@@ -170,8 +170,8 @@ local shopItems = {
 local function setup_item(item)
     item.stockDefault = item.stockDefault or -1
     item.stock = item.stockDefault ~= -1 and modfs_storage_load_integer("shop"..item.key.."Stock", item.stockDefault) or -1
-    item.color = item.color or function()
-        local color = (item.stock ~= 0 or item.before_interact) and 255 or 150
+    item.color = item.color or function(item)
+        local color = (item.stock ~= 0 or item.before_interact) and 255 or 100
         return {
             r = color,
             g = color,
@@ -213,35 +213,25 @@ local function init_shop_items()
             key = "cosmetic"..data.key,
             stockDefault = 1,
             coins = 3000,
-            texture = gTextures.star,
-            color = function(item)
-                if item.stock ~= 0 then
-                    return {
-                        r = 255,
-                        g = 255,
-                        b = 255,
-                        a = 255
-                    }
-                elseif gPlayerSyncTable[0].cosmeticActive == id then
-                    return {
-                        r = 100,
-                        g = 255,
-                        b = 100,
-                        a = 255
-                    }
-                else
-                    return {
-                        r = 255,
-                        g = 100,
-                        b = 100,
-                        a = 255
-                    }
+            texture = function(item, x, y, scale)
+                local tex = run_func_or_get_var(data.texture, item, x, y, scale)
+                if tex then
+                    djui_hud_render_texture(tex, x, y, scale, scale)
                 end
+            end,
+            color = function(item)
+                local color = (item.stock ~= 0 or gPlayerSyncTable[0].cosmeticActive == id) and 255 or 150
+                return {
+                    r = color,
+                    g = color,
+                    b = color,
+                    a = 255
+                }
             end,
             description = function(item)
                 local desc = data.desc.."\n\n"
                 if item.stock == 0 then
-                    desc = desc..item.name.." "..(gPlayerSyncTable[0].cosmeticActive == id and "Enabled" or "Disabled")
+                    desc = desc.."Cosmetic "..(gPlayerSyncTable[0].cosmeticActive == id and "Enabled" or "Disabled")
                 else
                     desc = desc.."Purchase to Enable"
                 end

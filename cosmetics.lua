@@ -1,5 +1,8 @@
 local E_MODEL_FLOWER = smlua_model_util_get_id("unused_flower_geo")
 
+local TEX_COSMETIC_DEFAULT = get_texture_info("cosmetic_default")
+local TEX_COSMETIC_RAINBOW = get_texture_info("cosmetic_rainbow")
+
 local l = gLakituState
 local prevMarioGfxPos = {}
 for i = 0, MAX_PLAYERS - 1 do
@@ -139,6 +142,7 @@ cosmeticList = {
         name = "Hot Footed",
         key = "HotFoot",
         desc = "A Cosmetic that causes your\nboots to catch ablaze! This gives\nmovement and impacts a little\nmore spice!",
+        texture = TEX_COSMETIC_DEFAULT,
         hooks = {
             [HOOK_MARIO_UPDATE] = function(m)
                 local vel = math.sqrt(m.vel.x^2 + (m.action & ACT_FLAG_AIR ~= 0 and m.vel.y or 0)^2 + m.vel.z^2)
@@ -209,6 +213,7 @@ cosmeticList = {
         name = "Garden Grower",
         key = "Flowers",
         desc = "A Cosmetic that grows flowers\nwherever you step!",
+        texture = TEX_COSMETIC_DEFAULT,
         hooks = {
             [HOOK_MARIO_UPDATE] = function(m)
                 if get_global_timer()%3 == 0 then
@@ -228,11 +233,31 @@ cosmeticList = {
             end
         }
     },
+    {
+        name = "Rainbow Trail",
+        key = "GayTrail",
+        desc = "A Cosmetic that shines\na colorful prism!",
+        texture = function(item, x, y, scale)
+            local djuiColor = djui_hud_get_color()
+            local rainbowColor = color_rainbow(get_global_timer()/90)
+            djui_hud_set_color((rainbowColor.r*0.6 + 100) * (djuiColor.r/255), (rainbowColor.g*0.6 + 100) * (djuiColor.g/255), (rainbowColor.b*0.6 + 100) * (djuiColor.b/255), djuiColor.a)
+            djui_hud_render_texture(TEX_COSMETIC_RAINBOW, x, y, scale, scale)
+        end,
+        hooks = {}
+    },
+    {
+        name = "Cotton Candy Clouds",
+        key = "TransClouds",
+        desc = "A Cosmetic that leaves a trail\nof soft colored clouds behind you!",
+        texture = TEX_COSMETIC_DEFAULT,
+        hooks = {}
+    },
 }
 
 -- Adds a cosmetic to the shop, running the associated hooks and restricting use of other cosmetics while active
 function add_cosmetic(cosmetic)
     if not cosmetic then return end
+    if not cosmetic.texture then cosmetic.texture = TEX_COSMETIC_DEFAULT end
     table.insert(cosmeticList, cosmetic)
 end
 
