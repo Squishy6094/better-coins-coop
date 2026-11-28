@@ -82,7 +82,7 @@ end
 
 local function update_save()
     if not network_is_server() then return end
-    if save_file_get_flags() < modfs_storage_load_integer(save_file_prefix("progress"), 0) then
+    if save_file_get_flags() < modfs_storage_load_integer(save_file_prefix("progress"), 0) and gNetworkPlayers[0].currActNum ~= 99 then
         -- Assume if progress is lost, that the save had been deleted
         log_to_console("Better Coins: Save Data Lost, Deleting Custom Save Flags!", CONSOLE_MESSAGE_WARNING)
         modfs_storage_remove(save_file_prefix("defeatFinalBowser"))
